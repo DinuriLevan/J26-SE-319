@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "Dart-Code.flutter",
+    "Dart-Code.dart-code",
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "eamodio.gitlens",
+    "rangav.vscode-thunder-client",
+    "ms-vscode-remote.remote-containers"
+  ]
+}

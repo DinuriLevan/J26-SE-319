@@ -1,0 +1,52 @@
+name: akurin
+description: "AkuRin — shared foundation shell for the dyslexia literacy learning app."
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # State management
+  flutter_riverpod: ^2.6.1
+
+  # Networking
+  dio: ^5.7.0
+
+  # On-device cache
+  drift: ^2.21.0
+  sqlite3_flutter_libs: ^0.5.26
+  path_provider: ^2.1.5
+  path: ^1.9.0
+
+  # Connectivity (for the offline sync queue)
+  connectivity_plus: ^6.1.0
+
+  # Local profile id
+  uuid: ^4.5.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  build_runner: ^2.4.13
+  drift_dev: ^2.21.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/avatars/
+    - assets/branding/
+
+  fonts:
+    - family: Lexend
+      fonts:
+        - asset: assets/fonts/Lexend-VariableFont_wght.ttf
+    - family: NotoSansSinhala
+      fonts:
+        - asset: assets/fonts/NotoSansSinhala-VariableFont_wdth,wght.ttf
