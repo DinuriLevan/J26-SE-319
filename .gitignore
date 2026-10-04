@@ -1,0 +1,36 @@
+# --- General ---
+.env
+*.log
+.DS_Store
+.claude
+
+# --- Python / backend ---
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.egg-info/
+backend/.venv/
+backend/venv/
+backend/.pytest_cache/
+
+# --- Flutter / app ---
+app/.dart_tool/
+app/.flutter-plugins
+app/.flutter-plugins-dependencies
+app/.packages
+app/build/
+app/android/.gradle/
+app/android/local.properties
+app/android/key.properties
+app/ios/Pods/
+app/ios/.symlinks/
+app/ios/Flutter/Flutter.framework
+app/ios/Flutter/Flutter.podspec
+app/*.g.dart
+app/*.freezed.dart
+
+# --- IDE ---
+.idea/
+*.iml
+
+# --- Docker ---
+pgdata/
