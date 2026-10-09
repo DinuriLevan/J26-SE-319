@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'app_drawer.dart';
+
 /// Common "title + placeholder body" scaffold used by each component's stub
 /// screen until its owner builds the real feature inside.
 class StubScreenScaffold extends StatelessWidget {
@@ -11,7 +13,7 @@ class StubScreenScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(leading: const DrawerMenuButton(), title: Text(title)),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),

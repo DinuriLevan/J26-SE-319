@@ -29,7 +29,7 @@ A running log of structural/technical decisions for the AkuRin shared foundation
 | Single local profile per install, no multi-profile picker | This app is used by one child per install; the "Who is learning today?" picker and profile switching added complexity nobody needs |
 | PIN removed entirely | The PIN only ever existed to gate switching between profiles on a shared device — with no switching, it has no purpose |
 | First launch auto-creates a default profile (no setup screen) | Zero-friction start; the child's name/avatar/language can be edited later from Settings instead of requiring input before the app is usable |
-| Nav restructured to **Home** + **Settings** (was 4 component tabs) | A single splash → Home flow reads better for a children's app; the four components are now reached via cards on Home rather than being top-level tabs, freeing a tab for Settings |
+| Nav: bottom bar = the four components; sidebar drawer = Home, Profile, Settings | Children jump straight between components from the bottom bar; account-level pages live in a hamburger drawer. Home (greeting + cards) is the landing page with no bottom tab selected. Profile editing moved out of Settings into its own screen |
 | Local `child_profiles` schema change applied as a destructive table recreate (`AppDatabase.schemaVersion` 1→2) | It's a local SQLite cache, not the backend's source of truth — losing a locally-cached profile just means the app re-creates a fresh default one on next splash, which is harmless at this stage |
 | Splash screen logo is a placeholder (icon + wordmark) | No logo asset exists yet; `assets/branding/` + the pubspec entry are already wired up so dropping in a real `logo.png` later is a one-line swap in `splash_screen.dart` |
 

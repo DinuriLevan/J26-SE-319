@@ -6,14 +6,12 @@ part of 'pending_activity_result_dao.dart';
 mixin _$PendingActivityResultDaoMixin on DatabaseAccessor<AppDatabase> {
   $PendingActivityResultsTable get pendingActivityResults =>
       attachedDatabase.pendingActivityResults;
-  PendingActivityResultDaoManager get managers =>
-      PendingActivityResultDaoManager(this);
+  PendingActivityResultDaoManager get managers => PendingActivityResultDaoManager(this);
 }
 
 class PendingActivityResultDaoManager {
   final _$PendingActivityResultDaoMixin _db;
   PendingActivityResultDaoManager(this._db);
   $$PendingActivityResultsTableTableManager get pendingActivityResults =>
-      $$PendingActivityResultsTableTableManager(
-          _db.attachedDatabase, _db.pendingActivityResults);
+      $$PendingActivityResultsTableTableManager(_db.attachedDatabase, _db.pendingActivityResults);
 }
