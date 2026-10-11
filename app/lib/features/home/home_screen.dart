@@ -1,25 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../handwriting/handwriting_stub_screen.dart';
-import '../math_memory/math_memory_stub_screen.dart';
+import '../../shared/widgets/app_drawer.dart';
+import '../home_shell/providers/nav_providers.dart';
 import '../profile/providers/profile_providers.dart';
-import '../speech/speech_stub_screen.dart';
-import '../spelling/spelling_stub_screen.dart';
 
-class _ComponentCard {
-  const _ComponentCard(this.title, this.icon, this.screenBuilder);
-
-  final String title;
-  final IconData icon;
-  final WidgetBuilder screenBuilder;
-}
-
-final _components = [
-  _ComponentCard('Math & Memory', Icons.extension, (_) => const MathMemoryStubScreen()),
-  _ComponentCard('Spelling & Phonics', Icons.spellcheck, (_) => const SpellingStubScreen()),
-  _ComponentCard('Handwriting', Icons.edit, (_) => const HandwritingStubScreen()),
-  _ComponentCard('Speech & Pronunciation', Icons.mic, (_) => const SpeechStubScreen()),
+// Order matches the bottom bar destinations in the home shell.
+const _components = [
+  ('Math & Memory', Icons.extension),
+  ('Spelling & Phonics', Icons.spellcheck),
+  ('Handwriting', Icons.edit),
+  ('Speech & Pronunciation', Icons.mic),
 ];
 
 class HomeScreen extends ConsumerWidget {
@@ -30,7 +21,7 @@ class HomeScreen extends ConsumerWidget {
     final profile = ref.watch(currentProfileProvider).valueOrNull;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('AkuRin')),
+      appBar: AppBar(leading: const DrawerMenuButton(), title: const Text('AkuRin')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -51,7 +42,10 @@ class HomeScreen extends ConsumerWidget {
                 crossAxisCount: 2,
                 mainAxisSpacing: 16,
                 crossAxisSpacing: 16,
-                children: [for (final component in _components) _buildCard(context, component)],
+                children: [
+                  for (final (i, (title, icon)) in _components.indexed)
+                    _buildCard(context, ref, tab: i + 1, title: title, icon: icon),
+                ],
               ),
             ),
           ],
@@ -60,22 +54,26 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildCard(BuildContext context, _ComponentCard component) {
+  Widget _buildCard(
+    BuildContext context,
+    WidgetRef ref, {
+    required int tab,
+    required String title,
+    required IconData icon,
+  }) {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: component.screenBuilder),
-        ),
+        onTap: () => ref.read(selectedTabProvider.notifier).state = tab,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(component.icon, size: 48, color: Theme.of(context).colorScheme.primary),
+            Icon(icon, size: 48, color: Theme.of(context).colorScheme.primary),
             const SizedBox(height: 12),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Text(
-                component.title,
+                title,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.titleSmall,
               ),

@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/sync/sync_service.dart';
+import '../../shared/widgets/app_drawer.dart';
+import '../handwriting/handwriting_stub_screen.dart';
 import '../home/home_screen.dart';
-import '../settings/settings_screen.dart';
+import '../math_memory/math_memory_stub_screen.dart';
+import '../speech/speech_stub_screen.dart';
+import '../spelling/spelling_stub_screen.dart';
 import 'providers/nav_providers.dart';
 
-/// Root app shell: Home (greeting + component cards) and Settings tabs.
-/// The four feature components are reached via Home's cards, not as
-/// top-level tabs — see docs/decision-log.md.
+/// Root app shell: bottom bar with the four components, plus a drawer with
+/// Home, Profile and Settings — see docs/decision-log.md.
 class HomeShellScreen extends ConsumerStatefulWidget {
   const HomeShellScreen({super.key});
 
@@ -17,9 +20,19 @@ class HomeShellScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeShellScreenState extends ConsumerState<HomeShellScreen> {
-  static const _tabs = [
-    (title: 'Home', icon: Icons.home, screen: HomeScreen()),
-    (title: 'Settings', icon: Icons.settings, screen: SettingsScreen()),
+  static const _pages = [
+    HomeScreen(),
+    MathMemoryStubScreen(),
+    SpellingStubScreen(),
+    HandwritingStubScreen(),
+    SpeechStubScreen(),
+  ];
+
+  static const _destinations = [
+    (title: 'Math', icon: Icons.extension),
+    (title: 'Spelling', icon: Icons.spellcheck),
+    (title: 'Writing', icon: Icons.edit),
+    (title: 'Speech', icon: Icons.mic),
   ];
 
   @override
@@ -36,18 +49,26 @@ class _HomeShellScreenState extends ConsumerState<HomeShellScreen> {
 
     final selectedIndex = ref.watch(selectedTabProvider);
 
+    final onHome = selectedIndex == 0;
+
     return Scaffold(
-      body: IndexedStack(
-        index: selectedIndex,
-        children: [for (final tab in _tabs) tab.screen],
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: selectedIndex,
-        onDestinationSelected: (index) => ref.read(selectedTabProvider.notifier).state = index,
-        destinations: [
-          for (final tab in _tabs)
-            NavigationDestination(icon: Icon(tab.icon), label: tab.title),
-        ],
+      key: ref.watch(shellScaffoldKeyProvider),
+      drawer: const AppDrawer(),
+      body: IndexedStack(index: selectedIndex, children: _pages),
+      bottomNavigationBar: NavigationBarTheme(
+        // On Home no component is selected, so hide the selection pill.
+        data: NavigationBarTheme.of(context).copyWith(
+          indicatorColor: onHome ? Colors.transparent : null,
+        ),
+        child: NavigationBar(
+          selectedIndex: onHome ? 0 : selectedIndex - 1,
+          onDestinationSelected: (index) =>
+              ref.read(selectedTabProvider.notifier).state = index + 1,
+          destinations: [
+            for (final d in _destinations)
+              NavigationDestination(icon: Icon(d.icon), label: d.title),
+          ],
+        ),
       ),
     );
   }

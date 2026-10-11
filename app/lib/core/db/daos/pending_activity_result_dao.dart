@@ -29,8 +29,7 @@ class PendingActivityResultDao extends DatabaseAccessor<AppDatabase>
   }
 
   Future<List<PendingActivityResult>> getUnsynced() {
-    return (select(pendingActivityResults)
-          ..where((t) => t.syncStatus.isIn(['pending', 'failed'])))
+    return (select(pendingActivityResults)..where((t) => t.syncStatus.isIn(['pending', 'failed'])))
         .get();
   }
 
