@@ -43,4 +43,18 @@ A running log of structural/technical decisions for the AkuRin shared foundation
 | Offline speech recordings get a **new add-only drift table `pending_speech_recordings`**, with an additive `AppDatabase` migration (schemaVersion 2→3) | The shared `pending_activity_results` queue holds finished JSON results, not unscored audio. Scored results still go through the shared queue |
 | `ml/speech/data/` and all `*.wav` / `*.npy` under `ml/speech` are gitignored; development uses synthetic embeddings | Child audio and personal data must never be committed; children's recordings are collected only after ethics clearance |
 
+## 2026-10-14 — Speech component Stage 1 (Fernando B.P.L)
+
+| Decision | Rationale |
+|---|---|
+| Speech word list lives in `ml/speech/config/words.csv` (committed), not in the gitignored `data/` | It's content, not personal data, and both the service and the app need the same ids |
+| Resampling and silence trimming use scipy (`resample_poly`) and an RMS trim, not librosa | Fewer heavy dependencies at inference time and deterministic behaviour; librosa stays in requirements for notebooks |
+| `data/embeddings/manifest.json` records which embedder built the reference bank; the service refuses to start on a mismatch | Prevents silently comparing XLS-R embeddings against embeddings from a different model, layer or the synthetic bank |
+| A model-free `SpectralEmbedder` is used for tests and dev only | Tests run with no network and no 1.2 GB model download. It is never used for evaluation |
+| `/speech/assess` is stateless in Stage 1; the app enqueues one shared `ActivityResult` per scored word through the existing offline queue | Reuses the documented CONTRIBUTING flow. `phoneme_progress` persistence and the "completed word" semantics arrive with the retry loop (Stage 5) |
+| The app deletes each recording as soon as it has been scored | No child audio is kept on the device longer than needed |
+| Main `AndroidManifest.xml` now declares `INTERNET` and `RECORD_AUDIO` | `INTERNET` was only in the debug/profile manifests, so release builds could not reach the backend. The mic permission is needed for speech |
+| Backend `requirements.txt` gains `httpx` and `python-multipart` (add-only) | Needed by the speech proxy (outbound HTTP and multipart parsing). **Rebuild the backend image: `docker compose up --build`** |
+| Note: the actual Android minSdk is **24**, not 21 | `build.gradle.kts` uses `flutter.minSdkVersion` (24 on Flutter 3.47), and `record` and `permission_handler` also require 24. The 2026-10-02 "minSdk 21" entry is out of date; team to confirm |
+
 <!-- Add new entries below this line, newest at the bottom or top — pick one convention and stay consistent. -->

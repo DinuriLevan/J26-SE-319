@@ -91,6 +91,11 @@ def build_bank(out_dir: Path, seed: int = 0, dim: int = 64) -> None:
     }
 
     out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / "embeddings").mkdir(exist_ok=True)
+    # Marks these as synthetic so the service refuses to score real audio against them.
+    (out_dir / "embeddings" / "manifest.json").write_text(
+        json.dumps({"embedder": "synthetic", "dim": dim}), encoding="utf-8"
+    )
     with open(out_dir / "words.csv", "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(["word_id", "text_si", "text_en", "language", "grade", "units"])

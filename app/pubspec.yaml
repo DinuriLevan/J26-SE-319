@@ -29,6 +29,15 @@ dependencies:
   # Local profile id
   uuid: ^4.5.1
 
+  # Localisation (shared gen-l10n, en + si — see docs/decision-log.md)
+  flutter_localizations:
+    sdk: flutter
+  intl: any
+
+  # Speech component: microphone recording + permission
+  record: ^7.1.2
+  permission_handler: ^12.0.1 # 13.x needs compileSdk 37; app compiles against 36
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -46,6 +55,7 @@ flutter_launcher_icons:
 
 flutter:
   uses-material-design: true
+  generate: true
 
   assets:
     - assets/avatars/

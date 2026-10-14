@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
-from app.routers import activity_results, child_profiles, learner_progress, rewards
+from app.routers import activity_results, child_profiles, learner_progress, rewards, speech
 
 settings = get_settings()
 
@@ -20,6 +20,7 @@ app.include_router(child_profiles.router)
 app.include_router(activity_results.router)
 app.include_router(learner_progress.router)
 app.include_router(rewards.router)
+app.include_router(speech.router)
 
 
 @app.get("/health", tags=["health"])

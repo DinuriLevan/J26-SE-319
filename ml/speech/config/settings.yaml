@@ -10,6 +10,13 @@ embedding:
   layer: 12                # PLACEHOLDER: chosen by the Stage 2 layer sweep
   truncate_encoder: true   # only used after the np.allclose check passes (Stage 2)
 
+baseline:
+  # Stage 1 single-reference baseline. null = first adult reference (by speaker_id).
+  reference_speaker: null
+
+service:
+  max_upload_bytes: 2000000   # ~6 s of 16-bit 48 kHz stereo WAV is ~1.2 MB
+
 scoring:
   k_nearest: 3             # aggregate = mean of the k nearest reference DTW costs
   n_std: 2.0               # accept if aggregate <= mean + n_std * std (leave-one-out over the bank)
@@ -24,6 +31,6 @@ retry:
 
 paths:
   data_dir: data
-  words_csv: data/words.csv
+  words_csv: config/words.csv   
   reference_dir: data/reference
   embeddings_dir: data/embeddings

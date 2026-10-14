@@ -1,0 +1,21 @@
+{
+  "@@locale": "en",
+
+  "speechTitle": "Say it!",
+  "@speechTitle": {"description": "Speech component screen title"},
+  "speechChooseWord": "Pick a word to say",
+  "speechTapToRecord": "Tap the mic and say the word",
+  "speechRecording": "Listening… tap again when you're done",
+  "speechChecking": "Checking…",
+  "speechGreatJob": "Great job!",
+  "speechAcceptedBody": "You said it really well.",
+  "speechNiceTry": "Nice try!",
+  "speechPractiseBody": "Let's practise this word together.",
+  "speechTryAgain": "Try again",
+  "speechNextWord": "Next word",
+  "speechMicNeeded": "We need the microphone to hear you. Please allow it.",
+  "speechOpenSettings": "Open settings",
+  "speechCouldNotHear": "We couldn't hear that clearly. Let's try again!",
+  "speechOfflineLater": "We'll check this when you're online.",
+  "speechSomethingWrong": "Something went wrong. Let's try again in a moment."
+}

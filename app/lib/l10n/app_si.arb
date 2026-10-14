@@ -1,0 +1,21 @@
+{
+  "@@locale": "si",
+  "@@x-review": "Sinhala strings drafted by a non-native writer: TO REVIEW BY A NATIVE SPEAKER / TEACHER before use with children.",
+
+  "speechTitle": "කියමු!",
+  "speechChooseWord": "කියන්න වචනයක් තෝරන්න",
+  "speechTapToRecord": "මයික් එක තට්ටු කරලා වචනය කියන්න",
+  "speechRecording": "අහගෙන ඉන්නවා… ඉවර වුණාම ආයෙත් තට්ටු කරන්න",
+  "speechChecking": "බලනවා…",
+  "speechGreatJob": "නියමයි!",
+  "speechAcceptedBody": "ඔයා ඒක හරිම ලස්සනට කිව්වා.",
+  "speechNiceTry": "හොඳ උත්සාහයක්!",
+  "speechPractiseBody": "අපි මේ වචනය එකට පුහුණු වෙමු.",
+  "speechTryAgain": "ආයෙත් කියමු",
+  "speechNextWord": "ඊළඟ වචනය",
+  "speechMicNeeded": "ඔයාව අහන්න මයික්‍රෆෝනය ඕනේ. කරුණාකර අවසර දෙන්න.",
+  "speechOpenSettings": "සැකසුම් විවෘත කරන්න",
+  "speechCouldNotHear": "අපිට ඒක පැහැදිලිව ඇහුණේ නෑ. ආයෙත් උත්සාහ කරමු!",
+  "speechOfflineLater": "ඔන්ලයින් වුණාම අපි මේක බලන්නම්.",
+  "speechSomethingWrong": "මොකක්හරි වැරදුණා. ටිකකින් ආයෙත් උත්සාහ කරමු."
+}

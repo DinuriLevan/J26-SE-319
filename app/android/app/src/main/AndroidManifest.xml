@@ -1,4 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Release builds need INTERNET to reach the backend (debug/profile manifests already add it). -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Speech component: record the child's voice. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <application
         android:label="AkuRin"
         android:name="${applicationName}"

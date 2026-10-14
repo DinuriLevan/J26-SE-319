@@ -1,0 +1,7 @@
+# Shared app localisation (Flutter gen-l10n). Add strings to lib/l10n/app_en.arb (template) and
+# lib/l10n/app_si.arb. Prefix keys with your component name (e.g. speechTitle, spellingTitle).
+arb-dir: lib/l10n
+template-arb-file: app_en.arb
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+nullable-getter: false

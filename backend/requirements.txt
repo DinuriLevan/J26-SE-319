@@ -5,3 +5,6 @@ alembic==1.14.0
 psycopg2-binary==2.9.10
 pydantic-settings==2.7.0
 python-dotenv==1.0.1
+# --- speech component (add-only): proxy to the speech inference service ---
+httpx==0.28.1
+python-multipart==0.0.20
