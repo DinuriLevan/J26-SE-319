@@ -29,7 +29,7 @@ void main() {
     expect(find.text('z'), findsOneWidget);
   });
 
-  testWidgets('Sinhala screen contains only the supplied 44-letter set', (
+  testWidgets('Sinhala screen contains only the supplied letter set', (
     tester,
   ) async {
     await tester.pumpWidget(buildSubject(const SinhalaHandwritingScreen()));

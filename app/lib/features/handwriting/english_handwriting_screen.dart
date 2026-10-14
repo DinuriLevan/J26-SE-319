@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'letter_demonstration_screen.dart';
+import 'models/character_stroke_definition.dart';
+import 'screens/character_demonstration_screen.dart';
 import 'widgets/character_selection_view.dart';
 
 const _englishLetters = [
@@ -124,8 +125,9 @@ class EnglishHandwritingScreen extends StatelessWidget {
     final letterIndex = _englishLetters.indexOf(character.toUpperCase());
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => LetterDemonstrationScreen(
+        builder: (_) => CharacterDemonstrationScreen(
           character: character,
+          language: HandwritingLanguage.english,
           emoji: _letterEmojis[letterIndex],
           exampleWord: _letterWords[letterIndex],
         ),

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
-import 'letter_demonstration_screen.dart';
+import 'models/character_stroke_definition.dart';
+import 'screens/character_demonstration_screen.dart';
 import 'widgets/character_selection_view.dart';
 
-// The 44 introductory Sinhala letters used by the supplied learning design.
+// The 43 introductory Sinhala letters used by the supplied learning design.
 const _sinhalaVowels = [
   'අ',
   'ආ',
@@ -24,12 +25,9 @@ const _sinhalaConsonants = [
   'ඛ',
   'ග',
   'ඝ',
-  'ඞ',
   'ච',
   'ඡ',
   'ජ',
-  'ඣ',
-  'ඤ',
   'ට',
   'ඨ',
   'ඩ',
@@ -45,10 +43,12 @@ const _sinhalaConsonants = [
   'බ',
   'භ',
   'ම',
+  'ඹ',
   'ය',
   'ර',
   'ල',
   'ව',
+  'ශ',
   'ස',
   'හ',
   'ළ',
@@ -83,7 +83,10 @@ class SinhalaHandwritingScreen extends StatelessWidget {
   void _openDemonstration(BuildContext context, String character) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => LetterDemonstrationScreen(character: character),
+        builder: (_) => CharacterDemonstrationScreen(
+          character: character,
+          language: HandwritingLanguage.sinhala,
+        ),
       ),
     );
   }
