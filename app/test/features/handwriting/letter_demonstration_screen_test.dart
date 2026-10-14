@@ -1,6 +1,8 @@
 import 'package:akurin/core/theme/app_theme.dart';
+import 'package:akurin/features/handwriting/data/sinhala_strokes.dart';
 import 'package:akurin/features/handwriting/english_handwriting_screen.dart';
 import 'package:akurin/features/handwriting/models/character_stroke_definition.dart';
+import 'package:akurin/features/handwriting/models/handwriting_animation_config.dart';
 import 'package:akurin/features/handwriting/screens/character_demonstration_screen.dart';
 import 'package:akurin/features/handwriting/sinhala_handwriting_screen.dart';
 import 'package:akurin/features/handwriting/widgets/stroke_demonstration_canvas.dart';
@@ -72,6 +74,8 @@ void main() {
 
     expect(find.text('Practice Time!'), findsOneWidget);
     expect(find.text('Write A'), findsOneWidget);
+    expect(find.text('Use your finger to write the letter.'), findsOneWidget);
+    expect(find.text('Use your finger to follow the letter.'), findsNothing);
 
     await tester.drag(
       find.byKey(const ValueKey('handwriting-practice-canvas')),
@@ -112,7 +116,7 @@ void main() {
             find.byType(StrokeDemonstrationCanvas),
           )
           .showReferenceGlyph,
-      isTrue,
+      isFalse,
     );
 
     await tester.scrollUntilVisible(
@@ -151,11 +155,16 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Practice Time!'), findsOneWidget);
     expect(find.text('Write අ'), findsOneWidget);
+    expect(find.text('Use your finger to write the letter.'), findsOneWidget);
+    expect(find.text('Use your finger to follow the letter.'), findsNothing);
   });
 
   testWidgets('Sinhala multi-stroke timing and step controls work', (
     tester,
   ) async {
+    final firstStrokeDuration = HandwritingAnimationConfig.sinhala
+        .durationForStroke(sinhalaStrokes['ආ']!.strokes.first);
+
     await tester.pumpWidget(
       buildSubject(
         const CharacterDemonstrationScreen(
@@ -171,7 +180,9 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
 
-    await tester.pump(const Duration(milliseconds: 2399));
+    await tester.pump(
+      firstStrokeDuration - const Duration(milliseconds: 1),
+    );
     expect(find.text('Step 1 of 2'), findsOneWidget);
 
     await tester.pump(const Duration(milliseconds: 1));

@@ -58,12 +58,6 @@ class _StrokeDemonstrationPainter extends CustomPainter {
     _paintGuideLines(canvas, size);
     if (showReferenceGlyph) _paintReferenceGlyph(canvas, size);
 
-    final guidePaint = Paint()
-      ..color = strokeColor.withValues(alpha: 0.1)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 8
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
     final strokePaint = Paint()
       ..color = strokeColor
       ..style = PaintingStyle.stroke
@@ -74,10 +68,6 @@ class _StrokeDemonstrationPainter extends CustomPainter {
     final paths = [
       for (final stroke in definition.strokes) stroke.buildPath(size),
     ];
-
-    for (final path in paths) {
-      canvas.drawPath(path, guidePaint);
-    }
 
     for (var index = 0; index < currentStrokeIndex; index++) {
       canvas.drawPath(paths[index], strokePaint);

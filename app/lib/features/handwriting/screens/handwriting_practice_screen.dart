@@ -47,7 +47,7 @@ class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
               ),
               const SizedBox(height: 6),
               Text(
-                'Use your finger to follow the letter.',
+                'Use your finger to write the letter.',
                 style: theme.textTheme.bodyLarge,
                 textAlign: TextAlign.center,
               ),
@@ -73,13 +73,8 @@ class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
                       onPanUpdate: _continueStroke,
                       child: CustomPaint(
                         painter: _PracticePainter(
-                          character: widget.character,
                           penStrokes: _penStrokes,
                           inkColor: theme.colorScheme.onSurface,
-                          guideColor: theme.colorScheme.primary,
-                          fontFamily: theme.textTheme.displayLarge?.fontFamily,
-                          fontFamilyFallback:
-                              theme.textTheme.displayLarge?.fontFamilyFallback,
                         ),
                         child: const SizedBox.expand(),
                       ),
@@ -106,52 +101,15 @@ class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
 
 class _PracticePainter extends CustomPainter {
   const _PracticePainter({
-    required this.character,
     required this.penStrokes,
     required this.inkColor,
-    required this.guideColor,
-    required this.fontFamily,
-    required this.fontFamilyFallback,
   });
 
-  final String character;
   final List<List<Offset>> penStrokes;
   final Color inkColor;
-  final Color guideColor;
-  final String? fontFamily;
-  final List<String>? fontFamilyFallback;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final linePaint = Paint()
-      ..color = guideColor.withValues(alpha: 0.16)
-      ..strokeWidth = 2;
-    for (final fraction in [0.25, 0.5, 0.75]) {
-      final y = size.height * fraction;
-      canvas.drawLine(Offset(16, y), Offset(size.width - 16, y), linePaint);
-    }
-
-    final guideText = TextPainter(
-      text: TextSpan(
-        text: character,
-        style: TextStyle(
-          color: inkColor.withValues(alpha: 0.08),
-          fontFamily: fontFamily,
-          fontFamilyFallback: fontFamilyFallback,
-          fontSize: size.shortestSide * 0.65,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    guideText.paint(
-      canvas,
-      Offset(
-        (size.width - guideText.width) / 2,
-        (size.height - guideText.height) / 2,
-      ),
-    );
-
     final inkPaint = Paint()
       ..color = inkColor
       ..strokeWidth = 8

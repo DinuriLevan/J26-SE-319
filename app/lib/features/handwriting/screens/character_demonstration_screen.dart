@@ -53,7 +53,7 @@ class _CharacterDemonstrationScreenState
     }
     _controller = AnimationController(
       vsync: this,
-      duration: _animationConfig.strokeDuration,
+      duration: _durationForStroke(0),
     )..addStatusListener(_handleAnimationStatus);
     if (_definition != null) _controller.forward();
   }
@@ -80,6 +80,7 @@ class _CharacterDemonstrationScreenState
     Future<void>.delayed(_animationConfig.strokePauseDuration, () {
       if (!mounted || !_autoPlay || token != _transitionToken) return;
       setState(() => _currentStrokeIndex++);
+      _controller.duration = _durationForStroke(_currentStrokeIndex);
       _controller.forward(from: 0);
     });
   }
@@ -89,6 +90,7 @@ class _CharacterDemonstrationScreenState
     _transitionToken++;
     _autoPlay = true;
     setState(() => _currentStrokeIndex = 0);
+    _controller.duration = _durationForStroke(0);
     _controller.forward(from: 0);
   }
 
@@ -98,6 +100,7 @@ class _CharacterDemonstrationScreenState
     _autoPlay = false;
     _controller.stop();
     setState(() => _currentStrokeIndex--);
+    _controller.duration = _durationForStroke(_currentStrokeIndex);
     _controller.value = 1;
   }
 
@@ -111,7 +114,16 @@ class _CharacterDemonstrationScreenState
     _autoPlay = false;
     _controller.stop();
     setState(() => _currentStrokeIndex++);
+    _controller.duration = _durationForStroke(_currentStrokeIndex);
     _controller.forward(from: 0);
+  }
+
+  Duration _durationForStroke(int index) {
+    final definition = _definition;
+    if (definition == null || definition.strokes.isEmpty) {
+      return _animationConfig.strokeDuration;
+    }
+    return _animationConfig.durationForStroke(definition.strokes[index]);
   }
 
   void _openPractice() {

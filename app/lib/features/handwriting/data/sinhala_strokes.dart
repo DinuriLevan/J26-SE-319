@@ -9,9 +9,9 @@ import 'sinhala_consonants_group_two_strokes.dart';
 import 'sinhala_vowels_group_one_strokes.dart';
 import 'sinhala_vowels_group_two_strokes.dart';
 
-/// Enables the temporary Sinhala-only alignment overlay on the demonstration
-/// canvas. Set this to false once the paths have been approved by an educator.
-const bool showSinhalaReferenceGlyph = true;
+/// Enables the Sinhala-only alignment overlay for internal path debugging.
+/// Production demonstrations must begin on a clean writing area.
+const bool showSinhalaReferenceGlyph = false;
 
 /// Normalized, single-pen teaching paths for the three Sinhala samples.
 ///
@@ -149,73 +149,77 @@ const sinhalaStrokes = <String, CharacterStrokeDefinition>{
     language: HandwritingLanguage.sinhala,
     strokes: [
       StrokeDefinition(
-        // Begin at the left side of the small upper loop.
-        start: Offset(0.30, 0.30),
+        // Begin at the upper loop, then continue through the entire character
+        // as one natural pen movement.
+        start: Offset(0.463, 0.244),
         segments: [
-          // Make the upper loop clockwise.
+          // Form the compact upper loop clockwise.
           StrokeSegment.cubic(
-            control1: Offset(0.27, 0.24),
-            control2: Offset(0.31, 0.19),
-            end: Offset(0.39, 0.19),
+            control1: Offset(0.495, 0.253),
+            control2: Offset(0.497, 0.302),
+            end: Offset(0.451, 0.313),
           ),
           StrokeSegment.cubic(
-            control1: Offset(0.48, 0.19),
-            control2: Offset(0.52, 0.24),
-            end: Offset(0.50, 0.30),
+            control1: Offset(0.414, 0.310),
+            control2: Offset(0.411, 0.263),
+            end: Offset(0.463, 0.244),
+          ),
+          // Sweep right, reverse gently, and enter the broad left bowl.
+          StrokeSegment.cubic(
+            control1: Offset(0.511, 0.238),
+            control2: Offset(0.558, 0.270),
+            end: Offset(0.570, 0.327),
           ),
           StrokeSegment.cubic(
-            control1: Offset(0.46, 0.34),
-            control2: Offset(0.36, 0.34),
-            end: Offset(0.30, 0.30),
-          ),
-          // Extend right, turn back sharply, and form the large left bowl.
-          StrokeSegment.cubic(
-            control1: Offset(0.41, 0.28),
-            control2: Offset(0.54, 0.28),
-            end: Offset(0.62, 0.31),
+            control1: Offset(0.532, 0.333),
+            control2: Offset(0.451, 0.334),
+            end: Offset(0.405, 0.352),
           ),
           StrokeSegment.cubic(
-            control1: Offset(0.53, 0.34),
-            control2: Offset(0.37, 0.32),
-            end: Offset(0.26, 0.36),
+            control1: Offset(0.316, 0.389),
+            control2: Offset(0.316, 0.519),
+            end: Offset(0.405, 0.568),
           ),
           StrokeSegment.cubic(
-            control1: Offset(0.14, 0.41),
-            control2: Offset(0.15, 0.63),
-            end: Offset(0.27, 0.69),
+            control1: Offset(0.468, 0.594),
+            control2: Offset(0.569, 0.574),
+            end: Offset(0.626, 0.577),
+          ),
+          // Turn down, make the long stem, and retrace it upward.
+          StrokeSegment.cubic(
+            control1: Offset(0.602, 0.608),
+            control2: Offset(0.575, 0.644),
+            end: Offset(0.572, 0.700),
           ),
           StrokeSegment.cubic(
-            control1: Offset(0.38, 0.75),
-            control2: Offset(0.54, 0.71),
-            end: Offset(0.62, 0.68),
-          ),
-          // Rise along the upright, descend it, then retrace upward.
-          StrokeSegment.cubic(
-            control1: Offset(0.65, 0.59),
-            control2: Offset(0.64, 0.42),
-            end: Offset(0.64, 0.31),
-          ),
-          StrokeSegment.line(Offset(0.64, 0.80)),
-          StrokeSegment.line(Offset(0.64, 0.30)),
-          // Finish by circling clockwise around the small right bowl.
-          StrokeSegment.cubic(
-            control1: Offset(0.66, 0.21),
-            control2: Offset(0.72, 0.18),
-            end: Offset(0.77, 0.21),
+            control1: Offset(0.571, 0.730),
+            control2: Offset(0.570, 0.750),
+            end: Offset(0.569, 0.756),
           ),
           StrokeSegment.cubic(
-            control1: Offset(0.84, 0.25),
-            control2: Offset(0.84, 0.37),
-            end: Offset(0.78, 0.43),
+            control1: Offset(0.566, 0.688),
+            control2: Offset(0.570, 0.452),
+            end: Offset(0.573, 0.343),
+          ),
+          // Finish with the rising right hook and its inward return.
+          StrokeSegment.cubic(
+            control1: Offset(0.576, 0.290),
+            control2: Offset(0.611, 0.255),
+            end: Offset(0.674, 0.238),
           ),
           StrokeSegment.cubic(
-            control1: Offset(0.73, 0.48),
-            control2: Offset(0.66, 0.45),
-            end: Offset(0.64, 0.40),
+            control1: Offset(0.674, 0.271),
+            control2: Offset(0.663, 0.315),
+            end: Offset(0.620, 0.331),
+          ),
+          StrokeSegment.cubic(
+            control1: Offset(0.603, 0.336),
+            control2: Offset(0.589, 0.339),
+            end: Offset(0.579, 0.341),
           ),
         ],
         instruction:
-            'Make the top loop and left bowl, trace the upright down and back up, then finish with the small right loop.',
+            'Make the top loop, sweep around the left bowl, trace the stem down and back up, then finish with the right hook.',
       ),
     ],
   ),

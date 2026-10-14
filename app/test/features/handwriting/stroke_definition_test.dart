@@ -147,6 +147,14 @@ void main() {
     }
   });
 
+  test('අ follows the corrected natural single-stroke proportions', () {
+    final stroke = sinhalaStrokes['අ']!.strokes.single;
+
+    expect(stroke.start, const Offset(0.463, 0.244));
+    expect(stroke.segments, hasLength(12));
+    expect(stroke.segments.last.end, const Offset(0.579, 0.341));
+  });
+
   test('unknown characters still return no definition', () {
     expect(
       CharacterStrokeRepository.find(
