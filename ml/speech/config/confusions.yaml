@@ -1,0 +1,23 @@
+# Sinhala-specific confusion candidates used by the rule-based error mapping (Stage 4).
+# TO VALIDATE WITH SPEECH-LANGUAGE EXPERT. These are starting hypotheses, not clinical categories.
+#
+# Error taxonomy: substitution | omission | insertion | distortion
+
+vowel_length:
+  description: Short vs long vowel (e.g. අ / ආ, ඉ / ඊ, උ / ඌ, එ / ඒ, ඔ / ඕ)
+  pairs: [["අ", "ආ"], ["ඉ", "ඊ"], ["උ", "ඌ"], ["එ", "ඒ"], ["ඔ", "ඕ"]]
+  likely_error_type: distortion
+
+aspiration:
+  description: Unaspirated vs aspirated stops
+  pairs: [["ක", "ඛ"], ["ග", "ඝ"], ["ච", "ඡ"], ["ජ", "ඣ"], ["ට", "ඨ"], ["ඩ", "ඪ"], ["ත", "ථ"], ["ද", "ධ"], ["ප", "ඵ"], ["බ", "භ"]]
+  likely_error_type: substitution
+
+prenasalised_stops:
+  description: Prenasalised stop vs plain voiced stop or nasal
+  pairs: [["ඟ", "ග"], ["ඬ", "ඩ"], ["ඳ", "ද"], ["ඹ", "බ"]]
+  likely_error_type: substitution
+
+geminates:
+  description: Geminate (doubled) vs single consonant, e.g. "අම්මා" vs "අමා"
+  likely_error_type: omission

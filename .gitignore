@@ -34,3 +34,12 @@ app/*.freezed.dart
 
 # --- Docker ---
 pgdata/
+
+# --- ML / speech (never commit audio, embeddings or bank manifests) ---
+ml/speech/data/
+ml/speech/**/*.wav
+ml/speech/**/*.npy
+ml/**/__pycache__/
+ml/**/.pytest_cache/
+ml/**/.venv/
+ml/**/.ipynb_checkpoints/

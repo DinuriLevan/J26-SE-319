@@ -1,0 +1,29 @@
+# Speech assessment settings. Values marked PLACEHOLDER are chosen on DEV data in a later stage.
+
+audio:
+  sample_rate: 16000
+  max_duration_s: 6.0
+  trim_top_db: 30          # librosa.effects.trim threshold; PLACEHOLDER
+
+embedding:
+  model_name: facebook/wav2vec2-xls-r-300m
+  layer: 12                # PLACEHOLDER: chosen by the Stage 2 layer sweep
+  truncate_encoder: true   # only used after the np.allclose check passes (Stage 2)
+
+scoring:
+  k_nearest: 3             # aggregate = mean of the k nearest reference DTW costs
+  n_std: 2.0               # accept if aggregate <= mean + n_std * std (leave-one-out over the bank)
+  min_refs_for_bank_threshold: 4
+  fallback_threshold: 0.30 # UNTESTED PLACEHOLDER: conservative global threshold when < 4 refs
+
+localisation:
+  max_flagged_units: 2
+
+retry:
+  max_tries_per_step: 3
+
+paths:
+  data_dir: data
+  words_csv: data/words.csv
+  reference_dir: data/reference
+  embeddings_dir: data/embeddings

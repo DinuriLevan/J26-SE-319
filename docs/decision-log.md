@@ -33,4 +33,14 @@ A running log of structural/technical decisions for the AkuRin shared foundation
 | Local `child_profiles` schema change applied as a destructive table recreate (`AppDatabase.schemaVersion` 1→2) | It's a local SQLite cache, not the backend's source of truth — losing a locally-cached profile just means the app re-creates a fresh default one on next splash, which is harmless at this stage |
 | Splash screen logo is a placeholder (icon + wordmark) | No logo asset exists yet; `assets/branding/` + the pubspec entry are already wired up so dropping in a real `logo.png` later is a one-line swap in `splash_screen.dart` |
 
+## 2026-10-14 — Speech & Pronunciation component setup (Fernando B.P.L)
+
+| Decision | Rationale |
+|---|---|
+| Speech app-layer endpoints (`/speech/assess` proxy, `/speech/progress/{child_id}`, `phoneme_progress` table) go in the **existing FastAPI backend** as an add-only router + Alembic migration | The project deck mentions Node.js, but the repo's backend is already FastAPI + SQLAlchemy + Alembic. Adding a second backend stack for one component would split the team's tooling |
+| The speech model runs in a **separate Python (FastAPI) inference service** built from `ml/speech`, with its own docker-compose entry | Keeps torch/transformers (large, slow startup) out of the shared backend image; the backend proxies to it |
+| Bilingual UI strings: **add shared Flutter gen-l10n** (`flutter_localizations` + ARB, `en` + `si`) | No l10n mechanism exists yet and all four components need Sinhala/English. It touches shared `pubspec.yaml`/`main.dart`, so it is added in the speech Stage 1 work and flagged for team agreement |
+| Offline speech recordings get a **new add-only drift table `pending_speech_recordings`**, with an additive `AppDatabase` migration (schemaVersion 2→3) | The shared `pending_activity_results` queue holds finished JSON results, not unscored audio. Scored results still go through the shared queue |
+| `ml/speech/data/` and all `*.wav` / `*.npy` under `ml/speech` are gitignored; development uses synthetic embeddings | Child audio and personal data must never be committed; children's recordings are collected only after ethics clearance |
+
 <!-- Add new entries below this line, newest at the bottom or top — pick one convention and stay consistent. -->
