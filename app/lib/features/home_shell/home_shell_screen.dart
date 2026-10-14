@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/sync/sync_service.dart';
 import '../../shared/widgets/app_drawer.dart';
-import '../handwriting/handwriting_stub_screen.dart';
+import '../handwriting/handwriting_language_selection_screen.dart';
 import '../home/home_screen.dart';
 import '../math_memory/math_memory_stub_screen.dart';
 import '../speech/speech_stub_screen.dart';
@@ -24,7 +24,7 @@ class _HomeShellScreenState extends ConsumerState<HomeShellScreen> {
     HomeScreen(),
     MathMemoryStubScreen(),
     SpellingStubScreen(),
-    HandwritingStubScreen(),
+    HandwritingLanguageSelectionScreen(),
     SpeechStubScreen(),
   ];
 
