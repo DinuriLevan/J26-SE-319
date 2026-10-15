@@ -32,8 +32,10 @@ def load_audio(
     max_duration_s: float = 6.0,
     trim_top_db: float = 30.0,
     min_rms: float = 1e-3,
+    trim: bool = True,
 ) -> np.ndarray:
-    """Return float32 mono audio at target_sr with silence trimmed.
+    """Return float32 mono audio at target_sr, with silence trimmed unless trim=False
+    (alignment needs times relative to the original file).
 
     Raises AudioValidationError for unreadable, too long, or silent input.
     """
@@ -56,7 +58,8 @@ def load_audio(
     if np.sqrt(np.mean(wav**2)) < min_rms:
         raise AudioValidationError("Audio is silent.")
 
-    wav = _trim(wav, target_sr, trim_top_db)
+    if trim:
+        wav = _trim(wav, target_sr, trim_top_db)
     if wav.size < int(0.1 * target_sr):
         raise AudioValidationError("Audio is too short after trimming silence.")
     return wav

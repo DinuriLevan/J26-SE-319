@@ -54,7 +54,20 @@ built with `--embedder spectral`; the service refuses to start on a mismatch. Us
 |---|---|
 | 0 Setup | Done |
 | 1 Baseline | Done: single adult reference + fallback threshold; Flutter record → result |
-| 2–7 | Not started |
+| 2 Layer sweep | Done: layer 9 chosen on dev children; truncated encoder verified and enabled |
+| 3–7 | Not started |
+
+## Child corpus (Stage 2)
+
+Ethics approval confirmed 2026-10-15. Recordings live in `data/grade*` (gitignored).
+
+```sh
+python scripts/build_child_corpus.py   # -> data/corpus/utterances.csv (anonymous speaker ids, dev/test split by speaker)
+python scripts/align_words.py          # -> data/corpus/words.csv (MMS forced-aligned word boundaries)
+python scripts/export_spotcheck.py     # -> data/corpus/spotcheck/*.wav + spotcheck.csv to check cuts by ear
+python scripts/layer_sweep.py          # -> eval/results/layer_sweep_dev.{csv,md,png}  (dev speakers only)
+python scripts/verify_truncation.py    # -> eval/results/truncation_check.json
+```
 
 ### Tested (automated)
 - `tests/test_scoring.py`: the reference implementation `src/scoring.py` (logic unchanged). Multi-reference
@@ -71,6 +84,16 @@ built with `--embedder spectral`; the service refuses to start on a mismatch. Us
 - Flutter `app/test/features/speech/speech_test.dart`: API parsing and error mapping, and the result
   screen in en/si with no "wrong/fail" wording.
 
+- `tests/test_dtw_fast.py`: the numba DTW gives identical costs and paths (including ties) to `scoring.dtw`.
+- `tests/test_corpus.py`: corpus indexing (ids, labels, split, Sinhala ZWJ fix) and the dev-only guard;
+  the layer sweep drops test speakers and only pairs tokens across different children.
+
+### Stage 2 results (2026-10-15, dev speakers g3_s1, g3_s3, g4_s1, g4_s2)
+- Layer sweep over 922 word tokens (335 word types), 20,576 pairs: **layer 9 is best** (AUC 0.984,
+  P@1 0.979). Layers 8–13 form a plateau (0.981–0.984); the last layers are much worse (layer 24: 0.909).
+- Truncated encoder: bit-identical to the full model at layers 1/6/9/12/18/23; layer 9 is 2.0× faster.
+  The service's embed step dropped from ~280 ms to ~90 ms per clip on this desktop CPU.
+
 ### Verified manually (2026-10-14, desktop CPU, not a target device)
 - Real XLS-R layer 12 run on Windows TTS voices (David = reference; Hazel/Zira = probes; 5 English words):
   the nearest word was correct 9/10 times (cat→dog was the miss). Embedding took ~280 ms per clip and DTW ~1 ms.
@@ -85,9 +108,15 @@ built with `--embedder spectral`; the service refuses to start on a mismatch. Us
   to the service. The silence error showed the gentle "couldn't hear" message. However, the emulator mic
   only delivered silence, so no spoken word has been scored from the app yet. To try it, run
   `adb emu avd hostmicon` and speak into the PC mic, or use a real phone.
-- Sinhala audio. No Sinhala recordings have been used yet.
-- `fallback_threshold: 0.30` is wrong for XLS-R (see above); it needs a value chosen on DEV data. The
-  layer (12) and `trim_top_db` are also placeholders.
+- **What the layer sweep measures:** telling *different words* apart across children. Mispronunciations
+  are much closer to the target than a different word, so the best layer for that finer task could
+  differ. Re-check once labelled mispronunciations exist.
+- **Word cuts are automatic** (MMS alignment) and have not been checked by ear yet. Tiny English words
+  ("I", "a") often align to 20 ms slivers, so the sweep drops tokens < 0.12 s or align_score < 0.3.
+- The sweep uses words cut from sentences (co-articulated), not isolated words as children will say them in the app.
+- Only 4 dev children: the plateau differences (≈0.001 AUC) are within noise.
+- `fallback_threshold: 0.30` is still wrong for XLS-R: with layer 9 it accepted "dog" as *cat* (0.249)
+  and "fish" as *sun* (0.279). It needs Stage 3. `trim_top_db` is also a placeholder.
 - The threshold in `tests/test_scoring.py` is computed from the scores it checks. It is a sanity demo,
   not accuracy evidence.
 - Latency on a low-end Android path is unmeasured; `scripts/bench_latency.py` comes in Stage 6.

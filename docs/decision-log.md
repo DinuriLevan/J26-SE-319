@@ -57,4 +57,16 @@ A running log of structural/technical decisions for the AkuRin shared foundation
 | Backend `requirements.txt` gains `httpx` and `python-multipart` (add-only) | Needed by the speech proxy (outbound HTTP and multipart parsing). **Rebuild the backend image: `docker compose up --build`** |
 | Note: the actual Android minSdk is **24**, not 21 | `build.gradle.kts` uses `flutter.minSdkVersion` (24 on Flutter 3.47), and `record` and `permission_handler` also require 24. The 2026-10-02 "minSdk 21" entry is out of date; team to confirm |
 
+## 2026-10-15 — Speech component Stage 2: child corpus + layer sweep (Fernando B.P.L)
+
+| Decision | Rationale |
+|---|---|
+| Ethics approval confirmed by the component owner for the children's recordings in `ml/speech/data/grade*` (6 children, 360 sentence readings) | Required before any use of child audio. The data stays gitignored; speakers are anonymised as `g3_s1` and so on |
+| Practice unit stays **single words** (not sentences) | Owner decision. Words are cut from the sentence recordings for development; a single-word recording list remains the target content |
+| Split by **speaker**: test = `g3_s5`, `g4_s3`; dev = the other 4. `src/splits.py` raises if tuning code is given test rows | Spec rule: the test split is never used to choose layer, k, n or thresholds. Splitting by speaker keeps test children's voices unseen |
+| Word boundaries come from **MMS forced alignment** (`torchaudio.pipelines.MMS_FA`) on uroman-romanised transcripts | Same model family as the spec's optional `ctc-forced-aligner` + uroman source, with no extra package. Boundaries are automatic and must be spot-checked (`scripts/export_spotcheck.py`) |
+| **XLS-R layer = 9** | Dev-speaker sweep over 922 word tokens: best ROC-AUC (0.984). Layers 8–13 form a plateau (0.981–0.984); the last layers are much worse (layer 24: 0.909). Layer 9 is the best and the cheapest in that plateau. See `ml/speech/eval/results/layer_sweep_dev.md` |
+| **Truncated encoder enabled** (keep `layer + 1` = 10 of 24 transformer layers) | `np.allclose` against the full model's `hidden_states[layer]` on 5 dev clips: max abs diff 0.0 at layers 1/6/9/12/18/23. A naive cut to `layer` layers differs by up to ~500 because XLS-R applies its final layer norm only to the last output. Layer 9 runs 2.0× faster |
+| numba-JIT DTW (`src/dtw_fast.py`) for bulk evaluation | Identical costs and paths to the reference `scoring.dtw`, including ties (tested); ~160× faster. The live service still uses the reference implementation |
+
 <!-- Add new entries below this line, newest at the bottom or top — pick one convention and stay consistent. -->

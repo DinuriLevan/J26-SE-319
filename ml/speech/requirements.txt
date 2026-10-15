@@ -6,6 +6,7 @@ scipy==1.14.1
 soundfile==0.12.1
 librosa==0.10.2.post1
 torch==2.5.1
+torchaudio==2.5.1        # MMS forced aligner (scripts/align_words.py); CPU wheel as for torch
 transformers==4.46.3
 fastapi==0.115.6
 uvicorn[standard]==0.34.0
@@ -17,3 +18,6 @@ pandas==2.2.3
 matplotlib==3.9.3
 scikit-learn==1.5.2
 black==24.10.0
+numba==0.61.0            # JIT DTW (src/dtw_fast.py), verified identical to src/scoring.dtw
+uroman==1.3.1.1          # romanise Sinhala for forced alignment
+tabulate==0.9.0          # markdown tables in eval outputs

@@ -20,19 +20,39 @@ class Embedder(Protocol):
         ...
 
 
+def truncate_encoder(model, layer: int):
+    """Keep only the first layer+1 transformer layers, in place.
+
+    XLS-R uses the stable-layer-norm encoder: hidden_states[k] is collected *before* layer k+1 runs,
+    and the final layer_norm is applied only to the last entry. Keeping layer+1 layers therefore
+    leaves hidden_states[layer] unchanged, while keeping just `layer` layers would wrongly apply
+    the final layer_norm to it. Verified with np.allclose by scripts/verify_truncation.py.
+    """
+    n = len(model.encoder.layers)
+    if layer + 1 < n:
+        model.encoder.layers = model.encoder.layers[: layer + 1]
+    return model
+
+
 class XLSREmbedder:
-    def __init__(self, model_name: str = "facebook/wav2vec2-xls-r-300m", layer: int = 12):
+    def __init__(
+        self,
+        model_name: str = "facebook/wav2vec2-xls-r-300m",
+        layer: int = 12,
+        truncate: bool = False,
+    ):
         import torch
         from transformers import AutoFeatureExtractor, Wav2Vec2Model
 
         self._torch = torch
         self.layer = layer
+        # The name does not include `truncate`: truncated and full outputs are verified identical.
         self.name = f"{model_name}@layer{layer}"
         self.extractor = AutoFeatureExtractor.from_pretrained(model_name)
         self.model = Wav2Vec2Model.from_pretrained(model_name)
         self.model.eval()
-        # Truncating the encoder to layer+1 layers is a Stage 2 optimisation, enabled only
-        # after it is verified with np.allclose against hidden_states[layer] of the full model.
+        if truncate:
+            truncate_encoder(self.model, layer)
 
     def embed(self, wav: np.ndarray) -> np.ndarray:
         inputs = self.extractor(wav, sampling_rate=16000, return_tensors="pt")
@@ -66,7 +86,7 @@ class SpectralEmbedder:
 def make_embedder(kind: str, settings: dict) -> Embedder:
     if kind == "xlsr":
         emb = settings["embedding"]
-        return XLSREmbedder(emb["model_name"], emb["layer"])
+        return XLSREmbedder(emb["model_name"], emb["layer"], emb.get("truncate_encoder", False))
     if kind == "spectral":
         return SpectralEmbedder()
     raise ValueError(f"Unknown embedder: {kind}")

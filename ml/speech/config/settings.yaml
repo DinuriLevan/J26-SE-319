@@ -7,8 +7,8 @@ audio:
 
 embedding:
   model_name: facebook/wav2vec2-xls-r-300m
-  layer: 12                # PLACEHOLDER: chosen by the Stage 2 layer sweep
-  truncate_encoder: true   # only used after the np.allclose check passes (Stage 2)
+  layer: 9                 # chosen by the Stage 2 layer sweep on DEV speakers (eval/results/layer_sweep_dev.md)
+  truncate_encoder: true   # verified bit-identical (eval/results/truncation_check.json)
 
 baseline:
   # Stage 1 single-reference baseline. null = first adult reference (by speaker_id).
@@ -16,6 +16,11 @@ baseline:
 
 service:
   max_upload_bytes: 2000000   # ~6 s of 16-bit 48 kHz stereo WAV is ~1.2 MB
+
+corpus:
+  # Children's sentence recordings (ethics approval confirmed 2026-10-15). Split is by speaker:
+  # test speakers are never used to choose layer, k, n or thresholds (src/splits.py enforces it).
+  test_speakers: [g3_s5, g4_s3]
 
 scoring:
   k_nearest: 3             # aggregate = mean of the k nearest reference DTW costs
