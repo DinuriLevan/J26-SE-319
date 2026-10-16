@@ -39,3 +39,4 @@ pgdata/
 
 ml/handwriting/datasets/processed/
 ml/handwriting/datasets/raw/
+ml/handwriting/datasets/split/
