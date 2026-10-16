@@ -94,6 +94,44 @@ void main() {
     });
   });
 
+  test('parses segments and orders flagged units worst first', () {
+    final r = AssessResult.fromJson({
+      ..._okJson,
+      'decision': 'needs_remediation',
+      'segments': [
+        {
+          'label': 'අ',
+          'start_s': 0.0,
+          'end_s': 0.1,
+          'status': 'flagged',
+          'cost': 0.3,
+          'error_type': 'distortion'
+        },
+        {
+          'label': 'ම්මා',
+          'start_s': 0.1,
+          'end_s': 0.5,
+          'status': 'flagged',
+          'cost': 0.6,
+          'error_type': 'omission'
+        },
+        {
+          'label': 'x',
+          'start_s': 0.5,
+          'end_s': 0.6,
+          'status': 'ok',
+          'cost': 0.1,
+          'error_type': null
+        },
+      ],
+    });
+    expect(r.segments, hasLength(3));
+    expect(r.flaggedUnits.map((u) => u.label), ['ම්මා', 'අ']);
+    expect(r.flaggedUnits.first.errorType, 'omission');
+    expect((r.toActivityPayload()['flagged_units'] as List).length, 2);
+    expect(AssessResult.fromJson(_okJson).segments, isEmpty);
+  });
+
   test('addReference sends adult-only dev fields and no child id', () async {
     final adapter = _FakeAdapter(200, {'ref_id': 'adult_01_p01', 'n_refs': 9});
     final r = await apiWith(adapter)

@@ -32,6 +32,15 @@ scoring:
 
 localisation:
   max_flagged_units: 2
+  second_flag_ratio: 0.8   # PLACEHOLDER: also flag the 2nd-worst unit if its cost >= 0.8 x worst
+  min_unit_frames: 2       # each reference unit spans >= 2 frames (40 ms) when projecting
+
+errors:                    # src/errors.py, TO VALIDATE WITH SPEECH-LANGUAGE EXPERT; ratios are vs the
+                           # unit's expected duration after correcting for the child's speaking rate
+  omission_ratio: 0.35     # PLACEHOLDER: unit mapped to < 35% of expected -> omission
+  insertion_ratio: 2.5     # PLACEHOLDER: unit mapped to > 250% of expected -> insertion
+  short_ratio: 0.6         # PLACEHOLDER: long vowel / geminate said < 60% of expected
+  substitution_cost: 0.5   # PLACEHOLDER: unit cost >= this -> substitution, else distortion
 
 retry:
   max_tries_per_step: 3

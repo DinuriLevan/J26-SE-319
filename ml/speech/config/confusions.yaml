@@ -1,23 +1,30 @@
-# Sinhala-specific confusion candidates used by the rule-based error mapping (Stage 4).
+# Sinhala-specific confusion candidates used by the rule-based error mapping (src/errors.py).
 # TO VALIDATE WITH SPEECH-LANGUAGE EXPERT. These are starting hypotheses, not clinical categories.
 #
 # Error taxonomy: substitution | omission | insertion | distortion
+# A flagged unit is matched against these categories by its label (the akshara text).
 
 vowel_length:
-  description: Short vs long vowel (e.g. අ / ආ, ඉ / ඊ, උ / ඌ, එ / ඒ, ඔ / ඕ)
-  pairs: [["අ", "ආ"], ["ඉ", "ඊ"], ["උ", "ඌ"], ["එ", "ඒ"], ["ඔ", "ඕ"]]
+  description: Long vowel said short (e.g. ආ -> අ, මා -> ම)
+  # Independent long vowels and long vowel signs (pili).
+  long_marks: ["ආ", "ඈ", "ඊ", "ඌ", "ඒ", "ඕ", "ා", "ෑ", "ී", "ූ", "ේ", "ෝ"]
+  rule: unit duration < short_ratio x expected -> distortion
   likely_error_type: distortion
+
+geminates:
+  description: Geminate (doubled) consonant said single, e.g. "අම්මා" -> "අමා"
+  # Detected as consonant + hal kirima (්) + the same consonant inside the unit label.
+  rule: unit duration < short_ratio x expected -> omission (of one consonant)
+  likely_error_type: omission
 
 aspiration:
   description: Unaspirated vs aspirated stops
   pairs: [["ක", "ඛ"], ["ග", "ඝ"], ["ච", "ඡ"], ["ජ", "ඣ"], ["ට", "ඨ"], ["ඩ", "ඪ"], ["ත", "ථ"], ["ද", "ධ"], ["ප", "ඵ"], ["බ", "භ"]]
+  rule: flagged unit containing one of these consonants -> substitution
   likely_error_type: substitution
 
 prenasalised_stops:
   description: Prenasalised stop vs plain voiced stop or nasal
   pairs: [["ඟ", "ග"], ["ඬ", "ඩ"], ["ඳ", "ද"], ["ඹ", "බ"]]
+  rule: flagged unit containing one of these consonants -> substitution
   likely_error_type: substitution
-
-geminates:
-  description: Geminate (doubled) vs single consonant, e.g. "අම්මා" vs "අමා"
-  likely_error_type: omission

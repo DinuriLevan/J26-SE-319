@@ -60,9 +60,15 @@ def setup(tmp_path_factory):
         ref_dir.mkdir(parents=True)
         for i, (spk, age, freqs, durs) in enumerate(spks):
             sf.write(ref_dir / f"{spk}.wav", tone_word(freqs, durs, seed=10 + i), 16000)
+            # w_002 refs get unit boundaries (one unit per tone; silence is trimmed on load).
+            t, units = 0.0, []
+            if word_id == "w_002":
+                for label, d in zip("cat", durs):
+                    units.append({"label": label, "start_s": t, "end_s": t + d})
+                    t += d
             (ref_dir / f"{spk}.json").write_text(
                 json.dumps(
-                    {"speaker_id": spk, "age_group": age, "accent": "standard", "units": []}
+                    {"speaker_id": spk, "age_group": age, "accent": "standard", "units": units}
                 ),
                 encoding="utf-8",
             )
@@ -136,6 +142,20 @@ def test_bank_mode_learned_range_rejects_wrong_middle_unit(client, make_tone_wor
     assert body["threshold_source"] == "bank"
     assert body["decision"] == "needs_remediation"
     assert body["score"] > body["threshold"]
+    # Localisation: the middle unit (the wrong tone) is flagged, with an error type.
+    segs = body["segments"]
+    assert [s["label"] for s in segs] == ["c", "a", "t"]
+    assert [s["label"] for s in segs if s["status"] == "flagged"][0] == "a"
+    flagged = [s for s in segs if s["status"] == "flagged"]
+    assert all(
+        s["error_type"] in {"substitution", "omission", "insertion", "distortion"} for s in flagged
+    )
+
+
+def test_accepted_attempt_has_no_segments(client, make_tone_word, to_wav_bytes):
+    wav = make_tone_word(WORD, [0.45, 0.5, 0.4], amp=0.6, seed=3)
+    body = _post(client, to_wav_bytes(wav), word_id="w_002", language="en").json()
+    assert body["decision"] == "accepted" and body["segments"] == []
 
 
 @pytest.mark.parametrize(

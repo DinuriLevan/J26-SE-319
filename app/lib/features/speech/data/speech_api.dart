@@ -4,6 +4,44 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/api_client.dart';
 import 'speech_words.dart';
 
+/// One unit (akshara / letter chunk) of the attempt, located on the child's timeline.
+/// Only present when the attempt was not accepted (see docs/api-contract.md).
+class SpeechSegment {
+  const SpeechSegment({
+    required this.label,
+    required this.startS,
+    required this.endS,
+    required this.flagged,
+    required this.cost,
+    this.errorType,
+  });
+
+  factory SpeechSegment.fromJson(Map<String, dynamic> json) => SpeechSegment(
+        label: json['label'] as String,
+        startS: (json['start_s'] as num).toDouble(),
+        endS: (json['end_s'] as num).toDouble(),
+        flagged: json['status'] == 'flagged',
+        cost: (json['cost'] as num).toDouble(),
+        errorType: json['error_type'] as String?,
+      );
+
+  final String label;
+  final double startS;
+  final double endS;
+  final bool flagged;
+  final double cost;
+
+  /// substitution | omission | insertion | distortion (only for flagged units).
+  final String? errorType;
+
+  Map<String, dynamic> toJson() => {
+        'label': label,
+        'flagged': flagged,
+        'cost': cost,
+        'error_type': errorType,
+      };
+}
+
 /// Response of POST /speech/assess (see docs/api-contract.md).
 class AssessResult {
   const AssessResult({
@@ -14,6 +52,7 @@ class AssessResult {
     required this.thresholdSource,
     required this.nearestVariant,
     required this.totalLatencyMs,
+    this.segments = const [],
   });
 
   factory AssessResult.fromJson(Map<String, dynamic> json) => AssessResult(
@@ -25,6 +64,10 @@ class AssessResult {
         nearestVariant: json['nearest_variant'] as String,
         totalLatencyMs:
             ((json['latency_ms'] as Map)['total'] as num).toDouble(),
+        segments: [
+          for (final s in (json['segments'] as List? ?? const []))
+            SpeechSegment.fromJson(s as Map<String, dynamic>),
+        ],
       );
 
   final String wordId;
@@ -34,6 +77,12 @@ class AssessResult {
   final String thresholdSource;
   final String nearestVariant;
   final double totalLatencyMs;
+  final List<SpeechSegment> segments;
+
+  /// Units to practise, worst first (empty when accepted).
+  List<SpeechSegment> get flaggedUnits =>
+      segments.where((s) => s.flagged).toList()
+        ..sort((a, b) => b.cost.compareTo(a.cost));
 
   Map<String, dynamic> toActivityPayload() => {
         'word_id': wordId,
@@ -42,6 +91,7 @@ class AssessResult {
         'threshold': threshold,
         'threshold_source': thresholdSource,
         'nearest_variant': nearestVariant,
+        'flagged_units': [for (final s in flaggedUnits) s.toJson()],
       };
 }
 

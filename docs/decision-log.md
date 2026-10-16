@@ -87,4 +87,13 @@ A running log of structural/technical decisions for the AkuRin shared foundation
 | Developer-only **reference recording mode** in the app (debug builds only) plus `POST /references` on the speech service (off unless `SPEECH_ALLOW_REFERENCE_UPLOAD=1`, **adults only**) | On a real phone, the owner's correct words scored 0.25–0.42 against a child-only bank (thresholds 0.18–0.28). Correct "cat" scored worse than a TTS "dog" (0.307), so no threshold could work. The bank must contain recordings made the way the app is used (single words, phone mic, varied speakers) |
 | The owner consented to storing **adult** voice recordings locally in gitignored `ml/speech/data/`; children's voices are never stored by this mode | Data/ethics guard rails. Nothing is committed |
 
+## 2026-10-16 — Speech component Stage 4: localisation + error mapping (Fernando B.P.L)
+
+| Decision | Rationale |
+|---|---|
+| Reference unit boundaries are **automatic now** (MMS forced alignment per unit, `scripts/align_units.py`, `units_source: "mms_fa"`), to be checked by ear later; hand-marked boundaries (`units_source: "manual"`) are never overwritten | Owner decision, so Stage 4 is not blocked on hand-marking about 100 clips |
+| **English units are letter chunks** (`c|a|t`, `s|k|y`, `sh|e`, `p|l|ay`), not IPA | Owner decision: the aligner can handle them and children can read them. English alignment confidence is low (median 0.03–0.19 per chunk), so English localisation is less reliable |
+| Localisation flags the worst unit, plus the second worst if its cost is ≥ 0.8 × the worst (placeholder). Error types are rule-based: duration vs expected (tempo-corrected) → omission/insertion; long vowel or geminate said short → distortion/omission; aspirated or prenasalised consonants → substitution; otherwise cost ≥ 0.5 → substitution, else distortion | Spec step 8. All ratios are placeholders, TO VALIDATE WITH SPEECH-LANGUAGE EXPERT |
+| Error-type thresholds are **not tuned** on the spliced dev study | Spliced errors are all substitutions by construction, so tuning on them would just push every label to "substitution". Needs real labelled errors |
+
 <!-- Add new entries below this line, newest at the bottom or top — pick one convention and stay consistent. -->

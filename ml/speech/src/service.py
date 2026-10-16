@@ -16,7 +16,7 @@ scoring.mode = "bank" (default): score against every reference of the word (mean
 and accept within the range learned from the bank itself (src/threshold.py); words with fewer than
 min_refs references use the config fallback (threshold_source = "fallback").
 scoring.mode = "single": Stage 1 baseline, one adult reference + fallback threshold.
-Segments (localisation) come in Stage 4.
+When an attempt is not accepted, `segments` locates the likely problem unit(s) (src/localise.py).
 """
 
 from __future__ import annotations
@@ -38,6 +38,7 @@ from src.audio import AudioValidationError, load_audio
 from src.bank import BankError, ReferenceBank
 from src.dtw_fast import dtw as fast_dtw
 from src.embed import Embedder, make_embedder
+from src.localise import localise_attempt
 from src.scoring import score_against_references
 from src.settings import DEFAULT_SETTINGS, load_settings
 from src.threshold import AcceptanceRange, acceptance_range
@@ -178,6 +179,15 @@ def create_app(
             )
             rng = word_range(word_id, refs)
             threshold, source = rng.threshold, rng.source
+        accepted = score <= threshold
+        segments = []
+        if not accepted and mode != "single":
+            by_id = {r["variant_id"]: r for r in refs}
+            best = next((x for x in results if by_id[x["variant_id"]].get("units")), None)
+            if best is not None:
+                segments = localise_attempt(
+                    child_emb, by_id[best["variant_id"]], best["path"], settings
+                )
         t3 = time.perf_counter()
 
         ms = lambda a, b: round((b - a) * 1000, 1)  # noqa: E731
@@ -185,12 +195,12 @@ def create_app(
         log.info("assess %s score=%.3f latency=%s", word_id, score, latency.model_dump())
         return AssessResponse(
             word_id=word_id,
-            decision="accepted" if score <= threshold else "needs_remediation",
+            decision="accepted" if accepted else "needs_remediation",
             score=round(score, 4),
             threshold=round(threshold, 4),
             threshold_source=source,
             nearest_variant=results[0]["variant_id"],
-            segments=[],
+            segments=segments,
             latency_ms=latency,
         )
 

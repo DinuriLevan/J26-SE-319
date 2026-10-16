@@ -50,7 +50,8 @@ class SpeechResultScreen extends StatelessWidget {
                 Text(
                   'score ${result.score.toStringAsFixed(3)} / threshold '
                   '${result.threshold.toStringAsFixed(3)} (${result.thresholdSource}) · '
-                  'ref ${result.nearestVariant} · ${result.totalLatencyMs.round()} ms',
+                  'ref ${result.nearestVariant} · ${result.totalLatencyMs.round()} ms'
+                  '${result.flaggedUnits.isEmpty ? '' : ' · flagged: ${result.flaggedUnits.map((u) => '${u.label} (${u.errorType})').join(', ')}'}',
                   style: theme.textTheme.bodySmall,
                   textAlign: TextAlign.center,
                 ),

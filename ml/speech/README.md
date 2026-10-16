@@ -63,7 +63,8 @@ built with `--embedder spectral`; the service refuses to start on a mismatch. Us
 | 1 Baseline | Done: single adult reference + fallback threshold; Flutter record → result |
 | 2 Layer sweep | Done: layer 9 chosen on dev children; truncated encoder verified and enabled |
 | 3 Bank + learned range | Done: multi-reference scoring, leave-one-out range, fallback; dev study vs single reference |
-| 4–7 | Not started |
+| 4 Localisation + errors | Done: automatic unit boundaries, unit flagging, rule-based error types; spliced-error dev study |
+| 5–7 | Not started |
 
 ## Child corpus (Stage 2)
 
@@ -79,6 +80,8 @@ python scripts/embed_corpus_words.py   # -> data/corpus/emb/<model>_l<layer>/*.n
 python eval/bank_study_dev.py [--loo token|speaker]   # -> eval/results/bank_study_dev[_loso].{csv,md}
 python scripts/build_demo_bank.py      # -> data/reference/<word_id>/<speaker>_tNN.{wav,json} (dev children only)
 python scripts/build_embeddings.py     # -> data/embeddings/ for the bank
+python scripts/align_units.py [--spotcheck 30]       # unit boundaries into every reference json
+python eval/localisation_study_dev.py [--children-only]  # -> eval/results/localisation_study_dev*.md
 ```
 
 ### Tested (automated)
@@ -126,6 +129,28 @@ Balanced accuracy (BA). "Bank regime" = trials whose bank has ≥ 4 references (
 Honest reading: the bank needs no tuned threshold yet matches an in-sample-tuned single reference on
 near-misses. It does not clearly beat it, and it is behind on random wrong words. These numbers are from
 4 children, a proxy task (different words, not real mispronunciations), and child-only references.
+
+- `tests/test_localise.py`: unit frames tile the reference (min frames, ordering); error rules
+  (omission, insertion, cost-based, geminate and long vowel said short, aspirated stop); on synthetic
+  prototypes the wrong middle or first unit is flagged, and a skipped unit is flagged as omission.
+- `tests/test_service.py`: a rejected attempt returns segments with the wrong middle unit flagged;
+  an accepted attempt returns none.
+
+### Stage 4 dev study (2026-10-16, spliced errors in dev children's references, LOSO banks)
+One unit of a dev child's reference is replaced by a unit from a different word; we check which unit is flagged.
+
+| Bank | detected | right unit top flag | right unit among flags | clean accepted |
+|---|---|---|---|---|
+| children + adult_01 app recordings | 0.578 | 0.740 | 0.904 | 0.936 |
+| children only | 0.756 | 0.743 | 0.934 | 0.923 |
+
+- Localisation meets the ≥ 70% target on this proxy (Sinhala 0.84 top-1; English 0.58–0.65, which
+  matches its weak letter alignment).
+- **One adult's many takes loosen a word's threshold**: sky caught 0/30 spliced errors with adult_01's
+  7 takes in the bank vs 20/30 without them. More adult speakers (so adult takes have peers) should fix
+  this. Otherwise consider a robust range (median/MAD), which would need approval.
+- **Error types are not calibrated**: spliced units are substitutions, but 88% were labelled distortion
+  (`substitution_cost` 0.5 is too high). Needs real labelled errors.
 
 ### Verified manually (2026-10-14, desktop CPU, not a target device)
 - Real XLS-R layer 12 run on Windows TTS voices (David = reference; Hazel/Zira = probes; 5 English words):

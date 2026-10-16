@@ -69,8 +69,9 @@ Errors return `{"detail": "..."}` with one of these statuses:
 | `503` | The speech service is down, or the word has no reference recordings yet |
 | `502` | Any other speech service error |
 
-**Current stage (Stage 3):**
-- Scoring uses every reference recording of the word. `threshold_source` is `"bank"` when the word has at least 4 references (the range is learned from them) and `"fallback"` otherwise. `segments` is always `[]` until Stage 4.
+**Current stage (Stage 4):**
+- Scoring uses every reference recording of the word. `threshold_source` is `"bank"` when the word has at least 4 references (the range is learned from them) and `"fallback"` otherwise.
+- `segments` is `[]` when the attempt is accepted. Otherwise it lists every unit of the word (Sinhala akshara, English letter chunks such as `c|a|t`) on the child's timeline. The worst unit, and the second worst if close, has `status: "flagged"` and an `error_type`. Error types are rule-based and not yet validated.
 - The endpoint is stateless. The app records each scored word through the shared offline queue (`component_name: "speech"`, `activity_id: "speech_word:<word_id>"`).
 
 The internal speech service (`ml/speech`, port 8001) exposes `POST /assess` (the same fields without `child_id`) and `GET /health`. Its interactive docs are at `http://localhost:8001/docs`.
