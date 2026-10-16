@@ -22,6 +22,7 @@ If this file and the live spec ever disagree, the live spec wins — update this
 | `GET` | `/rewards/{child_id}` | Get a child's unlocked reward cards |
 | `POST` | `/rewards/{child_id}/unlock` | Unlock a reward card for a child |
 | `POST` | `/speech/assess` | Speech component: score one spoken word (multipart; proxied to the speech inference service). See below |
+| `POST` | `/speech/references` | **Developer tool**, speech: add an **adult** reference recording to the bank. The speech service returns 404 unless started with `SPEECH_ALLOW_REFERENCE_UPLOAD=1`, and 422 for any `age_group` other than `adult`. Fields: `audio`, `word_id`, `language`, `speaker_id` (`[a-z0-9_]{1,32}`), `age_group`, `accent`. No child id |
 
 ## Auth
 

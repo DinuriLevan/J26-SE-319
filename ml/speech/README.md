@@ -38,6 +38,13 @@ python -m black --check .
    the service at `http://host.docker.internal:8001`; override this with `SPEECH_SERVICE_URL`.
 5. App: `flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000`, then open the Speech tab.
 
+**Adding adult references from the phone (developer tool):** start the service with
+`SPEECH_ALLOW_REFERENCE_UPLOAD=1`. In a debug build, open a word and tap the "library" icon at the top
+right, enter a speaker id (e.g. `adult_01`, a different id per person), and record the word. A banner
+shows that recordings are being saved as references, not scored. Each save relearns that word's
+threshold. Adults only: the service rejects any other `age_group`. Test with a *different* person than
+the one who recorded the references, or you are matching your own voice.
+
 `SPEECH_EMBEDDER=spectral` runs the service with the model-free stand-in embedder. The bank must then be
 built with `--embedder spectral`; the service refuses to start on a mismatch. Use it for development only.
 
@@ -127,6 +134,13 @@ near-misses. It does not clearly beat it, and it is behind on random wrong words
   **With the 0.30 fallback, "dog" was accepted as *cat* (0.216) and "fish" as *sun* (0.233).**
   Correct words scored 0.10–0.23. The placeholder threshold is far too lenient for XLS-R, and a single
   TTS reference gives no clean gap.
+
+### Found on a real phone (2026-10-16, Samsung SM-A176B)
+- Against the child-only demo bank, the owner's correct words all scored above threshold (cat 0.36–0.42 vs
+  0.282; sky 0.39–0.41 vs 0.210; she 0.253 vs 0.183; මට 0.412 vs 0.194), so every attempt got "Nice try".
+  Correct "cat" scored worse than a TTS "dog" (0.307), so this is a reference-coverage problem
+  (child voices cut from read sentences, different device), not a threshold problem.
+  Fix in progress: adult phone references via the developer recording mode.
 
 ### UNTESTED / placeholders
 - **The Flutter record screen with real speech.** On the Pixel 7 Pro emulator (2026-10-14) I verified:

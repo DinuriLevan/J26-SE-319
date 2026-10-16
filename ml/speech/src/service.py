@@ -1,13 +1,16 @@
 """Speech assessment inference service.
 
-    POST /assess   multipart: audio (WAV), word_id, language (si|en)
+    POST /assess      multipart: audio (WAV), word_id, language (si|en)
     GET  /health
+    POST /references  developer tool, OFF unless SPEECH_ALLOW_REFERENCE_UPLOAD=1: add an ADULT
+                      reference recording (audio, word_id, language, speaker_id, age_group, accent)
 
 Run (from ml/speech):
     uvicorn src.service:app --port 8001
 Environment:
     SPEECH_EMBEDDER   xlsr (default) | spectral (model-free stand-in, dev/tests only)
     SPEECH_SETTINGS   path to settings.yaml (default config/settings.yaml)
+    SPEECH_ALLOW_REFERENCE_UPLOAD  1 to enable POST /references (dev only; adults only)
 
 scoring.mode = "bank" (default): score against every reference of the word (mean of the k nearest)
 and accept within the range learned from the bank itself (src/threshold.py); words with fewer than
@@ -18,13 +21,16 @@ Segments (localisation) come in Stage 4.
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import time
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 from typing import Literal
 
 import numpy as np
+import soundfile as sf
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel
 
@@ -66,14 +72,28 @@ class AssessResponse(BaseModel):
     latency_ms: Latency
 
 
-def create_app(settings: dict, embedder: Embedder, bank: ReferenceBank) -> FastAPI:
+class ReferenceResponse(BaseModel):
+    word_id: str
+    ref_id: str
+    n_refs: int
+    n_speakers: int
+    threshold: float
+    threshold_source: Literal["bank", "fallback"]
+
+
+def create_app(
+    settings: dict,
+    embedder: Embedder,
+    bank: ReferenceBank,
+    allow_reference_upload: bool = False,
+) -> FastAPI:
     bank.check_embedder(embedder.name)
     sc = settings["scoring"]
     mode = sc.get("mode", "bank")
     ranges: dict[str, AcceptanceRange] = {}
 
     def word_range(word_id: str, refs: list[dict]) -> AcceptanceRange:
-        # The bank is fixed while the service runs, so each word's range is computed once.
+        # Computed once per word; POST /references drops the cached range when it adds a reference.
         if word_id not in ranges:
             ranges[word_id] = acceptance_range(
                 refs,
@@ -108,24 +128,18 @@ def create_app(settings: dict, embedder: Embedder, bank: ReferenceBank) -> FastA
     def health() -> dict[str, str]:
         return {"status": "ok", "embedder": embedder.name}
 
-    @app.post("/assess", response_model=AssessResponse)
-    def assess(
-        audio: UploadFile = File(...),
-        word_id: str = Form(...),
-        language: Literal["si", "en"] = Form(...),
-    ) -> AssessResponse:
-        t0 = time.perf_counter()
+    def read_word_audio(audio: UploadFile, word_id: str, language: str) -> np.ndarray:
+        """Validate the word and the upload; return trimmed 16 kHz mono audio (4xx on bad input)."""
         word = bank.words.get(word_id)
         if word is None:
             raise HTTPException(404, f"Unknown word_id {word_id!r}.")
         if word["language"] != language:
             raise HTTPException(422, f"{word_id} is a {word['language']!r} word, not {language!r}.")
-
         raw = audio.file.read(settings["service"]["max_upload_bytes"] + 1)
         if len(raw) > settings["service"]["max_upload_bytes"]:
             raise HTTPException(413, "Audio file is too large.")
         try:
-            wav = load_audio(
+            return load_audio(
                 raw,
                 target_sr=audio_cfg["sample_rate"],
                 max_duration_s=audio_cfg["max_duration_s"],
@@ -133,6 +147,15 @@ def create_app(settings: dict, embedder: Embedder, bank: ReferenceBank) -> FastA
             )
         except AudioValidationError as exc:
             raise HTTPException(400, str(exc)) from exc
+
+    @app.post("/assess", response_model=AssessResponse)
+    def assess(
+        audio: UploadFile = File(...),
+        word_id: str = Form(...),
+        language: Literal["si", "en"] = Form(...),
+    ) -> AssessResponse:
+        t0 = time.perf_counter()
+        wav = read_word_audio(audio, word_id, language)
         t1 = time.perf_counter()
 
         child_emb = embedder.embed(wav)
@@ -171,6 +194,61 @@ def create_app(settings: dict, embedder: Embedder, bank: ReferenceBank) -> FastA
             latency_ms=latency,
         )
 
+    if allow_reference_upload:
+
+        @app.post("/references", response_model=ReferenceResponse)
+        def add_reference(
+            audio: UploadFile = File(...),
+            word_id: str = Form(...),
+            language: Literal["si", "en"] = Form(...),
+            speaker_id: str = Form(..., pattern=r"^[a-z0-9_]{1,32}$"),
+            age_group: str = Form(...),
+            accent: str = Form("unknown", max_length=40),
+        ) -> ReferenceResponse:
+            """Developer tool: add an ADULT reference recording to the bank (off by default).
+            Children's voices are never stored through this endpoint."""
+            if age_group != "adult":
+                raise HTTPException(422, "Only adult reference recordings can be added here.")
+            wav = read_word_audio(audio, word_id, language)
+            ref_dir = bank.reference_dir / word_id
+            emb_dir = bank.embeddings_dir / word_id
+            ref_dir.mkdir(parents=True, exist_ok=True)
+            emb_dir.mkdir(parents=True, exist_ok=True)
+            n = len(list(ref_dir.glob(f"{speaker_id}_p*.json"))) + 1
+            ref_id = f"{speaker_id}_p{n:02d}"
+            sf.write(ref_dir / f"{ref_id}.wav", wav, audio_cfg["sample_rate"])
+            np.save(emb_dir / f"{ref_id}.npy", embedder.embed(wav))
+            meta = {
+                "speaker_id": speaker_id,
+                "age_group": "adult",
+                "accent": accent,
+                "source": "app_recording",
+                "recorded_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                "units": [],
+            }
+            (ref_dir / f"{ref_id}.json").write_text(
+                json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+            ranges.pop(word_id, None)  # the bank changed: relearn this word's range
+            refs = bank.reference_set(word_id)
+            r = word_range(word_id, refs)
+            log.info(
+                "reference %s/%s added: %d refs, threshold %.3f (%s)",
+                word_id,
+                ref_id,
+                r.n_refs,
+                r.threshold,
+                r.source,
+            )
+            return ReferenceResponse(
+                word_id=word_id,
+                ref_id=ref_id,
+                n_refs=r.n_refs,
+                n_speakers=len({x["speaker"] for x in refs}),
+                threshold=round(r.threshold, 4),
+                threshold_source=r.source,
+            )
+
     return app
 
 
@@ -178,7 +256,10 @@ def _app_from_env() -> FastAPI:
     logging.basicConfig(level=logging.INFO)
     settings = load_settings(os.environ.get("SPEECH_SETTINGS", DEFAULT_SETTINGS))
     embedder = make_embedder(os.environ.get("SPEECH_EMBEDDER", "xlsr"), settings)
-    return create_app(settings, embedder, ReferenceBank.from_settings(settings))
+    allow = os.environ.get("SPEECH_ALLOW_REFERENCE_UPLOAD") == "1"
+    if allow:
+        log.warning("POST /references is ENABLED (developer tool, adult recordings only)")
+    return create_app(settings, embedder, ReferenceBank.from_settings(settings), allow)
 
 
 def __getattr__(name: str):

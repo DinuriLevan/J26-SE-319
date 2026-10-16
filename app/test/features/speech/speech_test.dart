@@ -94,6 +94,19 @@ void main() {
     });
   });
 
+  test('addReference sends adult-only dev fields and no child id', () async {
+    final adapter = _FakeAdapter(200, {'ref_id': 'adult_01_p01', 'n_refs': 9});
+    final r = await apiWith(adapter)
+        .addReference(audioPath: wavPath, word: word, speakerId: 'adult_01');
+    expect(r['ref_id'], 'adult_01_p01');
+    expect(adapter.lastRequest!.path, '/speech/references');
+    final fields =
+        Map.fromEntries((adapter.lastRequest!.data as FormData).fields);
+    expect(fields['age_group'], 'adult');
+    expect(fields['speaker_id'], 'adult_01');
+    expect(fields.containsKey('child_id'), isFalse);
+  });
+
   group('SpeechResultScreen', () {
     Future<void> pump(WidgetTester tester,
         {required bool accepted, required String lang}) {

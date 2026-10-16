@@ -86,3 +86,29 @@ def test_bad_child_id_or_language_rejected_before_proxy():
     client = _client_with(handler)
     assert _post(client, child_id="not-a-uuid").status_code == 422
     assert _post(client, language="fr").status_code == 422
+
+
+def test_references_forwards_dev_fields_and_never_child_id():
+    seen = {}
+
+    def handler(request: httpx.Request):
+        seen["path"], seen["body"] = request.url.path, request.content
+        return httpx.Response(200, json={"word_id": "w_001", "ref_id": "adult_01_p01"})
+
+    r = _client_with(handler).post(
+        "/speech/references",
+        files={"audio": ("a.wav", b"RIFF..", "audio/wav")},
+        data={"word_id": "w_001", "language": "en", "speaker_id": "adult_01", "age_group": "adult"},
+    )
+    assert r.status_code == 200 and r.json()["ref_id"] == "adult_01_p01"
+    assert seen["path"] == "/references"
+    assert b"adult_01" in seen["body"] and b"child_id" not in seen["body"]
+
+
+def test_references_disabled_on_service_is_passed_through():
+    r = _client_with(lambda req: httpx.Response(404, json={"detail": "Not Found"})).post(
+        "/speech/references",
+        files={"audio": ("a.wav", b"RIFF..", "audio/wav")},
+        data={"word_id": "w_001", "language": "en", "speaker_id": "adult_01", "age_group": "adult"},
+    )
+    assert r.status_code == 404

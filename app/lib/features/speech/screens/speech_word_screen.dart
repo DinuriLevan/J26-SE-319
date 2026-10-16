@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -33,6 +34,10 @@ class _SpeechWordScreenState extends ConsumerState<SpeechWordScreen> {
   String? _message;
   bool _offerSettings = false;
   Timer? _autoStop;
+
+  /// Debug builds only: when set, recordings are saved as adult references for this speaker
+  /// instead of being scored (see _toggleReferenceMode). Always null in release builds.
+  String? _refSpeaker;
 
   SpeechWord get _word => speechDemoWords[_index];
 
@@ -90,6 +95,11 @@ class _SpeechWordScreenState extends ConsumerState<SpeechWordScreen> {
       return;
     }
 
+    if (_refSpeaker != null) {
+      await _saveReference(path, _refSpeaker!);
+      return;
+    }
+
     try {
       final result = await ref.read(speechApiProvider).assess(
             audioPath: path,
@@ -122,6 +132,66 @@ class _SpeechWordScreenState extends ConsumerState<SpeechWordScreen> {
     }
   }
 
+  /// DEVELOPER TOOL: upload the recording as an adult reference instead of scoring it.
+  Future<void> _saveReference(String path, String speakerId) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final r = await ref.read(speechApiProvider).addReference(
+            audioPath: path,
+            word: _word,
+            speakerId: speakerId,
+          );
+      messenger.showSnackBar(SnackBar(
+        content: Text('Saved ${r['ref_id']} · ${r['n_refs']} refs from '
+            '${r['n_speakers']} speakers · threshold ${r['threshold']} '
+            '(${r['threshold_source']})'),
+      ));
+    } on AssessException catch (e) {
+      messenger.showSnackBar(SnackBar(
+        content: Text('Reference not saved: ${e.detail ?? e.failure.name}'),
+      ));
+    } finally {
+      final file = File(path);
+      if (await file.exists()) await file.delete();
+      if (mounted) setState(() => _phase = _Phase.idle);
+    }
+  }
+
+  /// DEVELOPER TOOL: switch reference-recording mode on (asks for the adult speaker id) or off.
+  Future<void> _toggleReferenceMode() async {
+    if (_refSpeaker != null) {
+      setState(() => _refSpeaker = null);
+      return;
+    }
+    final controller = TextEditingController(text: 'adult_01');
+    final speaker = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Record adult references (dev)'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: 'Speaker id (a-z, 0-9, _)',
+            helperText: 'Adults only. Use a different id for each person.',
+          ),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel')),
+          FilledButton(
+              onPressed: () => Navigator.pop(context, controller.text.trim()),
+              child: const Text('Start')),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (speaker == null || !RegExp(r'^[a-z0-9_]{1,32}$').hasMatch(speaker)) {
+      return;
+    }
+    if (mounted) setState(() => _refSpeaker = speaker);
+  }
+
   /// One shared ActivityResult per scored word, via the offline queue (docs/CONTRIBUTING.md).
   Future<void> _recordActivity(String childId, AssessResult result) async {
     await ref.read(appDatabaseProvider).pendingActivityResultDao.enqueue(
@@ -143,13 +213,36 @@ class _SpeechWordScreenState extends ConsumerState<SpeechWordScreen> {
     final recording = _phase == _Phase.recording;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.speechTitle)),
+      appBar: AppBar(
+        title: Text(l10n.speechTitle),
+        actions: [
+          if (kDebugMode)
+            IconButton(
+              tooltip: 'Record adult references (dev)',
+              icon: Icon(_refSpeaker == null
+                  ? Icons.library_add_outlined
+                  : Icons.library_add_check),
+              onPressed: _phase == _Phase.idle ? _toggleReferenceMode : null,
+            ),
+        ],
+      ),
       body: SafeArea(
         child: Container(
           width: double.infinity, // centre content across the full screen width
           padding: const EdgeInsets.all(24),
           child: Column(
             children: [
+              if (_refSpeaker != null)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(8),
+                  color: Colors.orange.shade100,
+                  child: Text(
+                    'DEV: recordings are saved as adult references for '
+                    '"$_refSpeaker", not scored.',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
               const Spacer(),
               Text(_word.text,
                   style: theme.textTheme.displayMedium,

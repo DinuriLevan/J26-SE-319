@@ -84,18 +84,52 @@ class SpeechApi {
       );
       return AssessResult.fromJson(resp.data!);
     } on DioException catch (e) {
-      final status = e.response?.statusCode;
-      final detail = e.response?.data is Map
-          ? (e.response!.data as Map)['detail']?.toString()
-          : null;
-      if (status == 400) {
-        throw AssessException(AssessFailure.couldNotHear, detail);
-      }
-      if (status == null || status == 503) {
-        throw AssessException(AssessFailure.unreachable, detail);
-      }
-      throw AssessException(AssessFailure.other, detail ?? 'HTTP $status');
+      throw _failure(e);
     }
+  }
+
+  /// DEVELOPER TOOL (debug builds only): add an ADULT reference recording of [word] to the
+  /// bank. The service rejects it unless started with SPEECH_ALLOW_REFERENCE_UPLOAD=1, and it
+  /// never accepts children's recordings. No child id is sent.
+  Future<Map<String, dynamic>> addReference({
+    required String audioPath,
+    required SpeechWord word,
+    required String speakerId,
+    String accent = 'unknown',
+  }) async {
+    final form = FormData.fromMap({
+      'audio':
+          await MultipartFile.fromFile(audioPath, filename: 'reference.wav'),
+      'word_id': word.id,
+      'language': word.language,
+      'speaker_id': speakerId,
+      'age_group': 'adult',
+      'accent': accent,
+    });
+    try {
+      final resp = await _dio.post<Map<String, dynamic>>(
+        '/speech/references',
+        data: form,
+        options: Options(receiveTimeout: const Duration(seconds: 20)),
+      );
+      return resp.data!;
+    } on DioException catch (e) {
+      throw _failure(e);
+    }
+  }
+
+  AssessException _failure(DioException e) {
+    final status = e.response?.statusCode;
+    final detail = e.response?.data is Map
+        ? (e.response!.data as Map)['detail']?.toString()
+        : null;
+    if (status == 400) {
+      return AssessException(AssessFailure.couldNotHear, detail);
+    }
+    if (status == null || status == 503) {
+      return AssessException(AssessFailure.unreachable, detail);
+    }
+    return AssessException(AssessFailure.other, detail ?? 'HTTP $status');
   }
 }
 

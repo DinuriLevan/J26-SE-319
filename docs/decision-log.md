@@ -80,4 +80,11 @@ A running log of structural/technical decisions for the AkuRin shared foundation
 | Bank files are named by **recording id** (`<speaker>_t<NN>`); the json's `speaker_id` identifies the speaker | Lets a speaker contribute several takes of a word, which speaker-level leave-one-out needs. Banks with one recording per speaker (`<speaker_id>.wav`) still work unchanged |
 | The live service uses the numba DTW | Proven identical to `scoring.dtw` (`tests/test_dtw_fast.py`) and much faster for k-nearest over a bank |
 
+## 2026-10-16 — Speech: adult references recorded in the app (Fernando B.P.L)
+
+| Decision | Rationale |
+|---|---|
+| Developer-only **reference recording mode** in the app (debug builds only) plus `POST /references` on the speech service (off unless `SPEECH_ALLOW_REFERENCE_UPLOAD=1`, **adults only**) | On a real phone, the owner's correct words scored 0.25–0.42 against a child-only bank (thresholds 0.18–0.28). Correct "cat" scored worse than a TTS "dog" (0.307), so no threshold could work. The bank must contain recordings made the way the app is used (single words, phone mic, varied speakers) |
+| The owner consented to storing **adult** voice recordings locally in gitignored `ml/speech/data/`; children's voices are never stored by this mode | Data/ethics guard rails. Nothing is committed |
+
 <!-- Add new entries below this line, newest at the bottom or top — pick one convention and stay consistent. -->
