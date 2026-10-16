@@ -12,6 +12,7 @@ backend/.venv/
 backend/venv/
 backend/.pytest_cache/
 
+
 # --- Flutter / app ---
 app/.dart_tool/
 app/.flutter-plugins
@@ -34,3 +35,7 @@ app/*.freezed.dart
 
 # --- Docker ---
 pgdata/
+
+
+ml/handwriting/datasets/processed/
+ml/handwriting/datasets/raw/
