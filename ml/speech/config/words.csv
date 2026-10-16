@@ -1,6 +1,9 @@
 word_id,text_si,text_en,language,grade,units
-w_001,කමල,,si,2,ක|ම|ල
-w_002,අම්මා,,si,2,අ|ම්මා
-w_003,පාසල,,si,3,පා|ස|ල
-w_004,,cat,en,2,k|æ|t
-w_005,,sun,en,2,s|ʌ|n
+w_001,අම්මා,,si,2,අ|ම්මා
+w_002,මම,,si,2,ම|ම
+w_003,අපි,,si,2,අ|පි
+w_004,මට,,si,2,ම|ට
+w_005,,cat,en,2,k|æ|t
+w_006,,sky,en,2,s|k|aɪ
+w_007,,she,en,2,ʃ|iː
+w_008,,play,en,2,p|l|eɪ

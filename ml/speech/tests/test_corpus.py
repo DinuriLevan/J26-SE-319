@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 import soundfile as sf
 
-from src.splits import TestSplitLeakError, assert_dev_only
+from src.splits import SplitLeakError, assert_dev_only
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from build_child_corpus import ZWJ, index_corpus, normalise_text  # noqa: E402
@@ -14,7 +14,7 @@ from layer_sweep import build_pairs, select_tokens  # noqa: E402
 
 def test_assert_dev_only():
     assert_dev_only(["dev", "dev"], "x")
-    with pytest.raises(TestSplitLeakError, match="dev data only"):
+    with pytest.raises(SplitLeakError, match="dev data only"):
         assert_dev_only(["dev", "test"], "Threshold tuning")
 
 

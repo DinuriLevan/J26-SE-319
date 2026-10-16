@@ -1,7 +1,7 @@
 """Reference bank access: words.csv, reference/<word_id>/<speaker_id>.json, embeddings/*.npy.
 
-Stage 1 only needs a single baseline reference per word. The multi-reference bank and its
-learned acceptance range are added in Stage 3.
+reference_set() returns every reference of a word (the multi-reference bank, Stage 3);
+baseline_reference() returns the single adult reference used by the Stage 1 baseline.
 """
 
 from __future__ import annotations
@@ -48,16 +48,36 @@ class ReferenceBank:
             )
 
     def references(self, word_id: str) -> list[dict[str, Any]]:
-        """Metadata of every reference that has an embedding, sorted by speaker_id."""
+        """Metadata of every reference that has an embedding, sorted by recording id.
+
+        The recording id ("ref_id") is the file stem. It equals speaker_id when a speaker has one
+        recording of the word; several takes by one speaker use distinct stems (g3_s1_t01, ...).
+        """
         out = []
         for meta_path in sorted((self.reference_dir / word_id).glob("*.json")):
             meta = json.loads(meta_path.read_text(encoding="utf-8"))
-            if (self.embeddings_dir / word_id / f"{meta['speaker_id']}.npy").exists():
+            meta["ref_id"] = meta_path.stem
+            if (self.embeddings_dir / word_id / f"{meta_path.stem}.npy").exists():
                 out.append(meta)
         return out
 
-    def embedding(self, word_id: str, speaker_id: str) -> np.ndarray:
-        return np.load(self.embeddings_dir / word_id / f"{speaker_id}.npy")
+    def embedding(self, word_id: str, ref_id: str) -> np.ndarray:
+        return np.load(self.embeddings_dir / word_id / f"{ref_id}.npy")
+
+    def reference_set(self, word_id: str) -> list[dict[str, Any]]:
+        """Every reference of the word with its embedding, in the shape scoring expects."""
+        out = []
+        for meta in self.references(word_id):
+            out.append(
+                {
+                    "emb": self.embedding(word_id, meta["ref_id"]),
+                    "age_group": meta.get("age_group"),
+                    "variant_id": meta["ref_id"],
+                    "speaker": meta["speaker_id"],
+                    "units": meta.get("units", []),
+                }
+            )
+        return out
 
     def baseline_reference(self, word_id: str, speaker_id: str | None = None) -> dict[str, Any]:
         """The single adult reference used by the Stage 1 baseline (configured, else first adult)."""
@@ -69,5 +89,5 @@ class ReferenceBank:
         if not refs:
             raise BankError(f"No adult reference recording for {word_id}.")
         ref = dict(refs[0])
-        ref["emb"] = self.embedding(word_id, ref["speaker_id"])
+        ref["emb"] = self.embedding(word_id, ref["ref_id"])
         return ref

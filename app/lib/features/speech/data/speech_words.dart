@@ -10,11 +10,15 @@ class SpeechWord {
   final String language;
 }
 
-/// Stage 1 demo list. Moves to a bundled/synced word list when the offline queue lands (Stage 6).
+/// Demo list (Stage 3): frequent words from the child recordings, each with a reference bank of
+/// 6-14 child recordings. Moves to a bundled/synced word list with the offline queue (Stage 6).
 const speechDemoWords = [
-  SpeechWord(id: 'w_001', text: 'කමල', language: 'si'),
-  SpeechWord(id: 'w_002', text: 'අම්මා', language: 'si'),
-  SpeechWord(id: 'w_003', text: 'පාසල', language: 'si'),
-  SpeechWord(id: 'w_004', text: 'cat', language: 'en'),
-  SpeechWord(id: 'w_005', text: 'sun', language: 'en'),
+  SpeechWord(id: 'w_001', text: 'අම්මා', language: 'si'),
+  SpeechWord(id: 'w_002', text: 'මම', language: 'si'),
+  SpeechWord(id: 'w_003', text: 'අපි', language: 'si'),
+  SpeechWord(id: 'w_004', text: 'මට', language: 'si'),
+  SpeechWord(id: 'w_005', text: 'cat', language: 'en'),
+  SpeechWord(id: 'w_006', text: 'sky', language: 'en'),
+  SpeechWord(id: 'w_007', text: 'she', language: 'en'),
+  SpeechWord(id: 'w_008', text: 'play', language: 'en'),
 ];

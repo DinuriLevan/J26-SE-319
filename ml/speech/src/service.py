@@ -9,8 +9,11 @@ Environment:
     SPEECH_EMBEDDER   xlsr (default) | spectral (model-free stand-in, dev/tests only)
     SPEECH_SETTINGS   path to settings.yaml (default config/settings.yaml)
 
-Stage 1: scores against ONE adult reference with the fallback threshold from config.
-The multi-reference bank, learned range and segments come in Stages 3-4.
+scoring.mode = "bank" (default): score against every reference of the word (mean of the k nearest)
+and accept within the range learned from the bank itself (src/threshold.py); words with fewer than
+min_refs references use the config fallback (threshold_source = "fallback").
+scoring.mode = "single": Stage 1 baseline, one adult reference + fallback threshold.
+Segments (localisation) come in Stage 4.
 """
 
 from __future__ import annotations
@@ -27,9 +30,11 @@ from pydantic import BaseModel
 
 from src.audio import AudioValidationError, load_audio
 from src.bank import BankError, ReferenceBank
+from src.dtw_fast import dtw as fast_dtw
 from src.embed import Embedder, make_embedder
 from src.scoring import score_against_references
 from src.settings import DEFAULT_SETTINGS, load_settings
+from src.threshold import AcceptanceRange, acceptance_range
 
 log = logging.getLogger("speech.service")
 
@@ -63,12 +68,37 @@ class AssessResponse(BaseModel):
 
 def create_app(settings: dict, embedder: Embedder, bank: ReferenceBank) -> FastAPI:
     bank.check_embedder(embedder.name)
+    sc = settings["scoring"]
+    mode = sc.get("mode", "bank")
+    ranges: dict[str, AcceptanceRange] = {}
+
+    def word_range(word_id: str, refs: list[dict]) -> AcceptanceRange:
+        # The bank is fixed while the service runs, so each word's range is computed once.
+        if word_id not in ranges:
+            ranges[word_id] = acceptance_range(
+                refs,
+                k=sc["k_nearest"],
+                n_std=sc["n_std"],
+                min_refs=sc["min_refs_for_bank_threshold"],
+                fallback=sc["fallback_threshold"],
+                dtw_fn=fast_dtw,
+                loo_unit=sc.get("loo_unit", "token"),
+            )
+        return ranges[word_id]
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         t = time.perf_counter()
         embedder.embed(np.random.default_rng(0).normal(scale=0.1, size=16000).astype(np.float32))
         log.info("warm-up inference %.0f ms (%s)", (time.perf_counter() - t) * 1000, embedder.name)
+        if mode == "bank":
+            for word_id in bank.words:
+                refs = bank.reference_set(word_id)
+                if refs:
+                    r = word_range(word_id, refs)
+                    log.info(
+                        "%s: %d refs, threshold %.3f (%s)", word_id, r.n_refs, r.threshold, r.source
+                    )
         yield
 
     app = FastAPI(title="AkuRin speech assessment", version="0.1.0", lifespan=lifespan)
@@ -108,15 +138,25 @@ def create_app(settings: dict, embedder: Embedder, bank: ReferenceBank) -> FastA
         child_emb = embedder.embed(wav)
         t2 = time.perf_counter()
 
-        try:
-            ref = bank.baseline_reference(word_id, settings["baseline"]["reference_speaker"])
-        except BankError as exc:
-            raise HTTPException(503, str(exc)) from exc
-        refs = [{"emb": ref["emb"], "age_group": ref["age_group"], "variant_id": ref["speaker_id"]}]
-        score, results = score_against_references(child_emb, refs, k=1)
+        if mode == "single":
+            try:
+                ref = bank.baseline_reference(word_id, settings["baseline"]["reference_speaker"])
+            except BankError as exc:
+                raise HTTPException(503, str(exc)) from exc
+            refs = [{"emb": ref["emb"], "age_group": ref["age_group"], "variant_id": ref["ref_id"]}]
+            score, results = score_against_references(child_emb, refs, k=1, dtw_fn=fast_dtw)
+            threshold, source = float(sc["fallback_threshold"]), "fallback"
+        else:
+            refs = bank.reference_set(word_id)
+            if not refs:
+                raise HTTPException(503, f"No reference recordings for {word_id} yet.")
+            score, results = score_against_references(
+                child_emb, refs, k=sc["k_nearest"], dtw_fn=fast_dtw
+            )
+            rng = word_range(word_id, refs)
+            threshold, source = rng.threshold, rng.source
         t3 = time.perf_counter()
 
-        threshold = float(settings["scoring"]["fallback_threshold"])
         ms = lambda a, b: round((b - a) * 1000, 1)  # noqa: E731
         latency = Latency(load=ms(t0, t1), embed=ms(t1, t2), dtw=ms(t2, t3), total=ms(t0, t3))
         log.info("assess %s score=%.3f latency=%s", word_id, score, latency.model_dump())
@@ -124,8 +164,8 @@ def create_app(settings: dict, embedder: Embedder, bank: ReferenceBank) -> FastA
             word_id=word_id,
             decision="accepted" if score <= threshold else "needs_remediation",
             score=round(score, 4),
-            threshold=threshold,
-            threshold_source="fallback",
+            threshold=round(threshold, 4),
+            threshold_source=source,
             nearest_variant=results[0]["variant_id"],
             segments=[],
             latency_ms=latency,

@@ -69,4 +69,15 @@ A running log of structural/technical decisions for the AkuRin shared foundation
 | **Truncated encoder enabled** (keep `layer + 1` = 10 of 24 transformer layers) | `np.allclose` against the full model's `hidden_states[layer]` on 5 dev clips: max abs diff 0.0 at layers 1/6/9/12/18/23. A naive cut to `layer` layers differs by up to ~500 because XLS-R applies its final layer norm only to the last output. Layer 9 runs 2.0× faster |
 | numba-JIT DTW (`src/dtw_fast.py`) for bulk evaluation | Identical costs and paths to the reference `scoring.dtw`, including ties (tested); ~160× faster. The live service still uses the reference implementation |
 
+## 2026-10-15 — Speech component Stage 3: multi-reference bank + learned range (Fernando B.P.L)
+
+| Decision | Rationale |
+|---|---|
+| The service scores against **every reference** of a word (mean of k = 3 nearest) and accepts within a range **learned from the bank** (leave-one-out mean + 2·std). With fewer than 4 references it uses the fallback and reports `threshold_source: "fallback"` | Spec method (`src/threshold.py`). `scoring.mode: single` keeps the Stage 1 baseline available for comparison |
+| `fallback_threshold` = **0.245** (was the 0.30 placeholder) | The single-reference threshold with the best balanced accuracy on **dev** trials (`ml/speech/eval/results/bank_study_dev.md`). The old 0.30 accepted 70% of near-miss words |
+| **`loo_unit: speaker`** (approved by the owner 2026-10-15; the spec said "each reference against the others") | On dev, leaving out a reference's whole speaker fixes an over-strict range when a speaker has several takes (correct words accepted 77.8% → 89.9%; near-miss BA 0.855 → 0.861). It is identical to the spec when each speaker has one reference |
+| **Demo words = frequent words from the child recordings** (අම්මා, මම, අපි, මට, cat, sky, she, play), each bank built from **dev children only** (6–14 refs from 4 children; `scripts/build_demo_bank.py`) | Owner decision, so the presentation shows the learned range working (every word gets `threshold_source: "bank"`). Test children stay out of the bank for the final evaluation. Children's voices as references are within the approved ethics scope. Adult references should be added later for variety |
+| Bank files are named by **recording id** (`<speaker>_t<NN>`); the json's `speaker_id` identifies the speaker | Lets a speaker contribute several takes of a word, which speaker-level leave-one-out needs. Banks with one recording per speaker (`<speaker_id>.wav`) still work unchanged |
+| The live service uses the numba DTW | Proven identical to `scoring.dtw` (`tests/test_dtw_fast.py`) and much faster for k-nearest over a bank |
+
 <!-- Add new entries below this line, newest at the bottom or top — pick one convention and stay consistent. -->

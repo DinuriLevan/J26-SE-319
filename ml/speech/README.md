@@ -26,8 +26,8 @@ python -m black --check .
 
 ## Demo (Stage 1): record references → run service → app
 
-1. For each word in `config/words.csv`, put one or more **adult** reference clips at
-   `data/reference/<word_id>/<speaker_id>.wav`. Each clip needs a sibling `<speaker_id>.json`:
+1. Build the bank: `python scripts/build_demo_bank.py` (child references from the corpus), and/or add
+   your own clips at `data/reference/<word_id>/<recording_id>.wav`, each with a sibling `<recording_id>.json`:
    `{"speaker_id": "spk_adult_01", "age_group": "adult", "accent": "standard", "units": []}`
    (`units` can stay empty until Stage 4). Stage 1 uses the first adult reference by `speaker_id`,
    or the one set in `baseline.reference_speaker` in `config/settings.yaml`.
@@ -55,7 +55,8 @@ built with `--embedder spectral`; the service refuses to start on a mismatch. Us
 | 0 Setup | Done |
 | 1 Baseline | Done: single adult reference + fallback threshold; Flutter record → result |
 | 2 Layer sweep | Done: layer 9 chosen on dev children; truncated encoder verified and enabled |
-| 3–7 | Not started |
+| 3 Bank + learned range | Done: multi-reference scoring, leave-one-out range, fallback; dev study vs single reference |
+| 4–7 | Not started |
 
 ## Child corpus (Stage 2)
 
@@ -67,6 +68,10 @@ python scripts/align_words.py          # -> data/corpus/words.csv (MMS forced-al
 python scripts/export_spotcheck.py     # -> data/corpus/spotcheck/*.wav + spotcheck.csv to check cuts by ear
 python scripts/layer_sweep.py          # -> eval/results/layer_sweep_dev.{csv,md,png}  (dev speakers only)
 python scripts/verify_truncation.py    # -> eval/results/truncation_check.json
+python scripts/embed_corpus_words.py   # -> data/corpus/emb/<model>_l<layer>/*.npy (service embedder)
+python eval/bank_study_dev.py [--loo token|speaker]   # -> eval/results/bank_study_dev[_loso].{csv,md}
+python scripts/build_demo_bank.py      # -> data/reference/<word_id>/<speaker>_tNN.{wav,json} (dev children only)
+python scripts/build_embeddings.py     # -> data/embeddings/ for the bank
 ```
 
 ### Tested (automated)
@@ -94,6 +99,27 @@ python scripts/verify_truncation.py    # -> eval/results/truncation_check.json
 - Truncated encoder: bit-identical to the full model at layers 1/6/9/12/18/23; layer 9 is 2.0× faster.
   The service's embed step dropped from ~280 ms to ~90 ms per clip on this desktop CPU.
 
+- `tests/test_threshold.py`: fallback below 4 refs; LOO maths and k capping; numba and reference DTW
+  give the same range; **the learned range accepts the correct word and the accent variant and rejects
+  the wrong sound** (3+3 and 3+2 synthetic banks); speaker-level LOO ignores same-speaker takes.
+- `tests/test_service.py`: both modes. `single` = first adult + fallback; `bank` = fallback below 4 refs,
+  learned range at 5 refs accepts correct and variant and rejects the wrong middle unit.
+
+### Stage 3 dev study (2026-10-15, dev children only; words cut from sentences)
+Balanced accuracy (BA). "Bank regime" = trials whose bank has ≥ 4 references (17% of queries).
+"Near-miss" wrong words have the closest romanised spelling, a rough stand-in for mispronunciations.
+
+| System (bank regime) | accept correct | BA random wrong | BA near-miss |
+|---|---|---|---|
+| Single reference + old 0.30 | 0.987 | 0.931 | 0.642 |
+| Single reference + dev-best 0.245 (in-sample, optimistic) | 0.943 | 0.964 | 0.858 |
+| Bank + learned range, LOO by token (spec) | 0.778 | 0.887 | 0.855 |
+| Bank + learned range, LOO by speaker | 0.899 | 0.938 | 0.861 |
+
+Honest reading: the bank needs no tuned threshold yet matches an in-sample-tuned single reference on
+near-misses. It does not clearly beat it, and it is behind on random wrong words. These numbers are from
+4 children, a proxy task (different words, not real mispronunciations), and child-only references.
+
 ### Verified manually (2026-10-14, desktop CPU, not a target device)
 - Real XLS-R layer 12 run on Windows TTS voices (David = reference; Hazel/Zira = probes; 5 English words):
   the nearest word was correct 9/10 times (cat→dog was the miss). Embedding took ~280 ms per clip and DTW ~1 ms.
@@ -115,8 +141,12 @@ python scripts/verify_truncation.py    # -> eval/results/truncation_check.json
   ("I", "a") often align to 20 ms slivers, so the sweep drops tokens < 0.12 s or align_score < 0.3.
 - The sweep uses words cut from sentences (co-articulated), not isolated words as children will say them in the app.
 - Only 4 dev children: the plateau differences (≈0.001 AUC) are within noise.
-- `fallback_threshold: 0.30` is still wrong for XLS-R: with layer 9 it accepted "dog" as *cat* (0.249)
-  and "fish" as *sun* (0.279). It needs Stage 3. `trim_top_db` is also a placeholder.
+- `fallback_threshold` is now 0.245 (dev-chosen). `n_std = 2` and `k = 3` are still the spec defaults and
+  have not been tuned. `trim_top_db` is a placeholder.
+- Demo bank (`scripts/build_demo_bank.py`): 8 words with 6–14 child references each, from dev children
+  only. Learned thresholds are 0.174–0.282. Smoke test with computer voices as *cat*: Zira and David were
+  accepted, British Hazel just missed (0.286 vs 0.282), and dog, book and fish were all rejected. The bank
+  is **child-only** and has no adult references yet.
 - The threshold in `tests/test_scoring.py` is computed from the scores it checks. It is a sanity demo,
   not accuracy evidence.
 - Latency on a low-end Android path is unmeasured; `scripts/bench_latency.py` comes in Stage 6.

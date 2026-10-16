@@ -23,10 +23,12 @@ corpus:
   test_speakers: [g3_s5, g4_s3]
 
 scoring:
+  mode: bank               # bank = multi-reference + learned range (Stage 3); single = Stage 1 baseline
   k_nearest: 3             # aggregate = mean of the k nearest reference DTW costs
   n_std: 2.0               # accept if aggregate <= mean + n_std * std (leave-one-out over the bank)
   min_refs_for_bank_threshold: 4
-  fallback_threshold: 0.30 # UNTESTED PLACEHOLDER: conservative global threshold when < 4 refs
+  loo_unit: speaker        # leave out the whole speaker (approved 2026-10-15; spec value was token)
+  fallback_threshold: 0.245 # dev-best single-reference threshold (eval/results/bank_study_dev.md); used when < 4 refs
 
 localisation:
   max_flagged_units: 2

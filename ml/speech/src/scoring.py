@@ -36,12 +36,14 @@ def dtw(cost: np.ndarray):
     return acc[n, m] / len(path), path
 
 
-def score_against_references(child_emb, refs, k=3):
+def score_against_references(child_emb, refs, k=3, dtw_fn=None):
     """refs: list of dicts {emb, age_group, variant_id}. Returns per-reference results and
-    an aggregate = mean of the k smallest DTW costs (robust to one odd reference)."""
+    an aggregate = mean of the k smallest DTW costs (robust to one odd reference).
+    dtw_fn: optional drop-in for dtw (e.g. src.dtw_fast.dtw, tested identical); default is dtw."""
+    dtw_fn = dtw_fn or dtw
     results = []
     for r in refs:
-        c, path = dtw(cosine_cost_matrix(child_emb, r["emb"]))
+        c, path = dtw_fn(cosine_cost_matrix(child_emb, r["emb"]))
         results.append(
             {"variant_id": r["variant_id"], "age_group": r["age_group"], "cost": c, "path": path}
         )
