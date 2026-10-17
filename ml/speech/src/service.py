@@ -2,6 +2,9 @@
 
     POST /assess      multipart: audio (WAV), word_id, language (si|en)
     GET  /health
+    POST /assess_unit multipart: audio, word_id, language, start_unit, end_unit (a unit or a blend)
+    GET  /listen/{word_id}?start_unit=&end_unit=  adult model audio (WAV) for the LISTEN step
+    GET  /words       units per word and which have adult model audio
     POST /references  developer tool, OFF unless SPEECH_ALLOW_REFERENCE_UPLOAD=1: add an ADULT
                       reference recording (audio, word_id, language, speaker_id, age_group, accent)
 
@@ -21,6 +24,7 @@ When an attempt is not accepted, `segments` locates the likely problem unit(s) (
 
 from __future__ import annotations
 
+import io
 import json
 import logging
 import os
@@ -31,7 +35,7 @@ from typing import Literal
 
 import numpy as np
 import soundfile as sf
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Query, Response, UploadFile
 from pydantic import BaseModel
 
 from src.audio import AudioValidationError, load_audio
@@ -42,6 +46,7 @@ from src.localise import localise_attempt
 from src.scoring import score_against_references
 from src.settings import DEFAULT_SETTINGS, load_settings
 from src.threshold import AcceptanceRange, acceptance_range
+from src.units import SpanBank
 
 log = logging.getLogger("speech.service")
 
@@ -73,6 +78,27 @@ class AssessResponse(BaseModel):
     latency_ms: Latency
 
 
+class UnitAssessResponse(BaseModel):
+    word_id: str
+    start_unit: int
+    end_unit: int
+    label: str
+    decision: Literal["accepted", "needs_remediation"]
+    score: float
+    threshold: float
+    threshold_source: Literal["bank", "fallback"]
+    latency_ms: Latency
+
+
+class WordInfo(BaseModel):
+    word_id: str
+    text: str
+    language: str
+    units: list[str]
+    listen_units: list[int]
+    has_word_audio: bool
+
+
 class ReferenceResponse(BaseModel):
     word_id: str
     ref_id: str
@@ -92,6 +118,7 @@ def create_app(
     sc = settings["scoring"]
     mode = sc.get("mode", "bank")
     ranges: dict[str, AcceptanceRange] = {}
+    spans = SpanBank(bank, embedder, settings)
 
     def word_range(word_id: str, refs: list[dict]) -> AcceptanceRange:
         # Computed once per word; POST /references drops the cached range when it adds a reference.
@@ -120,6 +147,18 @@ def create_app(
                     log.info(
                         "%s: %d refs, threshold %.3f (%s)", word_id, r.n_refs, r.threshold, r.source
                     )
+            # Pre-compute unit and blend span references, so the first remediation attempt for a
+            # unit is not slowed down by cutting and embedding every reference (~2 s per span).
+            t = time.perf_counter()
+            n_spans = 0
+            for word_id in bank.words:
+                n = len(spans.units(word_id))
+                for a in range(n):
+                    for b in (a, a + 1):
+                        if b < n and spans.span_refs(word_id, a, b):
+                            spans.span_range(word_id, a, b)
+                            n_spans += 1
+            log.info("warmed %d unit/blend spans in %.1f s", n_spans, time.perf_counter() - t)
         yield
 
     app = FastAPI(title="AkuRin speech assessment", version="0.1.0", lifespan=lifespan)
@@ -204,6 +243,83 @@ def create_app(
             latency_ms=latency,
         )
 
+    def span_or_422(word_id: str, start_unit: int, end_unit: int) -> list[str]:
+        if word_id not in bank.words:
+            raise HTTPException(404, f"Unknown word_id {word_id!r}.")
+        units = spans.units(word_id)
+        if not 0 <= start_unit <= end_unit < len(units):
+            raise HTTPException(422, f"Unit span {start_unit}-{end_unit} is outside {word_id}.")
+        return units
+
+    @app.get("/words", response_model=list[WordInfo])
+    def words() -> list[WordInfo]:
+        return [
+            WordInfo(
+                word_id=w,
+                text=row["text_si"] or row["text_en"],
+                language=row["language"],
+                units=spans.units(w),
+                listen_units=spans.listen_units(w),
+                has_word_audio=spans.has_word_audio(w),
+            )
+            for w, row in bank.words.items()
+        ]
+
+    @app.post("/assess_unit", response_model=UnitAssessResponse)
+    def assess_unit(
+        audio: UploadFile = File(...),
+        word_id: str = Form(...),
+        language: Literal["si", "en"] = Form(...),
+        start_unit: int = Form(...),
+        end_unit: int = Form(...),
+    ) -> UnitAssessResponse:
+        t0 = time.perf_counter()
+        units = span_or_422(word_id, start_unit, end_unit)
+        wav = read_word_audio(audio, word_id, language)
+        t1 = time.perf_counter()
+        emb = embedder.embed(wav)
+        t2 = time.perf_counter()
+        refs = spans.span_refs(word_id, start_unit, end_unit)
+        if not refs:
+            raise HTTPException(503, f"No unit references for {word_id} yet.")
+        score, _ = score_against_references(emb, refs, k=sc["k_nearest"], dtw_fn=fast_dtw)
+        rng = spans.span_range(word_id, start_unit, end_unit)
+        t3 = time.perf_counter()
+        ms = lambda a, b: round((b - a) * 1000, 1)  # noqa: E731
+        return UnitAssessResponse(
+            word_id=word_id,
+            start_unit=start_unit,
+            end_unit=end_unit,
+            label="".join(units[start_unit : end_unit + 1]),
+            decision="accepted" if score <= rng.threshold else "needs_remediation",
+            score=round(score, 4),
+            threshold=round(rng.threshold, 4),
+            threshold_source=rng.source,
+            latency_ms=Latency(load=ms(t0, t1), embed=ms(t1, t2), dtw=ms(t2, t3), total=ms(t0, t3)),
+        )
+
+    @app.get("/listen/{word_id}")
+    def listen(
+        word_id: str,
+        start_unit: int | None = Query(None),
+        end_unit: int | None = Query(None),
+    ) -> Response:
+        """ADULT model audio only: children's recordings are never played back."""
+        if (start_unit is None) != (end_unit is None):
+            raise HTTPException(422, "Give both start_unit and end_unit, or neither.")
+        if start_unit is None:
+            if word_id not in bank.words:
+                raise HTTPException(404, f"Unknown word_id {word_id!r}.")
+        else:
+            span_or_422(word_id, start_unit, end_unit)
+        clip = spans.listen_clip(word_id, start_unit, end_unit)
+        if clip is None:
+            raise HTTPException(404, f"No adult model audio for {word_id} yet.")
+        ref_id, wav = clip
+        buf = io.BytesIO()
+        sf.write(buf, wav, settings["audio"]["sample_rate"], format="WAV", subtype="PCM_16")
+        return Response(buf.getvalue(), media_type="audio/wav", headers={"X-Ref-Id": ref_id})
+
     if allow_reference_upload:
 
         @app.post("/references", response_model=ReferenceResponse)
@@ -240,6 +356,7 @@ def create_app(
                 json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8"
             )
             ranges.pop(word_id, None)  # the bank changed: relearn this word's range
+            spans.invalidate(word_id)
             refs = bank.reference_set(word_id)
             r = word_range(word_id, refs)
             log.info(

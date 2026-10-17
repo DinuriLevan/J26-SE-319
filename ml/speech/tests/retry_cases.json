@@ -1,0 +1,221 @@
+{
+  "_comment": "Shared scenarios for the retry loop. Run by ml/speech/tests/test_retry.py (Python) and app/test/features/speech/retry_loop_test.dart (Dart). Steps are the state AFTER each action; events are 'type:step:unit'.",
+  "cases": [
+    {
+      "name": "happy_path",
+      "n_units": 3,
+      "listen_units": null,
+      "actions": [{"input": "full_word", "accepted": true, "flagged": []}],
+      "steps": [{"kind": "reward", "unit": null, "span": null, "try": 1}],
+      "events": ["attempt_scored:full_word:null", "word_mastered:full_word:null"],
+      "scheduled": [],
+      "final": "reward"
+    },
+    {
+      "name": "one_retry",
+      "n_units": 3,
+      "listen_units": null,
+      "actions": [
+        {"input": "full_word", "accepted": false, "flagged": [1]},
+        {"input": "listened"},
+        {"input": "unit", "passed": true},
+        {"input": "blend", "passed": true},
+        {"input": "full_word", "accepted": true, "flagged": []}
+      ],
+      "steps": [
+        {"kind": "listen", "unit": 1, "span": [1, 1], "try": 1},
+        {"kind": "say_unit", "unit": 1, "span": [1, 1], "try": 1},
+        {"kind": "blend", "unit": 1, "span": [1, 2], "try": 1},
+        {"kind": "full_word", "unit": null, "span": null, "try": 2},
+        {"kind": "reward", "unit": null, "span": null, "try": 1}
+      ],
+      "events": [
+        "attempt_scored:full_word:null",
+        "unit_flagged:full_word:1",
+        "attempt_scored:say_unit:1",
+        "step_passed:say_unit:1",
+        "attempt_scored:blend:1",
+        "step_passed:blend:1",
+        "attempt_scored:full_word:null",
+        "word_mastered:full_word:null"
+      ],
+      "scheduled": [],
+      "final": "reward"
+    },
+    {
+      "name": "unit_retry_without_listen_audio",
+      "n_units": 3,
+      "listen_units": [],
+      "actions": [
+        {"input": "full_word", "accepted": false, "flagged": [2]},
+        {"input": "unit", "passed": false},
+        {"input": "unit", "passed": true},
+        {"input": "blend", "passed": false},
+        {"input": "blend", "passed": true},
+        {"input": "full_word", "accepted": true, "flagged": []}
+      ],
+      "steps": [
+        {"kind": "say_unit", "unit": 2, "span": [2, 2], "try": 1},
+        {"kind": "say_unit", "unit": 2, "span": [2, 2], "try": 2},
+        {"kind": "blend", "unit": 2, "span": [1, 2], "try": 1},
+        {"kind": "blend", "unit": 2, "span": [1, 2], "try": 2},
+        {"kind": "full_word", "unit": null, "span": null, "try": 2},
+        {"kind": "reward", "unit": null, "span": null, "try": 1}
+      ],
+      "events": [
+        "attempt_scored:full_word:null",
+        "unit_flagged:full_word:2",
+        "attempt_scored:say_unit:2",
+        "attempt_scored:say_unit:2",
+        "step_passed:say_unit:2",
+        "attempt_scored:blend:2",
+        "attempt_scored:blend:2",
+        "step_passed:blend:2",
+        "attempt_scored:full_word:null",
+        "word_mastered:full_word:null"
+      ],
+      "scheduled": [],
+      "final": "reward"
+    },
+    {
+      "name": "exhaustion",
+      "n_units": 2,
+      "listen_units": null,
+      "actions": [
+        {"input": "full_word", "accepted": false, "flagged": [0]},
+        {"input": "listened"},
+        {"input": "unit", "passed": false},
+        {"input": "listened"},
+        {"input": "unit", "passed": false},
+        {"input": "listened"},
+        {"input": "unit", "passed": false},
+        {"input": "full_word", "accepted": false, "flagged": []},
+        {"input": "full_word", "accepted": false, "flagged": [0]}
+      ],
+      "steps": [
+        {"kind": "listen", "unit": 0, "span": [0, 0], "try": 1},
+        {"kind": "say_unit", "unit": 0, "span": [0, 0], "try": 1},
+        {"kind": "listen", "unit": 0, "span": [0, 0], "try": 2},
+        {"kind": "say_unit", "unit": 0, "span": [0, 0], "try": 2},
+        {"kind": "listen", "unit": 0, "span": [0, 0], "try": 3},
+        {"kind": "say_unit", "unit": 0, "span": [0, 0], "try": 3},
+        {"kind": "full_word", "unit": null, "span": null, "try": 2},
+        {"kind": "full_word", "unit": null, "span": null, "try": 3},
+        {"kind": "fallback", "unit": null, "span": null, "try": 1}
+      ],
+      "events": [
+        "attempt_scored:full_word:null",
+        "unit_flagged:full_word:0",
+        "attempt_scored:say_unit:0",
+        "attempt_scored:say_unit:0",
+        "attempt_scored:say_unit:0",
+        "fallback_taken:say_unit:0",
+        "attempt_scored:full_word:null",
+        "attempt_scored:full_word:null",
+        "fallback_taken:full_word:null"
+      ],
+      "scheduled": [0],
+      "final": "fallback"
+    },
+    {
+      "name": "two_flagged_units",
+      "n_units": 3,
+      "listen_units": [1],
+      "actions": [
+        {"input": "full_word", "accepted": false, "flagged": [2, 0, 1]},
+        {"input": "unit", "passed": true},
+        {"input": "blend", "passed": true},
+        {"input": "unit", "passed": true},
+        {"input": "blend", "passed": true},
+        {"input": "full_word", "accepted": true, "flagged": []}
+      ],
+      "steps": [
+        {"kind": "say_unit", "unit": 2, "span": [2, 2], "try": 1},
+        {"kind": "blend", "unit": 2, "span": [1, 2], "try": 1},
+        {"kind": "say_unit", "unit": 0, "span": [0, 0], "try": 1},
+        {"kind": "blend", "unit": 0, "span": [0, 1], "try": 1},
+        {"kind": "full_word", "unit": null, "span": null, "try": 2},
+        {"kind": "reward", "unit": null, "span": null, "try": 1}
+      ],
+      "events": [
+        "attempt_scored:full_word:null",
+        "unit_flagged:full_word:2",
+        "unit_flagged:full_word:0",
+        "attempt_scored:say_unit:2",
+        "step_passed:say_unit:2",
+        "attempt_scored:blend:2",
+        "step_passed:blend:2",
+        "attempt_scored:say_unit:0",
+        "step_passed:say_unit:0",
+        "attempt_scored:blend:0",
+        "step_passed:blend:0",
+        "attempt_scored:full_word:null",
+        "word_mastered:full_word:null"
+      ],
+      "scheduled": [],
+      "final": "reward"
+    },
+    {
+      "name": "single_unit_word_skips_blend",
+      "n_units": 1,
+      "listen_units": null,
+      "actions": [
+        {"input": "full_word", "accepted": false, "flagged": [0]},
+        {"input": "listened"},
+        {"input": "unit", "passed": true},
+        {"input": "full_word", "accepted": true, "flagged": []}
+      ],
+      "steps": [
+        {"kind": "listen", "unit": 0, "span": [0, 0], "try": 1},
+        {"kind": "say_unit", "unit": 0, "span": [0, 0], "try": 1},
+        {"kind": "full_word", "unit": null, "span": null, "try": 2},
+        {"kind": "reward", "unit": null, "span": null, "try": 1}
+      ],
+      "events": [
+        "attempt_scored:full_word:null",
+        "unit_flagged:full_word:0",
+        "attempt_scored:say_unit:0",
+        "step_passed:say_unit:0",
+        "attempt_scored:full_word:null",
+        "word_mastered:full_word:null"
+      ],
+      "scheduled": [],
+      "final": "reward"
+    },
+    {
+      "name": "blend_exhaustion_then_mastered",
+      "n_units": 2,
+      "listen_units": [],
+      "actions": [
+        {"input": "full_word", "accepted": false, "flagged": [1]},
+        {"input": "unit", "passed": true},
+        {"input": "blend", "passed": false},
+        {"input": "blend", "passed": false},
+        {"input": "blend", "passed": false},
+        {"input": "full_word", "accepted": true, "flagged": []}
+      ],
+      "steps": [
+        {"kind": "say_unit", "unit": 1, "span": [1, 1], "try": 1},
+        {"kind": "blend", "unit": 1, "span": [0, 1], "try": 1},
+        {"kind": "blend", "unit": 1, "span": [0, 1], "try": 2},
+        {"kind": "blend", "unit": 1, "span": [0, 1], "try": 3},
+        {"kind": "full_word", "unit": null, "span": null, "try": 2},
+        {"kind": "reward", "unit": null, "span": null, "try": 1}
+      ],
+      "events": [
+        "attempt_scored:full_word:null",
+        "unit_flagged:full_word:1",
+        "attempt_scored:say_unit:1",
+        "step_passed:say_unit:1",
+        "attempt_scored:blend:1",
+        "attempt_scored:blend:1",
+        "attempt_scored:blend:1",
+        "fallback_taken:blend:1",
+        "attempt_scored:full_word:null",
+        "word_mastered:full_word:null"
+      ],
+      "scheduled": [1],
+      "final": "reward"
+    }
+  ]
+}

@@ -37,6 +37,7 @@ dependencies:
   # Speech component: microphone recording + permission
   record: ^7.1.2
   permission_handler: ^12.0.1 # 13.x needs compileSdk 37; app compiles against 36
+  just_audio: ^0.10.6
 
 dev_dependencies:
   flutter_test:

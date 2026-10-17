@@ -58,4 +58,48 @@ class AppLocalizationsSi extends AppLocalizations {
   @override
   String get speechSomethingWrong =>
       'මොකක්හරි වැරදුණා. ටිකකින් ආයෙත් උත්සාහ කරමු.';
+
+  @override
+  String get speechListen => 'හොඳින් අහන්න';
+
+  @override
+  String get speechPlayAgain => 'ආයෙත් අහමු';
+
+  @override
+  String get speechNext => 'ඊළඟට';
+
+  @override
+  String get speechSaySound => 'දැන් ඔයා කියන්න!';
+
+  @override
+  String get speechBlend => 'දැන් එකට කියමු';
+
+  @override
+  String get speechWholeWordAgain => 'දැන් මුළු වචනයම කියමු';
+
+  @override
+  String get speechStepWellDone => 'හරිම හොඳයි!';
+
+  @override
+  String get speechStepOnceMore => 'අපි ආයෙත් වරක් උත්සාහ කරමු.';
+
+  @override
+  String get speechFallbackTitle => 'හොඳ උත්සාහයක්!';
+
+  @override
+  String speechFallbackBody(String units) {
+    return 'අපි $units ආයෙත් පස්සේ පුහුණු වෙමු.';
+  }
+
+  @override
+  String get speechCardUnlocked => 'ඔයාට අලුත් කාඩ්පතක් ලැබුණා!';
+
+  @override
+  String get speechLoading => 'සූදානම් වෙනවා…';
+
+  @override
+  String get speechChooseLanguage => 'ඔයා පුහුණු වෙන්න කැමති කුමන භාෂාවෙන්ද?';
+
+  @override
+  String get speechChangeLanguage => 'භාෂාව වෙනස් කරන්න';
 }

@@ -1,3 +1,5 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 /// A practice word. Ids must match ml/speech/config/words.csv (the reference bank).
 class SpeechWord {
   const SpeechWord(
@@ -22,3 +24,10 @@ const speechDemoWords = [
   SpeechWord(id: 'w_007', text: 'she', language: 'en'),
   SpeechWord(id: 'w_008', text: 'play', language: 'en'),
 ];
+
+/// Practice language chosen at the start of the Speech tab ('si' | 'en'); null = not chosen yet,
+/// so the language question is shown. Kept for as long as the app is open.
+final speechLanguageProvider = StateProvider<String?>((ref) => null);
+
+List<SpeechWord> speechWordsFor(String language) =>
+    speechDemoWords.where((w) => w.language == language).toList();

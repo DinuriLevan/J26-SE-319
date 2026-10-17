@@ -193,6 +193,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Something went wrong. Let\'s try again in a moment.'**
   String get speechSomethingWrong;
+
+  /// No description provided for @speechListen.
+  ///
+  /// In en, this message translates to:
+  /// **'Listen carefully'**
+  String get speechListen;
+
+  /// No description provided for @speechPlayAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Play again'**
+  String get speechPlayAgain;
+
+  /// No description provided for @speechNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get speechNext;
+
+  /// No description provided for @speechSaySound.
+  ///
+  /// In en, this message translates to:
+  /// **'Now you say it!'**
+  String get speechSaySound;
+
+  /// No description provided for @speechBlend.
+  ///
+  /// In en, this message translates to:
+  /// **'Now say them together'**
+  String get speechBlend;
+
+  /// No description provided for @speechWholeWordAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Now say the whole word'**
+  String get speechWholeWordAgain;
+
+  /// No description provided for @speechStepWellDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Well done!'**
+  String get speechStepWellDone;
+
+  /// No description provided for @speechStepOnceMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s try that once more.'**
+  String get speechStepOnceMore;
+
+  /// No description provided for @speechFallbackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Great effort!'**
+  String get speechFallbackTitle;
+
+  /// No description provided for @speechFallbackBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll practise {units} again later.'**
+  String speechFallbackBody(String units);
+
+  /// No description provided for @speechCardUnlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'You unlocked a new card!'**
+  String get speechCardUnlocked;
+
+  /// No description provided for @speechLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting ready…'**
+  String get speechLoading;
+
+  /// No description provided for @speechChooseLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Which language do you want to practise?'**
+  String get speechChooseLanguage;
+
+  /// No description provided for @speechChangeLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Change language'**
+  String get speechChangeLanguage;
 }
 
 class _AppLocalizationsDelegate

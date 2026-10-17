@@ -96,4 +96,22 @@ A running log of structural/technical decisions for the AkuRin shared foundation
 | Localisation flags the worst unit, plus the second worst if its cost is ≥ 0.8 × the worst (placeholder). Error types are rule-based: duration vs expected (tempo-corrected) → omission/insertion; long vowel or geminate said short → distortion/omission; aspirated or prenasalised consonants → substitution; otherwise cost ≥ 0.5 → substitution, else distortion | Spec step 8. All ratios are placeholders, TO VALIDATE WITH SPEECH-LANGUAGE EXPERT |
 | Error-type thresholds are **not tuned** on the spliced dev study | Spliced errors are all substitutions by construction, so tuning on them would just push every label to "substitution". Needs real labelled errors |
 
+## 2026-10-16 — Speech component Stage 5: retry loop, remediation, progress, rewards (Fernando B.P.L)
+
+| Decision | Rationale |
+|---|---|
+| **Listen plays ADULT recordings only.** Units or words without an adult recording skip Listen (`GET /listen` → 404) | Owner decision: children's research recordings are never played to other children (ethics) |
+| Retry loop lives in **both** `ml/speech/src/retry.py` (spec) and a Dart port (`app/.../logic/retry_loop.dart`); both run the shared scenarios in `ml/speech/tests/retry_cases.json` | Owner decision. The app drives the screens offline-capably, the spec's Python module stays the reference, and the shared JSON keeps them identical |
+| Rewards: **milestone cards** `speech_words_5`, `speech_words_10`, … (every 5 different words mastered), via the shared `POST /rewards/{child_id}/unlock` | Owner decision. The mastered-word count comes from the app's local record of finished words (rows in the shared queue table, read-only) |
+| **One `ActivityResult` per finished word** (mastered or fallback) instead of one per attempt | Matches the spec ("on each completed word"); attempt detail is kept in the payload's events |
+| `phoneme_progress` (Alembic `0002`) is written by `POST /speech/assess-unit` for **single-unit** attempts; blends are practice steps, not units. `mastery` = EMA of pass/fail, alpha 0.3. If the child profile has not synced yet, the score is still returned and the row is skipped | Spec table; keeps the score path working before profile sync |
+| Unit and blend references are cut **without padding** and are **pre-computed at service startup** (about 47 s for 30 spans) | Padding made a unit said alone look unlike its cut references. Computing on first use made the first attempt take 2.4 s (target < 2 s); after warm-up it is about 0.1 s |
+| `just_audio` added to the shared `pubspec.yaml` (add-only); model audio is downloaded via the shared Dio client and played from a file | Spec package. Android's media player blocks plain-HTTP URLs, while the shared Dio client works |
+
+## 2026-10-17 — Speech: choose the practice language first (Fernando B.P.L)
+
+| Decision | Rationale |
+|---|---|
+| The Speech tab opens by asking **"Which language do you want to practise?"** (සිංහල / English, each named in its own script). Only that language's words are shown, "next word" stays in that language, and a top-bar button switches language. The choice lasts while the app is open | Owner request. The practice language is separate from the UI language (the profile's `preferred_language`), so a child with a Sinhala UI can still practise English words |
+
 <!-- Add new entries below this line, newest at the bottom or top — pick one convention and stay consistent. -->

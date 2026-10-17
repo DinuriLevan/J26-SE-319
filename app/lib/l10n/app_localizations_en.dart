@@ -58,4 +58,48 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get speechSomethingWrong =>
       'Something went wrong. Let\'s try again in a moment.';
+
+  @override
+  String get speechListen => 'Listen carefully';
+
+  @override
+  String get speechPlayAgain => 'Play again';
+
+  @override
+  String get speechNext => 'Next';
+
+  @override
+  String get speechSaySound => 'Now you say it!';
+
+  @override
+  String get speechBlend => 'Now say them together';
+
+  @override
+  String get speechWholeWordAgain => 'Now say the whole word';
+
+  @override
+  String get speechStepWellDone => 'Well done!';
+
+  @override
+  String get speechStepOnceMore => 'Let\'s try that once more.';
+
+  @override
+  String get speechFallbackTitle => 'Great effort!';
+
+  @override
+  String speechFallbackBody(String units) {
+    return 'We\'ll practise $units again later.';
+  }
+
+  @override
+  String get speechCardUnlocked => 'You unlocked a new card!';
+
+  @override
+  String get speechLoading => 'Getting ready…';
+
+  @override
+  String get speechChooseLanguage => 'Which language do you want to practise?';
+
+  @override
+  String get speechChangeLanguage => 'Change language';
 }

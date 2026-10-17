@@ -64,7 +64,8 @@ built with `--embedder spectral`; the service refuses to start on a mismatch. Us
 | 2 Layer sweep | Done: layer 9 chosen on dev children; truncated encoder verified and enabled |
 | 3 Bank + learned range | Done: multi-reference scoring, leave-one-out range, fallback; dev study vs single reference |
 | 4 Localisation + errors | Done: automatic unit boundaries, unit flagging, rule-based error types; spliced-error dev study |
-| 5–7 | Not started |
+| 5 Retry loop + remediation | Done: retry.py and its Dart port (shared scenarios), unit/blend scoring, adult Listen audio, practice screens, phoneme_progress, milestone cards. **Not yet run end-to-end by a person on a phone** |
+| 6–7 | Not started |
 
 ## Child corpus (Stage 2)
 
@@ -135,6 +136,20 @@ near-misses. It does not clearly beat it, and it is behind on random wrong words
   prototypes the wrong middle or first unit is flagged, and a skipped unit is flagged as omission.
 - `tests/test_service.py`: a rejected attempt returns segments with the wrong middle unit flagged;
   an accepted attempt returns none.
+
+### Stage 5 (2026-10-16)
+- Tested: `tests/test_retry.py` and the Dart `retry_loop_test.dart` both pass the 7 shared scenarios
+  (happy path, one retry, exhaustion, two flagged units, no listen audio, single-unit word, blend
+  exhaustion). `tests/test_units_api.py`: the right isolated sound is accepted and a wrong one rejected,
+  blends work, spans are validated, and Listen serves adults only (404 for child-only words). Backend:
+  `test_speech_progress.py` (attempts, successes, mastery EMA, blends not recorded, unsynced child,
+  ordering). Flutter: API, result screen (en/si, never "wrong"), milestone rule, completed-word payload.
+- Verified live through the Docker backend: `/speech/words`, `/speech/listen` (adult clip; 404 for
+  අම්මා), `/speech/assess-unit` about 0.1 s after warm-up, and the Alembic `0002` migration applied.
+- **UNTESTED:** the full practice loop on a phone with a real child-like voice; unit scoring on
+  sounds actually *said alone* (references are cut from words, so expect a mismatch); English blends
+  are weak (a "ca" blend accepted a lone "a" because "c" is a ~40 ms auto-aligned chunk); milestone
+  unlock when offline (Stage 6).
 
 ### Stage 4 dev study (2026-10-16, spliced errors in dev children's references, LOSO banks)
 One unit of a dev child's reference is replaced by a unit from a different word; we check which unit is flagged.

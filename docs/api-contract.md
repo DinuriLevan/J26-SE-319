@@ -22,6 +22,10 @@ If this file and the live spec ever disagree, the live spec wins — update this
 | `GET` | `/rewards/{child_id}` | Get a child's unlocked reward cards |
 | `POST` | `/rewards/{child_id}/unlock` | Unlock a reward card for a child |
 | `POST` | `/speech/assess` | Speech component: score one spoken word (multipart; proxied to the speech inference service). See below |
+| `POST` | `/speech/assess-unit` | Speech remediation: score one unit or a blend. Multipart: `audio`, `word_id`, `language`, `start_unit`, `end_unit` (inclusive unit indices), `child_id`. Returns `{word_id, start_unit, end_unit, label, decision, score, threshold, threshold_source, latency_ms}`. Single-unit attempts are recorded in `phoneme_progress` |
+| `GET` | `/speech/progress/{child_id}` | Speech: the child's per-unit practice record `[{child_id, language, unit_label, attempts, successes, last_score, last_seen, mastery}]`, lowest mastery first. `mastery` = moving average of pass/fail (alpha 0.3) |
+| `GET` | `/speech/words` | Speech: `[{word_id, text, language, units, listen_units, has_word_audio}]`. `listen_units` = units with adult model audio |
+| `GET` | `/speech/listen/{word_id}?start_unit=&end_unit=` | Speech: **adult** model audio (WAV) for the Listen step, either a unit span or the whole word. 404 when the word has no adult recording. Children's recordings are never served |
 | `POST` | `/speech/references` | **Developer tool**, speech: add an **adult** reference recording to the bank. The speech service returns 404 unless started with `SPEECH_ALLOW_REFERENCE_UPLOAD=1`, and 422 for any `age_group` other than `adult`. Fields: `audio`, `word_id`, `language`, `speaker_id` (`[a-z0-9_]{1,32}`), `age_group`, `accent`. No child id |
 
 ## Auth
@@ -68,6 +72,8 @@ Errors return `{"detail": "..."}` with one of these statuses:
 | `422` | Bad form fields: wrong or invalid `language`, or a `child_id` that isn't a UUID |
 | `503` | The speech service is down, or the word has no reference recordings yet |
 | `502` | Any other speech service error |
+
+**Rewards (Stage 5):** after a word is mastered, the app unlocks a milestone card in the shared album via `POST /rewards/{child_id}/unlock` with `card_id = "speech_words_<N>"` for every 5th different word mastered (5, 10, 15, ...). Each finished word (mastered or fallback) writes one `ActivityResult` (`component_name: "speech"`, `activity_id: "speech_word:<word_id>"`) through the shared offline queue. Its payload holds `outcome` (`mastered` or `fallback`), attempt counts, `flagged_units`, `practise_later` and the loop events.
 
 **Current stage (Stage 4):**
 - Scoring uses every reference recording of the word. `threshold_source` is `"bank"` when the word has at least 4 references (the range is learned from them) and `"fallback"` otherwise.
