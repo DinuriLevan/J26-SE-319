@@ -9,6 +9,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../profile/providers/profile_providers.dart';
+import '../audio/speech_voice.dart';
 import '../data/speech_api.dart';
 import '../data/speech_progress_store.dart';
 import '../data/speech_recorder.dart';
@@ -18,6 +19,7 @@ import '../logic/speech_rewards.dart';
 import '../ui/parrot.dart';
 import '../ui/speech_theme.dart';
 import '../ui/speech_widgets.dart';
+import '../ui/talking_parrot.dart';
 import 'speech_result_screen.dart';
 
 enum _Phase { idle, recording, checking }
@@ -98,6 +100,7 @@ class _SpeechWordScreenState extends ConsumerState<SpeechWordScreen> {
       return;
     }
     await _player.stop();
+    await ref.read(speechVoiceProvider).stop(); // never talk over the child
     try {
       await recorder.start();
     } catch (_) {
@@ -171,9 +174,9 @@ class _SpeechWordScreenState extends ConsumerState<SpeechWordScreen> {
       });
       if (loop.done) {
         await _finishWord(childId, loop);
-      } else if (loop.step.kind == StepKind.listen) {
-        unawaited(_playListen());
       }
+      // The Listen step's model audio starts after the parrot has said "Listen carefully"
+      // (TalkingParrot.onSpoken in _stepBody).
     } on AssessException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -344,6 +347,7 @@ class _SpeechWordScreenState extends ConsumerState<SpeechWordScreen> {
         appBar: AppBar(
           title: Text(l10n.speechTitle),
           actions: [
+            const VoiceToggleButton(),
             if (kDebugMode)
               IconButton(
                 tooltip: 'Record adult references (dev)',
@@ -408,6 +412,32 @@ class _SpeechWordScreenState extends ConsumerState<SpeechWordScreen> {
     return ParrotMood.idle;
   }
 
+  /// What the parrot says aloud: feedback first, then the instruction. Silent while recording
+  /// or checking, and once the word is finished (the result screen speaks then).
+  List<VoiceLine> _voiceLines(
+      AppLocalizations l10n, RetryStep step, String instruction) {
+    if (_phase != _Phase.idle || _loop!.done) return const [];
+    final messageKey = {
+      l10n.speechStepWellDone: 'speechStepWellDone',
+      l10n.speechStepOnceMore: 'speechStepOnceMore',
+      l10n.speechCouldNotHear: 'speechCouldNotHear',
+      l10n.speechMicNeeded: 'speechMicNeeded',
+      l10n.speechSomethingWrong: 'speechSomethingWrong',
+    }[_message];
+    final instructionKey = switch (step.kind) {
+      StepKind.fullWord when step.tryNo > 1 => 'speechWholeWordAgain',
+      StepKind.fullWord => 'speechTapToRecord',
+      StepKind.listen => 'speechListen',
+      StepKind.sayUnit => 'speechSaySound',
+      StepKind.blend => 'speechBlend',
+      _ => null,
+    };
+    return [
+      if (messageKey != null) VoiceLine(messageKey, _message!),
+      if (instructionKey != null) VoiceLine(instructionKey, instruction),
+    ];
+  }
+
   Widget _stepBody(
       BuildContext context, AppLocalizations l10n, ThemeData theme) {
     final step = _step!;
@@ -450,7 +480,14 @@ class _SpeechWordScreenState extends ConsumerState<SpeechWordScreen> {
                 textAlign: TextAlign.center,
               ),
             ),
-          ParrotSays(text: bubble, mood: _mood(l10n)),
+          TalkingParrot(
+            text: bubble,
+            mood: _mood(l10n),
+            lines: _voiceLines(l10n, step, instruction),
+            speakKey: '${_word.id}|${stepKindName(step.kind)}|${step.unit}|'
+                '${step.tryNo}|${_phase.name}|$_message',
+            onSpoken: isListen ? _playListen : null,
+          ),
           if (_offerSettings)
             TextButton(
                 onPressed: openAppSettings,

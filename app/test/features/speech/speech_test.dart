@@ -11,7 +11,10 @@ import 'package:akurin/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'fake_voice.dart';
 
 const _okJson = {
   'word_id': 'w_004',
@@ -212,25 +215,27 @@ void main() {
         required String lang,
         List<String> later = const [],
         bool card = false}) {
-      return tester.pumpWidget(MaterialApp(
-        locale: Locale(lang),
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: AppLocalizations.supportedLocales,
-        // Reduce motion (as a child's device might): every speech animation must settle.
-        builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(context).copyWith(disableAnimations: true),
-            child: child!),
-        home: SpeechResultScreen(
-            word: word,
-            mastered: mastered,
-            practiseLater: later,
-            cardUnlocked: card),
-      ));
+      return tester.pumpWidget(ProviderScope(
+          overrides: [FakeVoice().override],
+          child: MaterialApp(
+            locale: Locale(lang),
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: AppLocalizations.supportedLocales,
+            // Reduce motion (as a child's device might): every speech animation must settle.
+            builder: (context, child) => MediaQuery(
+                data: MediaQuery.of(context).copyWith(disableAnimations: true),
+                child: child!),
+            home: SpeechResultScreen(
+                word: word,
+                mastered: mastered,
+                practiseLater: later,
+                cardUnlocked: card),
+          )));
     }
 
     testWidgets('mastered shows praise and the card (en)', (tester) async {

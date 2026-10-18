@@ -47,5 +47,8 @@
         "type": "int"
       }
     }
-  }
+  },
+  "speechHearAgain": "Hear again",
+  "speechVoiceOff": "Turn the parrot's voice off",
+  "speechVoiceOn": "Turn the parrot's voice on"
 }

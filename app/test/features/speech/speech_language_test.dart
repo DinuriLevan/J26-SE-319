@@ -1,11 +1,14 @@
 import 'package:akurin/features/speech/data/speech_api.dart';
 import 'package:akurin/features/speech/data/speech_words.dart';
+import 'package:akurin/features/home_shell/providers/nav_providers.dart';
 import 'package:akurin/features/speech/speech_stub_screen.dart';
 import 'package:akurin/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'fake_voice.dart';
 
 /// Word info as the service would report it: every word ready unless listed in [unready].
 Map<String, WordInfo> _wordInfo({Set<String> unready = const {}}) => {
@@ -19,12 +22,18 @@ Map<String, WordInfo> _wordInfo({Set<String> unready = const {}}) => {
     };
 
 Widget _app(String locale,
-        {Map<String, WordInfo>? info, bool showUnready = false}) =>
+        {Map<String, WordInfo>? info,
+        bool showUnready = false,
+        FakeVoice? voice,
+        int tab = 0}) =>
     ProviderScope(
-      key: ValueKey(showUnready), // a fresh app (and language choice) per view
+      key:
+          ValueKey('$showUnready-$tab'), // a fresh app per view (language, tab)
       overrides: [
         speechWordsProvider.overrideWith((ref) async => info ?? _wordInfo()),
         speechShowUnreadyWordsProvider.overrideWithValue(showUnready),
+        (voice ?? FakeVoice()).override,
+        selectedTabProvider.overrideWith((ref) => tab),
       ],
       child: MaterialApp(
         locale: Locale(locale),
@@ -107,5 +116,53 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('hat'), findsOneWidget);
     expect(find.text('needs recordings 1/4'), findsOneWidget);
+  });
+
+  testWidgets('the parrot only talks while the Speech tab is selected',
+      (tester) async {
+    final hidden = FakeVoice();
+    await tester.pumpWidget(_app('en', voice: hidden, tab: 0)); // on Home
+    await tester.pumpAndSettle();
+    expect(hidden.said, isEmpty);
+
+    final shown = FakeVoice();
+    await tester.pumpWidget(_app('en', voice: shown, tab: 4)); // Speech tab
+    await tester.pumpAndSettle();
+    expect(shown.tts.spoken, ['en-US:Which language do you want to practise?']);
+  });
+
+  testWidgets('switching the app language says the question again',
+      (tester) async {
+    final voice = FakeVoice(ttsLanguages: {'en-US', 'si-LK'});
+    Widget app(String locale) => ProviderScope(
+          key: const ValueKey('same-app'),
+          overrides: [
+            speechWordsProvider.overrideWith((ref) async => _wordInfo()),
+            voice.override,
+            selectedTabProvider.overrideWith((ref) => 4),
+          ],
+          child: MaterialApp(
+            locale: Locale(locale),
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: AppLocalizations.supportedLocales,
+            builder: (context, child) => MediaQuery(
+                data: MediaQuery.of(context).copyWith(disableAnimations: true),
+                child: child!),
+            home: const SpeechStubScreen(),
+          ),
+        );
+    await tester.pumpWidget(app('en'));
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(app('si'));
+    await tester.pumpAndSettle();
+    expect(voice.tts.spoken, [
+      'en-US:Which language do you want to practise?',
+      'si-LK:ඔයා පුහුණු වෙන්න කැමති කුමන භාෂාවෙන්ද?',
+    ]);
   });
 }

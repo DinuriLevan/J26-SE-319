@@ -107,4 +107,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String speechLevel(int level) {
     return 'Level $level';
   }
+
+  @override
+  String get speechHearAgain => 'Hear again';
+
+  @override
+  String get speechVoiceOff => 'Turn the parrot\'s voice off';
+
+  @override
+  String get speechVoiceOn => 'Turn the parrot\'s voice on';
 }

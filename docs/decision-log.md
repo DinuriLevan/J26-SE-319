@@ -142,4 +142,14 @@ A running log of structural/technical decisions for the AkuRin shared foundation
 | **Gentle motion + celebrations** (pulsing mic, sound waves, one-off confetti and stars, card flip). Every animation follows the system **reduce motion** setting | Owner choice; calm by default. Reduce motion also keeps widget tests deterministic |
 | Practice and result screens scroll instead of overflowing on short screens (`FillOrScroll`) | Found by tests: the result screen overflowed by 112 px at 800×600 |
 
+## 2026-10-18 — Speech: spoken instructions (Fernando B.P.L)
+
+| Decision | Rationale |
+|---|---|
+| The parrot **speaks every instruction and feedback line** (17 prompts per language, keyed by their l10n keys) | Children with dyslexia may not be able to read the bubble |
+| Voice = **recorded adult prompts** bundled as app assets (`app/assets/speech/prompts/<en|si>/<key>.wav`, offline), with the device's **text-to-speech as fallback** when a prompt isn't recorded (`flutter_tts`, added add-only). If the device has no voice for the language, the line stays silent | Owner choice. A natural voice, offline-first, and usable before anything is recorded. Prompt audio is adult app content recorded with consent; child audio never goes in assets |
+| **Auto-speak** once per new instruction, never while recording (the mic tap stops the voice); a **replay** button on the bubble; a **mute** toggle for auto-speech in the speech app bars | Owner choice |
+| Spoken in the **app/UI language** (the profile's locale), not the practice language; switching language re-speaks | Owner choice: a Sinhala-speaking child practising English hears Sinhala instructions |
+| The parrot speaks only while the Speech tab is selected | The home shell keeps every tab mounted (`IndexedStack`), so the parrot would otherwise talk over other screens |
+
 <!-- Add new entries below this line, newest at the bottom or top — pick one convention and stay consistent. -->

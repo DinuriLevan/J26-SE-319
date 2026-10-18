@@ -26,10 +26,17 @@ enum ParrotMood {
 /// no image assets. Purely decorative for screen readers. Motion follows the system
 /// "reduce motion" setting; with it on, the parrot is drawn in its pose without animating.
 class ParrotBuddy extends StatefulWidget {
-  const ParrotBuddy({super.key, this.mood = ParrotMood.idle, this.size = 120});
+  const ParrotBuddy(
+      {super.key,
+      this.mood = ParrotMood.idle,
+      this.size = 120,
+      this.talking = false});
 
   final ParrotMood mood;
   final double size;
+
+  /// The parrot's beak moves while its spoken instruction is playing.
+  final bool talking;
 
   @override
   State<ParrotBuddy> createState() => _ParrotBuddyState();
@@ -70,7 +77,7 @@ class _ParrotBuddyState extends State<ParrotBuddy>
         child: AnimatedBuilder(
           animation: _c,
           builder: (_, __) => CustomPaint(
-            painter: _ParrotPainter(widget.mood, _c.value),
+            painter: _ParrotPainter(widget.mood, _c.value, widget.talking),
           ),
         ),
       ),
@@ -79,10 +86,11 @@ class _ParrotBuddyState extends State<ParrotBuddy>
 }
 
 class _ParrotPainter extends CustomPainter {
-  _ParrotPainter(this.mood, this.t);
+  _ParrotPainter(this.mood, this.t, this.talking);
 
   final ParrotMood mood;
   final double t; // 0..1, loops
+  final bool talking;
 
   static const green = Color(0xFF5BC27A);
   static const greenDark = Color(0xFF3FA25F);
@@ -185,7 +193,11 @@ class _ParrotPainter extends CustomPainter {
           eye + Offset(s * 0.02, -s * 0.012), s * 0.01, p(SpeechColors.paper));
     }
     // Hooked beak (opens a little while listening).
-    final open = mood == ParrotMood.listening ? (wave.abs() * s * 0.03) : 0.0;
+    final open = talking
+        ? (math.sin(t * 2 * math.pi * 8).abs() * s * 0.04)
+        : mood == ParrotMood.listening
+            ? (wave.abs() * s * 0.03)
+            : 0.0;
     final upper = Path()
       ..moveTo(head.dx + s * 0.15, head.dy - s * 0.02)
       ..quadraticBezierTo(head.dx + s * 0.32, head.dy - s * 0.01,
@@ -264,5 +276,6 @@ class _ParrotPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_ParrotPainter old) => old.t != t || old.mood != mood;
+  bool shouldRepaint(_ParrotPainter old) =>
+      old.t != t || old.mood != mood || old.talking != talking;
 }

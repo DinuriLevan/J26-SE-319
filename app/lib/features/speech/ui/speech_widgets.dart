@@ -6,18 +6,25 @@ import '../logic/retry_loop.dart';
 import 'parrot.dart';
 import 'speech_theme.dart';
 
-/// The parrot with a speech bubble holding the instruction or feedback.
+/// The parrot with a speech bubble holding the instruction or feedback. With [onReplay], a round
+/// speaker button on the bubble repeats the spoken instruction ([replayLabel] for screen readers).
 class ParrotSays extends StatelessWidget {
   const ParrotSays({
     super.key,
     required this.text,
     this.mood = ParrotMood.idle,
     this.parrotSize = 104,
+    this.talking = false,
+    this.onReplay,
+    this.replayLabel = 'Hear again',
   });
 
   final String text;
   final ParrotMood mood;
   final double parrotSize;
+  final bool talking;
+  final VoidCallback? onReplay;
+  final String replayLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -25,23 +32,53 @@ class ParrotSays extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        ParrotBuddy(mood: mood, size: parrotSize),
+        ParrotBuddy(mood: mood, size: parrotSize, talking: talking),
         const SizedBox(width: 4),
         Expanded(
           child: CustomPaint(
             painter: _BubblePainter(),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(28, 16, 18, 16),
-              child: AnimatedSwitcher(
-                duration: SpeechTheme.motion(context)
-                    ? const Duration(milliseconds: 250)
-                    : Duration.zero,
-                child: Text(
-                  text,
-                  key: ValueKey(text),
-                  style: theme.textTheme.titleMedium!
-                      .copyWith(fontWeight: FontWeight.w600),
-                ),
+              padding: const EdgeInsets.fromLTRB(28, 16, 12, 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: AnimatedSwitcher(
+                      duration: SpeechTheme.motion(context)
+                          ? const Duration(milliseconds: 250)
+                          : Duration.zero,
+                      child: Text(
+                        text,
+                        key: ValueKey(text),
+                        style: theme.textTheme.titleMedium!
+                            .copyWith(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                  if (onReplay != null) ...[
+                    const SizedBox(width: 8),
+                    Semantics(
+                      button: true,
+                      label: replayLabel,
+                      excludeSemantics: true,
+                      child: Material(
+                        color: talking ? SpeechColors.coral : SpeechColors.sky,
+                        shape: const CircleBorder(),
+                        child: InkWell(
+                          customBorder: const CircleBorder(),
+                          onTap: onReplay,
+                          child: SizedBox.square(
+                            dimension: 52,
+                            child: Icon(Icons.volume_up_rounded,
+                                size: 30,
+                                color: talking
+                                    ? SpeechColors.paper
+                                    : SpeechColors.blue),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
           ),

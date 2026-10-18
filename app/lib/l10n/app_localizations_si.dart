@@ -107,4 +107,13 @@ class AppLocalizationsSi extends AppLocalizations {
   String speechLevel(int level) {
     return 'මට්ටම $level';
   }
+
+  @override
+  String get speechHearAgain => 'ආයෙත් අහන්න';
+
+  @override
+  String get speechVoiceOff => 'ගිරවාගේ කටහඬ නවත්වන්න';
+
+  @override
+  String get speechVoiceOn => 'ගිරවාගේ කටහඬ දාන්න';
 }

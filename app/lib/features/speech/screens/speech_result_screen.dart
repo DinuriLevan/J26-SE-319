@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../audio/speech_voice.dart';
 import '../data/speech_words.dart';
 import '../ui/celebration.dart';
 import '../ui/parrot.dart';
 import '../ui/speech_theme.dart';
 import '../ui/speech_widgets.dart';
+import '../ui/talking_parrot.dart';
 
 /// End of a word's practice loop. Always encouraging and non-punitive: either the word was
 /// mastered (confetti, stars, maybe a new card) or we gently move on and practise the hard units
@@ -43,7 +45,10 @@ class SpeechResultScreen extends StatelessWidget {
               : l10n.speechFallbackBody(practiseLater.join(', '));
 
       return Scaffold(
-        appBar: AppBar(title: Text(l10n.speechTitle)),
+        appBar: AppBar(
+          title: Text(l10n.speechTitle),
+          actions: const [VoiceToggleButton()],
+        ),
         body: Stack(
           children: [
             SafeArea(
@@ -52,9 +57,44 @@ class SpeechResultScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     const Spacer(),
-                    ParrotBuddy(
-                      mood: mastered ? ParrotMood.happy : ParrotMood.encourage,
-                      size: 170,
+                    SpokenLines(
+                      lines: [
+                        VoiceLine(
+                            mastered ? 'speechGreatJob' : 'speechFallbackTitle',
+                            title),
+                        if (mastered)
+                          VoiceLine('speechAcceptedBody', body)
+                        else if (practiseLater.isEmpty)
+                          VoiceLine('speechPractiseBody', body)
+                        else
+                          // Recorded voice: the general "let's practise" line; TTS reads it all.
+                          VoiceLine('speechFallbackBody', body,
+                              recordedAlternative: const [
+                                'speechPractiseBody'
+                              ]),
+                        if (cardUnlocked)
+                          VoiceLine(
+                              'speechCardUnlocked', l10n.speechCardUnlocked),
+                      ],
+                      speakKey: 'result:${word.id}:$mastered',
+                      builder: (context, talking, replay) => Column(
+                        children: [
+                          ParrotBuddy(
+                            mood: mastered
+                                ? ParrotMood.happy
+                                : ParrotMood.encourage,
+                            size: 170,
+                            talking: talking,
+                          ),
+                          if (replay != null)
+                            IconButton.filledTonal(
+                              tooltip: l10n.speechHearAgain,
+                              onPressed: replay,
+                              iconSize: 30,
+                              icon: const Icon(Icons.volume_up_rounded),
+                            ),
+                        ],
+                      ),
                     ),
                     if (mastered) ...[
                       const SizedBox(height: 4),

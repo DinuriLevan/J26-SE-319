@@ -7,23 +7,29 @@ import 'package:akurin/features/speech/ui/speech_widgets.dart';
 import 'package:akurin/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Widget _wrap(Widget child, {bool reduceMotion = true}) => MaterialApp(
-      locale: const Locale('en'),
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: AppLocalizations.supportedLocales,
-      builder: (context, c) => MediaQuery(
-          data:
-              MediaQuery.of(context).copyWith(disableAnimations: reduceMotion),
-          child: c!),
-      home: SpeechThemed(child: Scaffold(body: Center(child: child))),
-    );
+import 'fake_voice.dart';
+
+Widget _wrap(Widget child, {bool reduceMotion = true, FakeVoice? voice}) =>
+    ProviderScope(
+        overrides: [(voice ?? FakeVoice()).override],
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          builder: (context, c) => MediaQuery(
+              data: MediaQuery.of(context)
+                  .copyWith(disableAnimations: reduceMotion),
+              child: c!),
+          home: SpeechThemed(child: Scaffold(body: Center(child: child))),
+        ));
 
 void main() {
   testWidgets('the parrot draws every mood', (tester) async {
@@ -112,5 +118,22 @@ void main() {
       final parrot = tester.widget<ParrotBuddy>(find.byType(ParrotBuddy));
       expect(parrot.mood, ParrotMood.encourage);
     });
+  });
+
+  testWidgets('the result screen says its title and message', (tester) async {
+    final voice = FakeVoice();
+    await tester.pumpWidget(_wrap(
+        const SpeechResultScreen(
+            word:
+                SpeechWord(id: 'w_005', text: 'cat', language: 'en', level: 1),
+            mastered: true,
+            cardUnlocked: true),
+        voice: voice));
+    await tester.pumpAndSettle();
+    expect(voice.tts.spoken, [
+      'en-US:Great job!',
+      'en-US:You said it really well.',
+      'en-US:You unlocked a new card!',
+    ]);
   });
 }

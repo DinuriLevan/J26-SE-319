@@ -3,13 +3,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../shared/widgets/app_drawer.dart';
+import '../home_shell/providers/nav_providers.dart';
+import 'audio/speech_voice.dart';
 import 'data/speech_api.dart';
 import 'data/speech_words.dart';
 import 'screens/speech_word_screen.dart';
-import 'ui/parrot.dart';
 import 'ui/speech_theme.dart';
-import 'ui/speech_widgets.dart';
+import 'ui/talking_parrot.dart';
 import 'ui/word_tile.dart';
+
+/// Position of this tab in HomeShellScreen's page list (Home, Math, Spelling, Writing, Speech).
+/// The shell keeps every tab mounted, so the parrot only speaks while this tab is selected.
+const _speechTabIndex = 4;
+
+final _speechTabActiveProvider =
+    Provider<bool>((ref) => ref.watch(selectedTabProvider) == _speechTabIndex);
 
 /// Entry point of the Speech & Pronunciation tab. The file/class name is kept as-is because the
 /// home shell references it (docs/CONTRIBUTING.md). It first asks which language to practise
@@ -27,6 +35,7 @@ class SpeechStubScreen extends ConsumerWidget {
           leading: const DrawerMenuButton(),
           title: Text(l10n.speechTitle),
           actions: [
+            const VoiceToggleButton(),
             if (language != null)
               IconButton(
                 tooltip: l10n.speechChangeLanguage,
@@ -67,7 +76,13 @@ class _LanguageChoice extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ParrotSays(text: l10n.speechChooseLanguage, parrotSize: 110),
+        TalkingParrot(
+          text: l10n.speechChooseLanguage,
+          lines: [VoiceLine('speechChooseLanguage', l10n.speechChooseLanguage)],
+          speakKey: 'choose-language',
+          active: ref.watch(_speechTabActiveProvider),
+          parrotSize: 110,
+        ),
         const SizedBox(height: 20),
         for (final (code, name, letter, colour) in _languages) ...[
           Expanded(
@@ -135,16 +150,25 @@ class _WordList extends ConsumerWidget {
         showUnready: ref.watch(speechShowUnreadyWordsProvider));
     // "Next word" in the practice screen only moves through words a child can practise.
     final playable = practiceWords(words, map, showUnready: false);
-    return _LevelGrid(words: shown, playable: playable, info: map);
+    return _LevelGrid(
+        words: shown,
+        playable: playable,
+        info: map,
+        active: ref.watch(_speechTabActiveProvider));
   }
 }
 
 class _LevelGrid extends StatelessWidget {
-  const _LevelGrid({required this.words, required this.playable, this.info});
+  const _LevelGrid(
+      {required this.words,
+      required this.playable,
+      this.info,
+      this.active = true});
 
   final List<SpeechWord> words;
   final List<SpeechWord> playable;
   final Map<String, WordInfo>? info;
+  final bool active;
 
   @override
   Widget build(BuildContext context) {
@@ -153,8 +177,13 @@ class _LevelGrid extends StatelessWidget {
 
     return ListView(
       children: [
-        ParrotSays(
-            text: l10n.speechChooseWord, mood: ParrotMood.idle, parrotSize: 84),
+        TalkingParrot(
+          text: l10n.speechChooseWord,
+          lines: [VoiceLine('speechChooseWord', l10n.speechChooseWord)],
+          speakKey: 'choose-word:${words.isEmpty ? '' : words.first.language}',
+          active: active,
+          parrotSize: 84,
+        ),
         for (final level in levels) ...[
           const SizedBox(height: 20),
           _LevelRibbon(level: level, label: l10n.speechLevel(level)),

@@ -31,5 +31,8 @@
   "speechLoading": "සූදානම් වෙනවා…",
   "speechChooseLanguage": "ඔයා පුහුණු වෙන්න කැමති කුමන භාෂාවෙන්ද?",
   "speechChangeLanguage": "භාෂාව වෙනස් කරන්න",
-  "speechLevel": "මට්ටම {level}"
+  "speechLevel": "මට්ටම {level}",
+  "speechHearAgain": "ආයෙත් අහන්න",
+  "speechVoiceOff": "ගිරවාගේ කටහඬ නවත්වන්න",
+  "speechVoiceOn": "ගිරවාගේ කටහඬ දාන්න"
 }

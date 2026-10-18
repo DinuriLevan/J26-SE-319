@@ -283,6 +283,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Level {level}'**
   String speechLevel(int level);
+
+  /// No description provided for @speechHearAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Hear again'**
+  String get speechHearAgain;
+
+  /// No description provided for @speechVoiceOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn the parrot\'s voice off'**
+  String get speechVoiceOff;
+
+  /// No description provided for @speechVoiceOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn the parrot\'s voice on'**
+  String get speechVoiceOn;
 }
 
 class _AppLocalizationsDelegate

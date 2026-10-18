@@ -45,6 +45,15 @@ shows that recordings are being saved as references, not scored. Each save relea
 threshold. Adults only: the service rejects any other `age_group`. Test with a *different* person than
 the one who recorded the references, or you are matching your own voice.
 
+**Spoken instructions (the parrot's voice):** the app speaks each instruction from a recorded adult
+voice, or from the phone's text-to-speech until one is recorded. To record:
+1. `python scripts/prepare_prompts.py --script` writes `data/prompts/RECORDING_SCRIPT.md`: 17 lines
+   × English/Sinhala, taken from the app's text so the voice matches the bubble.
+2. An adult (with consent) reads each line warmly and slowly. Save as `<folder>/en/<key>.wav` and
+   `<folder>/si/<key>.wav` (wav/ogg/flac).
+3. `python scripts/prepare_prompts.py --in <folder>` cleans the recordings (mono 22.05 kHz, trimmed,
+   loudness-normalised) into `app/assets/speech/prompts/`, and reports missing keys. Rebuild the app.
+
 `SPEECH_EMBEDDER=spectral` runs the service with the model-free stand-in embedder. The bank must then be
 built with `--embedder spectral`; the service refuses to start on a mismatch. Use it for development only.
 
