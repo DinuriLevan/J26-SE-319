@@ -34,5 +34,7 @@
   "speechLevel": "මට්ටම {level}",
   "speechHearAgain": "ආයෙත් අහන්න",
   "speechVoiceOff": "ගිරවාගේ කටහඬ නවත්වන්න",
-  "speechVoiceOn": "ගිරවාගේ කටහඬ දාන්න"
+  "speechVoiceOn": "ගිරවාගේ කටහඬ දාන්න",
+  "speechHearWord": "අහලා බලන්න",
+  "speechHearSound": "අහන්න"
 }

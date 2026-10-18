@@ -9,6 +9,9 @@ class FakePromptPlayer implements PromptPlayer {
   Future<void> playAsset(String assetPath) async => played.add(assetPath);
 
   @override
+  Future<void> playFile(String path) async => played.add('file:$path');
+
+  @override
   Future<void> stop() async {}
 }
 

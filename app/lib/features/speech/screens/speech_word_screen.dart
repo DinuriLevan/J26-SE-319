@@ -224,6 +224,41 @@ class _SpeechWordScreenState extends ConsumerState<SpeechWordScreen> {
     }
   }
 
+  /// "Hear before saying": plays the whole word, or units [start]..[end], when the child taps.
+  /// The adult recording is used when one exists; otherwise text-to-speech in the word's language,
+  /// except for English units: TTS reads a lone letter by its name ("c" -> "see"), which would
+  /// teach the wrong sound, so those need a recording.
+  Future<void> _hear({int? start, int? end}) async {
+    final info = _info;
+    if (info == null || _phase != _Phase.idle) return;
+    final word = _word;
+    final unit = start != null;
+    final hasRecording = unit
+        ? [for (var i = start; i <= end!; i++) i]
+            .every(info.listenUnits.contains)
+        : info.hasWordAudio;
+    final key = '${word.id}:$start-$end';
+    await _player.stop();
+    await ref.read(speechVoiceProvider).playModel(
+          fetchRecording: () async {
+            if (!hasRecording) return null;
+            if (!_listenCache.containsKey(key)) {
+              _listenCache[key] = await ref
+                  .read(speechApiProvider)
+                  .listen(word, start: start, end: end);
+            }
+            return _listenCache[key];
+          },
+          ttsText: unit ? info.spanLabel(start, end!) : word.text,
+          lang: word.language,
+          allowTts: !unit || word.language == 'si',
+        );
+  }
+
+  /// Tiles the child can tap to hear (see [_hear] for the English-letter rule).
+  bool _canHearUnit(int i) =>
+      _info!.listenUnits.contains(i) || _word.language == 'si';
+
   void _onListened() {
     _player.stop();
     setState(() {
@@ -504,6 +539,11 @@ class _SpeechWordScreenState extends ConsumerState<SpeechWordScreen> {
               wordId: _word.id, size: step.spanStart == null ? 120 : 72),
           const SizedBox(height: 16),
           SyllableTiles(
+            onTapUnit: _phase == _Phase.idle && !isListen
+                ? (i) => _hear(start: i, end: i)
+                : null,
+            canTapUnit: _canHearUnit,
+            hearLabel: l10n.speechHearSound,
             units: _info!.units,
             targetStart: step.spanStart,
             targetEnd: step.spanEnd,
@@ -523,6 +563,25 @@ class _SpeechWordScreenState extends ConsumerState<SpeechWordScreen> {
                 style: theme.textTheme.displayLarge!
                     .copyWith(color: SpeechColors.navy, height: 1.25),
               ),
+            ),
+          ],
+          if (!isListen) ...[
+            const SizedBox(height: 20),
+            // "Hear before saying": the whole word, or the sound being practised. Tap only, so
+            // the first try stays a real reading attempt.
+            FilledButton.tonalIcon(
+              key: const ValueKey('hear_it'),
+              style: FilledButton.styleFrom(
+                backgroundColor: SpeechColors.sky,
+                foregroundColor: SpeechColors.navy,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+              ),
+              onPressed: _phase == _Phase.idle
+                  ? () => _hear(start: step.spanStart, end: step.spanEnd)
+                  : null,
+              icon: const Icon(Icons.hearing_rounded, size: 30),
+              label: Text(l10n.speechHearWord),
             ),
           ],
           const Spacer(),

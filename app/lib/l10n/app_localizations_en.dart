@@ -116,4 +116,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get speechVoiceOn => 'Turn the parrot\'s voice on';
+
+  @override
+  String get speechHearWord => 'Hear it';
+
+  @override
+  String get speechHearSound => 'Hear';
 }

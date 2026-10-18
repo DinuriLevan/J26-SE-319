@@ -71,6 +71,33 @@ void main() {
     ]);
   });
 
+  testWidgets('tapping a hearable syllable tile plays that unit',
+      (tester) async {
+    final taps = <int>[];
+    final handle = tester.ensureSemantics();
+    await tester.pumpWidget(_wrap(SyllableTiles(
+      units: const ['c', 'a', 't'],
+      onTapUnit: taps.add,
+      canTapUnit: (i) => i != 2, // e.g. no adult recording for "t"
+      hearLabel: 'Hear',
+    )));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('tap_tile_1')));
+    expect(taps, [1]);
+    expect(find.byKey(const ValueKey('tap_tile_2')), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('tile_2')), warnIfMissed: false);
+    expect(taps, [1]);
+    expect(find.bySemanticsLabel('Hear a'), findsOneWidget);
+    handle.dispose();
+  });
+
+  testWidgets('tiles are plain (not tappable) without onTapUnit',
+      (tester) async {
+    await tester.pumpWidget(_wrap(const SyllableTiles(units: ['ම', 'ම'])));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('tap_tile_0')), findsNothing);
+  });
+
   testWidgets('mic button has a screen-reader label and recording state',
       (tester) async {
     final handle = tester.ensureSemantics();

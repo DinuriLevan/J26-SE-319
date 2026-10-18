@@ -50,5 +50,7 @@
   },
   "speechHearAgain": "Hear again",
   "speechVoiceOff": "Turn the parrot's voice off",
-  "speechVoiceOn": "Turn the parrot's voice on"
+  "speechVoiceOn": "Turn the parrot's voice on",
+  "speechHearWord": "Hear it",
+  "speechHearSound": "Hear"
 }

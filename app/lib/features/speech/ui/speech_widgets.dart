@@ -378,12 +378,26 @@ class SyllableTiles extends StatelessWidget {
     this.targetStart,
     this.targetEnd,
     this.fontSize = 56,
+    this.onTapUnit,
+    this.canTapUnit,
+    this.hearLabel = 'Hear',
   });
 
   final List<String> units;
   final int? targetStart;
   final int? targetEnd;
   final double fontSize;
+
+  /// "Hear before saying": called with the tile's index when a tappable tile is tapped.
+  final void Function(int index)? onTapUnit;
+
+  /// Which tiles can be tapped (all, when null and [onTapUnit] is set).
+  final bool Function(int index)? canTapUnit;
+
+  /// Screen-reader prefix for tappable tiles, e.g. "Hear" -> "Hear ම".
+  final String hearLabel;
+
+  bool tappable(int i) => onTapUnit != null && (canTapUnit?.call(i) ?? true);
 
   bool isTarget(int i) =>
       targetStart != null && i >= targetStart! && i <= targetEnd!;
@@ -405,28 +419,68 @@ class SyllableTiles extends StatelessWidget {
                 duration:
                     motion ? const Duration(milliseconds: 300) : Duration.zero,
                 curve: Curves.easeOutBack,
-                child: Container(
-                  key: ValueKey('tile_$i'),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                  decoration: BoxDecoration(
-                    color:
-                        isTarget(i) ? SpeechColors.peach : SpeechColors.paper,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: isTarget(i)
-                          ? SpeechColors.coral
-                          : SpeechColors.navySoft.withValues(alpha: 0.15),
-                      width: isTarget(i) ? 3 : 2,
+                child: _tappable(
+                  i,
+                  Container(
+                    key: ValueKey('tile_$i'),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(
+                      color:
+                          isTarget(i) ? SpeechColors.peach : SpeechColors.paper,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: isTarget(i)
+                            ? SpeechColors.coral
+                            : SpeechColors.navySoft.withValues(alpha: 0.15),
+                        width: isTarget(i) ? 3 : 2,
+                      ),
+                      boxShadow: isTarget(i) ? speechShadow : null,
                     ),
-                    boxShadow: isTarget(i) ? speechShadow : null,
+                    child: Text(units[i],
+                        style:
+                            style.copyWith(fontSize: fontSize, height: 1.25)),
                   ),
-                  child: Text(units[i],
-                      style: style.copyWith(fontSize: fontSize, height: 1.25)),
                 ),
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  /// Makes a tile tappable (with a small speaker badge) when it can be heard.
+  Widget _tappable(int i, Widget tile) {
+    if (!tappable(i)) return tile;
+    return Semantics(
+      button: true,
+      label: '$hearLabel ${units[i]}',
+      excludeSemantics: true,
+      child: GestureDetector(
+        key: ValueKey('tap_tile_$i'),
+        behavior: HitTestBehavior.opaque,
+        onTap: () => onTapUnit!(i),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            tile,
+            Positioned(
+              right: -4,
+              top: -4,
+              child: Container(
+                width: 26,
+                height: 26,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: SpeechColors.sky,
+                  boxShadow: speechShadow,
+                ),
+                child: const Icon(Icons.volume_up_rounded,
+                    size: 16, color: SpeechColors.blue),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -69,6 +69,62 @@ void main() {
     });
   });
 
+  group('hear before saying (playModel)', () {
+    test('plays the adult recording when there is one', () async {
+      final f = FakeVoice();
+      await f.voice.playModel(
+          fetchRecording: () async => '/tmp/cat.wav',
+          ttsText: 'cat',
+          lang: 'en',
+          allowTts: true);
+      expect(f.player.played, ['file:/tmp/cat.wav']);
+      expect(f.tts.spoken, isEmpty);
+    });
+
+    test('falls back to TTS in the word language without a recording',
+        () async {
+      final f = FakeVoice(ttsLanguages: {'en-US', 'si-LK'});
+      await f.voice.playModel(
+          fetchRecording: () async => null,
+          ttsText: 'ම්මා',
+          lang: 'si',
+          allowTts: true);
+      expect(f.tts.spoken, ['si-LK:ම්මා']);
+    });
+
+    test('English letters never fall back to TTS', () async {
+      final f = FakeVoice();
+      await f.voice.playModel(
+          fetchRecording: () async => null,
+          ttsText: 'c',
+          lang: 'en',
+          allowTts: false);
+      expect(f.said, isEmpty);
+    });
+
+    test('a failed download counts as no recording', () async {
+      final f = FakeVoice();
+      await f.voice.playModel(
+          fetchRecording: () async => throw Exception('offline'),
+          ttsText: 'cat',
+          lang: 'en',
+          allowTts: true);
+      expect(f.tts.spoken, ['en-US:cat']);
+      expect(f.voice.speaking.value, isFalse);
+    });
+
+    test('plays even when the parrot is muted (the child asked for it)',
+        () async {
+      final f = FakeVoice()..voice.autoSpeak = false;
+      await f.voice.playModel(
+          fetchRecording: () async => null,
+          ttsText: 'sun',
+          lang: 'en',
+          allowTts: true);
+      expect(f.tts.spoken, ['en-US:sun']);
+    });
+  });
+
   testWidgets('the bubble replay button calls onReplay and is labelled',
       (tester) async {
     var replays = 0;

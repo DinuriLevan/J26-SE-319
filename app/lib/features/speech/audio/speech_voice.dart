@@ -19,9 +19,10 @@ class VoiceLine {
   final List<String> recordedAlternative;
 }
 
-/// Plays a recorded prompt; completes when it has finished.
+/// Plays a recording (a bundled prompt or a downloaded model word); completes when finished.
 abstract class PromptPlayer {
   Future<void> playAsset(String assetPath);
+  Future<void> playFile(String path);
   Future<void> stop();
 }
 
@@ -95,6 +96,38 @@ class SpeechVoice {
     }
   }
 
+  /// "Hear before saying": plays the model word or syllable. Uses the adult recording returned by
+  /// [fetchRecording] when there is one (a fetch error counts as none); otherwise, if
+  /// [allowTts], the device's voice reads [ttsText] in [lang] (the word's language); otherwise
+  /// nothing. Shares this voice's channel, so it replaces the parrot and [stop] cuts it off.
+  Future<void> playModel({
+    required Future<String?> Function() fetchRecording,
+    required String ttsText,
+    required String lang,
+    required bool allowTts,
+  }) async {
+    await stop();
+    final gen = _generation;
+    speaking.value = true;
+    try {
+      String? path;
+      try {
+        path = await fetchRecording();
+      } catch (_) {
+        path = null; // offline or service down: fall back below
+      }
+      if (gen != _generation) return;
+      if (path != null) {
+        await _player.playFile(path);
+      } else if (allowTts && await _hasTts(lang)) {
+        if (gen != _generation) return;
+        await _tts.speak(ttsText, ttsTag(lang));
+      }
+    } finally {
+      if (gen == _generation) speaking.value = false;
+    }
+  }
+
   Future<void> stop() async {
     _generation++;
     speaking.value = false;
@@ -119,6 +152,12 @@ class JustAudioPromptPlayer implements PromptPlayer {
   Future<void> playAsset(String assetPath) async {
     await _player.setAsset(assetPath);
     await _player.play(); // completes when playback ends or is stopped
+  }
+
+  @override
+  Future<void> playFile(String path) async {
+    await _player.setFilePath(path);
+    await _player.play();
   }
 
   @override

@@ -301,6 +301,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Turn the parrot\'s voice on'**
   String get speechVoiceOn;
+
+  /// No description provided for @speechHearWord.
+  ///
+  /// In en, this message translates to:
+  /// **'Hear it'**
+  String get speechHearWord;
+
+  /// No description provided for @speechHearSound.
+  ///
+  /// In en, this message translates to:
+  /// **'Hear'**
+  String get speechHearSound;
 }
 
 class _AppLocalizationsDelegate

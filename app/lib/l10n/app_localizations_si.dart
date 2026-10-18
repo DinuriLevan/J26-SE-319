@@ -116,4 +116,10 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get speechVoiceOn => 'ගිරවාගේ කටහඬ දාන්න';
+
+  @override
+  String get speechHearWord => 'අහලා බලන්න';
+
+  @override
+  String get speechHearSound => 'අහන්න';
 }
