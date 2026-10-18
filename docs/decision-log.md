@@ -152,4 +152,13 @@ A running log of structural/technical decisions for the AkuRin shared foundation
 | Spoken in the **app/UI language** (the profile's locale), not the practice language; switching language re-speaks | Owner choice: a Sinhala-speaking child practising English hears Sinhala instructions |
 | The parrot speaks only while the Speech tab is selected | The home shell keeps every tab mounted (`IndexedStack`), so the parrot would otherwise talk over other screens |
 
+## 2026-10-18 — Speech: a picture for each word (Fernando B.P.L)
+
+| Decision | Rationale |
+|---|---|
+| Every practice word has a picture: a **Twemoji SVG** (CC-BY 4.0, v15.1.0) bundled in `app/assets/speech/pictures/<word_id>.svg` (60 files, 243 KB) with `ATTRIBUTION.md`; the emoji is the `picture` column in `ml/speech/config/words.csv`, fetched by `scripts/fetch_word_pictures.py` from a version-pinned CDN URL | Owner choice. Pictures help children with dyslexia link the word to its meaning; bundling keeps them offline and identical on every phone (system emoji vary and are missing on old Android) |
+| Shown on the word cards, the practice screen (large on the whole-word step, smaller while practising a sound) and the result screen; an attribution line sits under the speech word list | Owner choice; the smaller picture during practice keeps the highlighted syllables in focus |
+| Abstract words get best-effort pictures (මම🙋, අපි🧑‍🤝‍🧑, මට🤲, වැඩ🧹, ලස්සන🌈, ran/runs🏃, fast🐆, she👩, play🤸, tasty😋), TO REVIEW WITH A TEACHER. Twemoji's family emoji (silhouette icons) were replaced by character pictures (අම්මා👩‍🍼) | Seen on the emulator: Twemoji draws family sequences as abstract blue pictograms, which don't suit children |
+| `flutter_svg` added (add-only, pure Dart) | Sharp at any size; the 72 px PNGs would blur at the practice-screen size |
+
 <!-- Add new entries below this line, newest at the bottom or top — pick one convention and stay consistent. -->

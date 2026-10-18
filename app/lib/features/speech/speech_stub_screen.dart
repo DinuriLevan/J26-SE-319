@@ -201,6 +201,11 @@ class _LevelGrid extends StatelessWidget {
             ],
           ),
         ],
+        const SizedBox(height: 20),
+        // Twemoji licence (CC-BY 4.0) asks for attribution.
+        Text('Pictures: Twemoji (CC-BY 4.0)',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall),
         const SizedBox(height: 12),
       ],
     );
@@ -210,6 +215,7 @@ class _LevelGrid extends StatelessWidget {
     final ready = info == null || isWordReady(info![word.id]);
     final index = playable.indexOf(word);
     return WordTile(
+      wordId: word.id,
       text: word.text,
       level: word.level,
       ready: ready,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'speech_theme.dart';
+import 'word_picture.dart';
 
 /// A pastel word card, coloured by level, with the level's stars in the corner. An unready word
 /// (developer view only) is greyed and shows how many recordings it still needs.
@@ -10,11 +11,15 @@ class WordTile extends StatelessWidget {
     required this.text,
     required this.level,
     required this.onTap,
+    this.wordId,
     this.ready = true,
     this.badge,
   });
 
   final String text;
+
+  /// Shows the word's picture on the left when given.
+  final String? wordId;
   final int level;
   final VoidCallback onTap;
   final bool ready;
@@ -61,23 +66,42 @@ class WordTile extends StatelessWidget {
                   ),
                 ),
                 Center(
-                  child: Column(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          text,
-                          style: theme.textTheme.headlineMedium!.copyWith(
-                            fontSize: 34,
-                            color: ready
-                                ? SpeechColors.navy
-                                : SpeechColors.navySoft.withValues(alpha: 0.6),
-                          ),
+                      if (wordId != null) ...[
+                        Opacity(
+                          opacity: ready ? 1 : 0.4,
+                          child: WordPicture(wordId: wordId!, size: 50),
+                        ),
+                        const SizedBox(width: 10),
+                      ],
+                      Flexible(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                text,
+                                style: theme.textTheme.headlineMedium!.copyWith(
+                                  fontSize: 32,
+                                  color: ready
+                                      ? SpeechColors.navy
+                                      : SpeechColors.navySoft
+                                          .withValues(alpha: 0.6),
+                                ),
+                              ),
+                            ),
+                            if (badge != null)
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(badge!,
+                                    style: theme.textTheme.labelSmall),
+                              ),
+                          ],
                         ),
                       ),
-                      if (badge != null)
-                        Text(badge!, style: theme.textTheme.labelSmall),
                     ],
                   ),
                 ),

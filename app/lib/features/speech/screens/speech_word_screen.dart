@@ -20,6 +20,7 @@ import '../ui/parrot.dart';
 import '../ui/speech_theme.dart';
 import '../ui/speech_widgets.dart';
 import '../ui/talking_parrot.dart';
+import '../ui/word_picture.dart';
 import 'speech_result_screen.dart';
 
 enum _Phase { idle, recording, checking }
@@ -497,6 +498,11 @@ class _SpeechWordScreenState extends ConsumerState<SpeechWordScreen> {
             StepTrail(kind: step.kind),
             const SizedBox(height: 20),
           ],
+          // The word's picture: big for the whole word, smaller while practising a sound so the
+          // highlighted tiles stay the focus.
+          WordPicture(
+              wordId: _word.id, size: step.spanStart == null ? 120 : 72),
+          const SizedBox(height: 16),
           SyllableTiles(
             units: _info!.units,
             targetStart: step.spanStart,

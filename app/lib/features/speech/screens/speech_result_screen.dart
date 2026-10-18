@@ -8,6 +8,7 @@ import '../ui/parrot.dart';
 import '../ui/speech_theme.dart';
 import '../ui/speech_widgets.dart';
 import '../ui/talking_parrot.dart';
+import '../ui/word_picture.dart';
 
 /// End of a word's practice loop. Always encouraging and non-punitive: either the word was
 /// mastered (confetti, stars, maybe a new card) or we gently move on and practise the hard units
@@ -112,9 +113,18 @@ class SpeechResultScreen extends StatelessWidget {
                         color: mastered ? SpeechColors.mint : SpeechColors.sky,
                         borderRadius: BorderRadius.circular(SpeechTheme.radius),
                       ),
-                      child: Text(word.text,
-                          style: theme.textTheme.displaySmall!
-                              .copyWith(height: 1.3)),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          WordPicture(wordId: word.id, size: 64),
+                          const SizedBox(width: 14),
+                          Flexible(
+                            child: Text(word.text,
+                                style: theme.textTheme.displaySmall!
+                                    .copyWith(height: 1.3)),
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Text(body,

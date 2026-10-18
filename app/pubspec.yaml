@@ -39,6 +39,7 @@ dependencies:
   permission_handler: ^12.0.1 # 13.x needs compileSdk 37; app compiles against 36
   just_audio: ^0.10.6
   flutter_tts: ^4.2.5 # spoken instructions: fallback when a prompt is not recorded yet
+  flutter_svg: ^2.3.0 # word pictures (Twemoji SVGs, assets/speech/pictures)
 
 dev_dependencies:
   flutter_test:
@@ -65,6 +66,8 @@ flutter:
     # Speech component: recorded spoken instructions (adult voice), one WAV per l10n key
     - assets/speech/prompts/en/
     - assets/speech/prompts/si/
+    # Speech component: one picture per practice word (Twemoji, CC-BY 4.0, see ATTRIBUTION.md)
+    - assets/speech/pictures/
 
   fonts:
     - family: Lexend

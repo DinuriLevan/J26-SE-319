@@ -159,6 +159,9 @@ has ≥ 4 references (counts as of 2026-10-18 in brackets). Debug builds list un
 | 2 | බත්, මල්, පාට, ගෙදර, පොත්, *වතුර (0)*, *හාවා (0)*, *පූසා (2)* | she, sky, play, book, boy, toy, ball, fly, rice, birds, *fish (2)*, *ship (0)*, *frog (2)* |
 | 3 | අම්මා, අක්කා, තාත්තා, පාසල්, මල්ලි, ලස්සන, සෙල්ලම්, පාඩම්, කියවයි, *බල්ලා (2)*, *කෙසෙල් (2)* | school, apple, garden, tasty, *rabbit (0)*, *window (0)*, *sister (0)*, *pencil (2)* |
 
+- **Pictures:** each word has a Twemoji picture (CC-BY 4.0) from the `picture` column, fetched with
+  `python scripts/fetch_word_pictures.py` (only missing files; `--force` refreshes all) into
+  `app/assets/speech/pictures/`. Abstract words have best-effort pictures, TO REVIEW WITH A TEACHER.
 - Ready now: 20 per language. To make a curated word ready, record it with the reference mode from 4
   minus its count different adults (one take each).
 - **Risk:** banks from only 2 children have narrow ranges and may reject correct new speakers: hat,
