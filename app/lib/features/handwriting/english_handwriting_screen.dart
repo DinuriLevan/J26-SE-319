@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'models/character_stroke_definition.dart';
 import 'screens/character_demonstration_screen.dart';
+import 'services/handwriting_classifier.dart';
 import 'widgets/character_selection_view.dart';
 
 const _englishLetters = [
@@ -128,6 +129,9 @@ class EnglishHandwritingScreen extends StatelessWidget {
         builder: (_) => CharacterDemonstrationScreen(
           character: character,
           language: HandwritingLanguage.english,
+          modelType: character == character.toUpperCase()
+              ? HandwritingModelType.englishUppercase
+              : HandwritingModelType.englishLowercase,
           emoji: _letterEmojis[letterIndex],
           exampleWord: _letterWords[letterIndex],
         ),

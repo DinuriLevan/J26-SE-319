@@ -1,9 +1,9 @@
 {
-  "generated_at_utc": "2026-10-16T17:43:06.401370+00:00",
+  "generated_at_utc": "2026-10-18T09:16:33.985295+00:00",
   "raw_directory": "D:\\Study Materials\\Research Project\\J26-SE-319\\ml\\handwriting\\datasets\\raw",
   "processed_directory": "D:\\Study Materials\\Research Project\\J26-SE-319\\ml\\handwriting\\datasets\\processed",
-  "total_found": 9791,
-  "processed": 9791,
+  "total_found": 150,
+  "processed": 150,
   "skipped": 0,
   "failed": 0,
   "output_size": "224x224",
@@ -16,592 +16,166 @@
   ],
   "per_dataset": {
     "english_lowercase": {
-      "found": 2395,
-      "processed": 2395,
-      "skipped": 0,
-      "failed": 0
-    },
-    "english_uppercase": {
-      "found": 4093,
-      "processed": 4093,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala": {
-      "found": 3303,
-      "processed": 3303,
+      "found": 150,
+      "processed": 150,
       "skipped": 0,
       "failed": 0
     }
   },
   "per_class": {
     "english_lowercase/a": {
-      "found": 163,
-      "processed": 163,
+      "found": 6,
+      "processed": 6,
       "skipped": 0,
       "failed": 0
     },
     "english_lowercase/b": {
-      "found": 154,
-      "processed": 154,
+      "found": 6,
+      "processed": 6,
       "skipped": 0,
       "failed": 0
     },
     "english_lowercase/c": {
-      "found": 92,
-      "processed": 92,
+      "found": 7,
+      "processed": 7,
       "skipped": 0,
       "failed": 0
     },
     "english_lowercase/d": {
-      "found": 59,
-      "processed": 59,
+      "found": 6,
+      "processed": 6,
       "skipped": 0,
       "failed": 0
     },
     "english_lowercase/e": {
-      "found": 82,
-      "processed": 82,
+      "found": 7,
+      "processed": 7,
       "skipped": 0,
       "failed": 0
     },
     "english_lowercase/f": {
-      "found": 121,
-      "processed": 121,
+      "found": 5,
+      "processed": 5,
       "skipped": 0,
       "failed": 0
     },
     "english_lowercase/g": {
-      "found": 50,
-      "processed": 50,
+      "found": 6,
+      "processed": 6,
       "skipped": 0,
       "failed": 0
     },
     "english_lowercase/h": {
-      "found": 62,
-      "processed": 62,
+      "found": 6,
+      "processed": 6,
       "skipped": 0,
       "failed": 0
     },
     "english_lowercase/i": {
-      "found": 83,
-      "processed": 83,
+      "found": 7,
+      "processed": 7,
       "skipped": 0,
       "failed": 0
     },
     "english_lowercase/j": {
-      "found": 100,
-      "processed": 100,
+      "found": 6,
+      "processed": 6,
       "skipped": 0,
       "failed": 0
     },
     "english_lowercase/k": {
-      "found": 102,
-      "processed": 102,
+      "found": 5,
+      "processed": 5,
       "skipped": 0,
       "failed": 0
     },
     "english_lowercase/l": {
-      "found": 60,
-      "processed": 60,
+      "found": 5,
+      "processed": 5,
       "skipped": 0,
       "failed": 0
     },
     "english_lowercase/m": {
-      "found": 92,
-      "processed": 92,
+      "found": 5,
+      "processed": 5,
       "skipped": 0,
       "failed": 0
     },
     "english_lowercase/n": {
-      "found": 65,
-      "processed": 65,
+      "found": 6,
+      "processed": 6,
       "skipped": 0,
       "failed": 0
     },
     "english_lowercase/o": {
-      "found": 122,
-      "processed": 122,
+      "found": 5,
+      "processed": 5,
       "skipped": 0,
       "failed": 0
     },
     "english_lowercase/p": {
-      "found": 110,
-      "processed": 110,
+      "found": 5,
+      "processed": 5,
       "skipped": 0,
       "failed": 0
     },
     "english_lowercase/q": {
-      "found": 62,
-      "processed": 62,
+      "found": 5,
+      "processed": 5,
       "skipped": 0,
       "failed": 0
     },
     "english_lowercase/r": {
-      "found": 87,
-      "processed": 87,
+      "found": 5,
+      "processed": 5,
       "skipped": 0,
       "failed": 0
     },
     "english_lowercase/s": {
-      "found": 58,
-      "processed": 58,
+      "found": 6,
+      "processed": 6,
       "skipped": 0,
       "failed": 0
     },
     "english_lowercase/t": {
-      "found": 96,
-      "processed": 96,
+      "found": 6,
+      "processed": 6,
       "skipped": 0,
       "failed": 0
     },
     "english_lowercase/u": {
-      "found": 85,
-      "processed": 85,
+      "found": 6,
+      "processed": 6,
       "skipped": 0,
       "failed": 0
     },
     "english_lowercase/v": {
-      "found": 108,
-      "processed": 108,
+      "found": 6,
+      "processed": 6,
       "skipped": 0,
       "failed": 0
     },
     "english_lowercase/w": {
-      "found": 94,
-      "processed": 94,
+      "found": 6,
+      "processed": 6,
       "skipped": 0,
       "failed": 0
     },
     "english_lowercase/x": {
-      "found": 88,
-      "processed": 88,
+      "found": 5,
+      "processed": 5,
       "skipped": 0,
       "failed": 0
     },
     "english_lowercase/y": {
-      "found": 82,
-      "processed": 82,
+      "found": 6,
+      "processed": 6,
       "skipped": 0,
       "failed": 0
     },
     "english_lowercase/z": {
-      "found": 118,
-      "processed": 118,
-      "skipped": 0,
-      "failed": 0
-    },
-    "english_uppercase/A": {
-      "found": 215,
-      "processed": 215,
-      "skipped": 0,
-      "failed": 0
-    },
-    "english_uppercase/B": {
-      "found": 199,
-      "processed": 199,
-      "skipped": 0,
-      "failed": 0
-    },
-    "english_uppercase/C": {
-      "found": 216,
-      "processed": 216,
-      "skipped": 0,
-      "failed": 0
-    },
-    "english_uppercase/D": {
-      "found": 192,
-      "processed": 192,
-      "skipped": 0,
-      "failed": 0
-    },
-    "english_uppercase/E": {
-      "found": 169,
-      "processed": 169,
-      "skipped": 0,
-      "failed": 0
-    },
-    "english_uppercase/F": {
-      "found": 201,
-      "processed": 201,
-      "skipped": 0,
-      "failed": 0
-    },
-    "english_uppercase/G": {
-      "found": 87,
-      "processed": 87,
-      "skipped": 0,
-      "failed": 0
-    },
-    "english_uppercase/H": {
-      "found": 206,
-      "processed": 206,
-      "skipped": 0,
-      "failed": 0
-    },
-    "english_uppercase/I": {
-      "found": 216,
-      "processed": 216,
-      "skipped": 0,
-      "failed": 0
-    },
-    "english_uppercase/J": {
-      "found": 199,
-      "processed": 199,
-      "skipped": 0,
-      "failed": 0
-    },
-    "english_uppercase/K": {
-      "found": 97,
-      "processed": 97,
-      "skipped": 0,
-      "failed": 0
-    },
-    "english_uppercase/L": {
-      "found": 167,
-      "processed": 167,
-      "skipped": 0,
-      "failed": 0
-    },
-    "english_uppercase/M": {
-      "found": 209,
-      "processed": 209,
-      "skipped": 0,
-      "failed": 0
-    },
-    "english_uppercase/N": {
-      "found": 220,
-      "processed": 220,
-      "skipped": 0,
-      "failed": 0
-    },
-    "english_uppercase/O": {
-      "found": 135,
-      "processed": 135,
-      "skipped": 0,
-      "failed": 0
-    },
-    "english_uppercase/P": {
-      "found": 134,
-      "processed": 134,
-      "skipped": 0,
-      "failed": 0
-    },
-    "english_uppercase/Q": {
-      "found": 94,
-      "processed": 94,
-      "skipped": 0,
-      "failed": 0
-    },
-    "english_uppercase/R": {
-      "found": 215,
-      "processed": 215,
-      "skipped": 0,
-      "failed": 0
-    },
-    "english_uppercase/S": {
-      "found": 131,
-      "processed": 131,
-      "skipped": 0,
-      "failed": 0
-    },
-    "english_uppercase/T": {
-      "found": 216,
-      "processed": 216,
-      "skipped": 0,
-      "failed": 0
-    },
-    "english_uppercase/U": {
-      "found": 110,
-      "processed": 110,
-      "skipped": 0,
-      "failed": 0
-    },
-    "english_uppercase/V": {
-      "found": 104,
-      "processed": 104,
-      "skipped": 0,
-      "failed": 0
-    },
-    "english_uppercase/W": {
-      "found": 108,
-      "processed": 108,
-      "skipped": 0,
-      "failed": 0
-    },
-    "english_uppercase/X": {
-      "found": 111,
-      "processed": 111,
-      "skipped": 0,
-      "failed": 0
-    },
-    "english_uppercase/Y": {
-      "found": 59,
-      "processed": 59,
-      "skipped": 0,
-      "failed": 0
-    },
-    "english_uppercase/Z": {
-      "found": 83,
-      "processed": 83,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/අ": {
-      "found": 77,
-      "processed": 77,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ආ": {
-      "found": 77,
-      "processed": 77,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ඇ": {
-      "found": 78,
-      "processed": 78,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ඈ": {
-      "found": 76,
-      "processed": 76,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ඉ": {
-      "found": 78,
-      "processed": 78,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ඊ": {
-      "found": 78,
-      "processed": 78,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/උ": {
-      "found": 78,
-      "processed": 78,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ඌ": {
-      "found": 77,
-      "processed": 77,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/එ": {
-      "found": 77,
-      "processed": 77,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ඒ": {
-      "found": 75,
-      "processed": 75,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ඔ": {
-      "found": 75,
-      "processed": 75,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ඕ": {
-      "found": 77,
-      "processed": 77,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ක": {
-      "found": 76,
-      "processed": 76,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ඛ": {
-      "found": 79,
-      "processed": 79,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ග": {
-      "found": 80,
-      "processed": 80,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ඝ": {
-      "found": 77,
-      "processed": 77,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ච": {
-      "found": 76,
-      "processed": 76,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ඡ": {
-      "found": 76,
-      "processed": 76,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ජ": {
-      "found": 78,
-      "processed": 78,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ට": {
-      "found": 77,
-      "processed": 77,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ඨ": {
-      "found": 79,
-      "processed": 79,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ඩ": {
-      "found": 77,
-      "processed": 77,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ණ": {
-      "found": 78,
-      "processed": 78,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ත": {
-      "found": 77,
-      "processed": 77,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ථ": {
-      "found": 63,
-      "processed": 63,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ද": {
-      "found": 77,
-      "processed": 77,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ධ": {
-      "found": 79,
-      "processed": 79,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/න": {
-      "found": 79,
-      "processed": 79,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ප": {
-      "found": 78,
-      "processed": 78,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ඵ": {
-      "found": 77,
-      "processed": 77,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/බ": {
-      "found": 81,
-      "processed": 81,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/භ": {
-      "found": 75,
-      "processed": 75,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ම": {
-      "found": 77,
-      "processed": 77,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ඹ": {
-      "found": 72,
-      "processed": 72,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ය": {
-      "found": 78,
-      "processed": 78,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ර": {
-      "found": 80,
-      "processed": 80,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ල": {
-      "found": 77,
-      "processed": 77,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ව": {
-      "found": 73,
-      "processed": 73,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ශ": {
-      "found": 76,
-      "processed": 76,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ෂ": {
-      "found": 75,
-      "processed": 75,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ස": {
-      "found": 78,
-      "processed": 78,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/හ": {
-      "found": 79,
-      "processed": 79,
-      "skipped": 0,
-      "failed": 0
-    },
-    "sinhala/ළ": {
-      "found": 76,
-      "processed": 76,
+      "found": 6,
+      "processed": 6,
       "skipped": 0,
       "failed": 0
     }

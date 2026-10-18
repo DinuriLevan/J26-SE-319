@@ -4,6 +4,7 @@ import '../data/character_stroke_repository.dart';
 import '../data/sinhala_strokes.dart';
 import '../models/character_stroke_definition.dart';
 import '../models/handwriting_animation_config.dart';
+import '../services/handwriting_classifier.dart';
 import '../widgets/demonstration_controls.dart';
 import '../widgets/stroke_demonstration_canvas.dart';
 import 'handwriting_practice_screen.dart';
@@ -15,12 +16,14 @@ class CharacterDemonstrationScreen extends StatefulWidget {
     required this.language,
     this.emoji,
     this.exampleWord,
+    this.modelType,
   });
 
   final String character;
   final HandwritingLanguage language;
   final String? emoji;
   final String? exampleWord;
+  final HandwritingModelType? modelType;
 
   @override
   State<CharacterDemonstrationScreen> createState() =>
@@ -131,9 +134,19 @@ class _CharacterDemonstrationScreenState
       MaterialPageRoute<void>(
         builder: (_) => HandwritingPracticeScreen(
           character: widget.character,
+          modelType: widget.modelType ?? _modelTypeForSelection(),
         ),
       ),
     );
+  }
+
+  HandwritingModelType _modelTypeForSelection() {
+    if (widget.language == HandwritingLanguage.sinhala) {
+      return HandwritingModelType.sinhala;
+    }
+    return widget.character == widget.character.toUpperCase()
+        ? HandwritingModelType.englishUppercase
+        : HandwritingModelType.englishLowercase;
   }
 
   @override

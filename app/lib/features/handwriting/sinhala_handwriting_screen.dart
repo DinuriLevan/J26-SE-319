@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'models/character_stroke_definition.dart';
 import 'screens/character_demonstration_screen.dart';
+import 'services/handwriting_classifier.dart';
 import 'widgets/character_selection_view.dart';
 
 // The 43 introductory Sinhala letters used by the supplied learning design.
@@ -86,6 +87,7 @@ class SinhalaHandwritingScreen extends StatelessWidget {
         builder: (_) => CharacterDemonstrationScreen(
           character: character,
           language: HandwritingLanguage.sinhala,
+          modelType: HandwritingModelType.sinhala,
         ),
       ),
     );
