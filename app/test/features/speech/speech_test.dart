@@ -68,7 +68,7 @@ class _ListAdapter implements HttpClientAdapter {
 }
 
 void main() {
-  const word = SpeechWord(id: 'w_004', text: 'cat', language: 'en');
+  const word = SpeechWord(id: 'w_005', text: 'cat', language: 'en', level: 1);
   late String wavPath;
 
   setUpAll(() async {
@@ -92,7 +92,7 @@ void main() {
       expect(adapter.lastRequest!.path, '/speech/assess');
       final fields =
           Map.fromEntries((adapter.lastRequest!.data as FormData).fields);
-      expect(fields, {'word_id': 'w_004', 'language': 'en', 'child_id': 'c1'});
+      expect(fields, {'word_id': 'w_005', 'language': 'en', 'child_id': 'c1'});
       expect(r.toActivityPayload()['decision'], 'accepted');
     });
 
@@ -221,6 +221,10 @@ void main() {
           GlobalCupertinoLocalizations.delegate,
         ],
         supportedLocales: AppLocalizations.supportedLocales,
+        // Reduce motion (as a child's device might): every speech animation must settle.
+        builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(disableAnimations: true),
+            child: child!),
         home: SpeechResultScreen(
             word: word,
             mastered: mastered,

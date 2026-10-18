@@ -102,4 +102,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get speechChangeLanguage => 'Change language';
+
+  @override
+  String speechLevel(int level) {
+    return 'Level $level';
+  }
 }

@@ -114,4 +114,32 @@ A running log of structural/technical decisions for the AkuRin shared foundation
 |---|---|
 | The Speech tab opens by asking **"Which language do you want to practise?"** (සිංහල / English, each named in its own script). Only that language's words are shown, "next word" stays in that language, and a top-bar button switches language. The choice lasts while the app is open | Owner request. The practice language is separate from the UI language (the profile's `preferred_language`), so a child with a Sinhala UI can still practise English words |
 
+## 2026-10-17 — Speech: 24 practice words in three difficulty levels (Fernando B.P.L)
+
+| Decision | Rationale |
+|---|---|
+| Word list grown from 8 to **24 (12 Sinhala, 12 English)**, all taken from words in the child recordings with ≥ 4 dev tokens from ≥ 2 children, so each has a reference bank (4–14 refs). Content words only (no "the", "in", ...) | Owner request: more words. Every word must have a bank, or it would only get the fallback threshold |
+| **Three levels, rule-based** (`ml/speech/src/word_levels.py`, tested against `config/words.csv`). Sinhala: double consonant or conjunct → 3; else points = extra aksharas + long vowel + final hal (0/1/≥2 → 1/2/3). English: 2+ syllables → 3; else points = letter teams + extra onset consonants (0/1–2/≥3 → 1/2/3). TO VALIDATE WITH A TEACHER | Owner request: order easier → harder for Grades 2–3. Rules keep the levels transparent and reproducible instead of hand-picked |
+| App shows words grouped as **Level 1 ★ / Level 2 ★★ / Level 3 ★★★**, easiest first; "next word" follows that order. No "hard" wording | Non-punitive presentation for children with dyslexia |
+| `build_demo_bank.py` now replaces only `source: "child_corpus"` references | The previous rebuild deleted whole word folders, which would have erased adult app recordings |
+
+## 2026-10-18 — Speech: 60 dyslexia-suitable words, readiness rule, span cache (Fernando B.P.L)
+
+| Decision | Rationale |
+|---|---|
+| Word list grown to **60 (30 Sinhala, 30 English)** from **two sources** (`source` column in `config/words.csv`): 16 more words from the child recordings (scorable now) and 20 **curated** words (need adult recordings) | Owner decision ("both", about 30 per language). The corpus alone has too few suitable words left |
+| Selection criteria: concrete, everyday, picturable words a 7–9-year-old knows; no function words or inflected forms; English words decodable and regularly spelled (CVC, sh/ch/ck, common vowel teams), no irregular sight words. Levels stay rule-based (`src/word_levels.py`, tested). TO VALIDATE WITH A TEACHER / SLT | Suitability for children with dyslexia |
+| A word is **ready** when its bank has **≥ 4 references** (same as `min_refs_for_bank_threshold`). Children see only ready words. Debug builds also show unready words, greyed with "needs recordings n/4", so developers can record them with the reference mode. `GET /speech/words` gains `n_refs` and `n_speakers` (additive) | Unscorable words must never reach children, while still being easy for developers to find and fill |
+| **Span-embedding disk cache** (`data/embeddings/_spans/`, keyed by reference, span, cut times and padding; cleared by `build_embeddings.py`) | The unit/blend warm-up grew to 227 spans. The cache cuts start-up from 126 s (first run) to 6 s (later runs) |
+
+## 2026-10-18 — Speech: child-friendly visual design (Fernando B.P.L)
+
+| Decision | Rationale |
+|---|---|
+| Speech screens get their own theme (`app/lib/features/speech/ui/speech_theme.dart`) layered over the shared theme; the shared theme, home shell and other components are unchanged | `app_theme.dart` asks components to layer their own styling within their feature folder |
+| **Parrot buddy** guide, drawn in code (no image assets), with moods: idle, listening (recording), thinking (checking), happy (success), encourage (try again, with a heart) | Owner choice. Parrots "repeat words", which fits speech practice; the character keeps feedback warm and non-punitive |
+| **Soft pastel** palette: cream background, navy text (no pure white or black), level colours mint/sky/lilac, coral mic. Lexend/Noto Sans Sinhala with wider spacing; target syllables shown as raised coloured tiles (no underlines or italics) | Owner choice; dyslexia-friendly style guidance |
+| **Gentle motion + celebrations** (pulsing mic, sound waves, one-off confetti and stars, card flip). Every animation follows the system **reduce motion** setting | Owner choice; calm by default. Reduce motion also keeps widget tests deterministic |
+| Practice and result screens scroll instead of overflowing on short screens (`FillOrScroll`) | Found by tests: the result screen overflowed by 112 px at 800×600 |
+
 <!-- Add new entries below this line, newest at the bottom or top — pick one convention and stay consistent. -->

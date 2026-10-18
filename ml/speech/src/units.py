@@ -4,7 +4,12 @@ A span (a, b) is an inclusive range of a word's units, e.g. (1, 1) = the 2nd aks
 (1, 2) = the 2nd and 3rd blended. Span references are cut from every bank reference that has unit
 boundaries (same trimmed audio the boundaries were aligned on), embedded, and given an acceptance
 range learned exactly like whole words (src/threshold.py). Everything is computed on first use and
-cached; invalidate(word_id) drops a word's cache when its bank changes.
+cached in memory; invalidate(word_id) drops a word's cache when its bank changes.
+
+Span embeddings are also cached on disk in data/embeddings/_spans/<word_id>/, named by reference id,
+span, cut times (ms) and padding, so re-aligned units or a padding change simply miss the cache.
+scripts/build_embeddings.py wipes data/embeddings/, which clears this cache when the model or layer
+changes. After the first start-up, warm-up loads these files instead of re-running XLS-R.
 
 Model audio for the LISTEN step comes from ADULT references only (owner decision 2026-10-16:
 children's research recordings are never played to other children). The most typical adult
@@ -32,6 +37,13 @@ class SpanBank:
         self._wav: dict[tuple[str, str], np.ndarray] = {}
         self._refs: dict[tuple[str, int, int], list[dict]] = {}
         self._ranges: dict[tuple[str, int, int], AcceptanceRange] = {}
+
+    def _cache_path(self, word_id: str, ref: dict, a: int, b: int):
+        start = round(ref["units"][a]["start_s"] * 1000)
+        end = round(ref["units"][b]["end_s"] * 1000)
+        pad = round(PAD_S * 1000)
+        name = f"{ref['variant_id']}_{a}_{b}_{start}_{end}_p{pad}.npy"
+        return self.bank.embeddings_dir / "_spans" / word_id / name
 
     def units(self, word_id: str) -> list[str]:
         return self.bank.words[word_id]["units"].split("|")
@@ -68,10 +80,17 @@ class SpanBank:
             for ref in self.bank.reference_set(word_id):
                 if len(ref["units"]) != n:
                     continue
+                cache = self._cache_path(word_id, ref, a, b)
+                if cache.exists():
+                    out.append({**ref, "emb": np.load(cache)})
+                    continue
                 clip = self._cut(word_id, ref, a, b)
                 if clip.size < 640:  # < 40 ms: too short to embed meaningfully
                     continue
-                out.append({**ref, "emb": self.embedder.embed(clip)})
+                emb = self.embedder.embed(clip)
+                cache.parent.mkdir(parents=True, exist_ok=True)
+                np.save(cache, emb)
+                out.append({**ref, "emb": emb})
             self._refs[key] = out
         return self._refs[key]
 

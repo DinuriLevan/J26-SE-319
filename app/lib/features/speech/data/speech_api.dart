@@ -106,6 +106,8 @@ class WordInfo {
     required this.units,
     required this.listenUnits,
     required this.hasWordAudio,
+    this.nRefs = 0,
+    this.nSpeakers = 0,
   });
 
   factory WordInfo.fromJson(Map<String, dynamic> json) => WordInfo(
@@ -113,12 +115,18 @@ class WordInfo {
         units: (json['units'] as List).cast<String>(),
         listenUnits: (json['listen_units'] as List).cast<int>().toSet(),
         hasWordAudio: json['has_word_audio'] as bool,
+        nRefs: json['n_refs'] as int? ?? 0,
+        nSpeakers: json['n_speakers'] as int? ?? 0,
       );
 
   final String wordId;
   final List<String> units;
   final Set<int> listenUnits;
   final bool hasWordAudio;
+
+  /// Reference recordings in the bank; see [speechMinRefs] for when a word is ready.
+  final int nRefs;
+  final int nSpeakers;
 
   String spanLabel(int start, int end) => units.sublist(start, end + 1).join();
 }

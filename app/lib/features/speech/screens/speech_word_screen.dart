@@ -15,6 +15,9 @@ import '../data/speech_recorder.dart';
 import '../data/speech_words.dart';
 import '../logic/retry_loop.dart';
 import '../logic/speech_rewards.dart';
+import '../ui/parrot.dart';
+import '../ui/speech_theme.dart';
+import '../ui/speech_widgets.dart';
 import 'speech_result_screen.dart';
 
 enum _Phase { idle, recording, checking }
@@ -330,60 +333,79 @@ class _SpeechWordScreenState extends ConsumerState<SpeechWordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     // Watching keeps the autoDispose recorder alive for as long as this screen is mounted.
     ref.watch(speechRecorderProvider);
     final words = ref.watch(speechWordsProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.speechTitle),
-        actions: [
-          if (kDebugMode)
-            IconButton(
-              tooltip: 'Record adult references (dev)',
-              icon: Icon(_refSpeaker == null
-                  ? Icons.library_add_outlined
-                  : Icons.library_add_check),
-              onPressed: _phase == _Phase.idle ? _toggleReferenceMode : null,
-            ),
-        ],
-      ),
-      body: SafeArea(
-        child: words.when(
-          loading: () => _centered(theme, l10n.speechLoading, spinner: true),
-          error: (_, __) => _centered(theme, l10n.speechSomethingWrong,
-              action: TextButton(
-                onPressed: () => ref.invalidate(speechWordsProvider),
-                child: Text(l10n.speechTryAgain),
-              )),
-          data: (map) {
-            _ensureLoop(map);
-            if (_loop == null) {
-              return _centered(theme, l10n.speechSomethingWrong);
-            }
-            return _stepBody(context, l10n, theme);
-          },
+    return SpeechThemed(child: Builder(builder: (context) {
+      final l10n = AppLocalizations.of(context);
+      final theme = Theme.of(context);
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(l10n.speechTitle),
+          actions: [
+            if (kDebugMode)
+              IconButton(
+                tooltip: 'Record adult references (dev)',
+                icon: Icon(_refSpeaker == null
+                    ? Icons.library_add_outlined
+                    : Icons.library_add_check),
+                onPressed: _phase == _Phase.idle ? _toggleReferenceMode : null,
+              ),
+          ],
+        ),
+        body: SafeArea(
+          child: words.when(
+            loading: () =>
+                _centered(theme, l10n.speechLoading, mood: ParrotMood.thinking),
+            error: (_, __) => _centered(theme, l10n.speechSomethingWrong,
+                mood: ParrotMood.encourage,
+                action: OutlinedButton(
+                  onPressed: () => ref.invalidate(speechWordsProvider),
+                  child: Text(l10n.speechTryAgain),
+                )),
+            data: (map) {
+              _ensureLoop(map);
+              if (_loop == null) {
+                return _centered(theme, l10n.speechSomethingWrong,
+                    mood: ParrotMood.encourage);
+              }
+              return _stepBody(context, l10n, theme);
+            },
+          ),
+        ),
+      );
+    }));
+  }
+
+  Widget _centered(ThemeData theme, String text,
+      {ParrotMood mood = ParrotMood.idle, Widget? action}) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ParrotBuddy(mood: mood, size: 140),
+            const SizedBox(height: 16),
+            Text(text,
+                style: theme.textTheme.titleMedium,
+                textAlign: TextAlign.center),
+            if (action != null) ...[const SizedBox(height: 16), action],
+          ],
         ),
       ),
     );
   }
 
-  Widget _centered(ThemeData theme, String text,
-      {bool spinner = false, Widget? action}) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (spinner) const CircularProgressIndicator(),
-          const SizedBox(height: 16),
-          Text(text,
-              style: theme.textTheme.titleMedium, textAlign: TextAlign.center),
-          if (action != null) action,
-        ],
-      ),
-    );
+  /// The parrot's mood follows what is happening: listening while recording, thinking while
+  /// checking, happy after a pass, encouraging after "once more".
+  ParrotMood _mood(AppLocalizations l10n) {
+    if (_phase == _Phase.recording) return ParrotMood.listening;
+    if (_phase == _Phase.checking) return ParrotMood.thinking;
+    if (_message == l10n.speechStepWellDone) return ParrotMood.happy;
+    if (_message != null) return ParrotMood.encourage;
+    return ParrotMood.idle;
   }
 
   Widget _stepBody(
@@ -391,6 +413,7 @@ class _SpeechWordScreenState extends ConsumerState<SpeechWordScreen> {
     final step = _step!;
     final recording = _phase == _Phase.recording;
     final isListen = step.kind == StepKind.listen;
+    final remediating = step.kind != StepKind.fullWord || step.tryNo > 1;
 
     final instruction = switch (step.kind) {
       StepKind.fullWord when step.tryNo > 1 => l10n.speechWholeWordAgain,
@@ -400,133 +423,99 @@ class _SpeechWordScreenState extends ConsumerState<SpeechWordScreen> {
       StepKind.blend => l10n.speechBlend,
       _ => '',
     };
+    final bubble = recording
+        ? l10n.speechRecording
+        : _phase == _Phase.checking
+            ? l10n.speechChecking
+            : _message == null
+                ? instruction
+                : '$_message\n$instruction';
 
-    return Container(
-      width: double.infinity, // centre content across the full screen width
-      padding: const EdgeInsets.all(24),
+    return FillOrScroll(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       child: Column(
         children: [
           if (_refSpeaker != null)
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(8),
-              color: Colors.orange.shade100,
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: SpeechColors.butter,
+                borderRadius: BorderRadius.circular(16),
+              ),
               child: Text(
                 'DEV: recordings are saved as adult references for '
                 '"$_refSpeaker", not scored.',
                 textAlign: TextAlign.center,
               ),
             ),
+          ParrotSays(text: bubble, mood: _mood(l10n)),
+          if (_offerSettings)
+            TextButton(
+                onPressed: openAppSettings,
+                child: Text(l10n.speechOpenSettings)),
           const Spacer(),
-          _WordWithHighlight(
+          if (remediating) ...[
+            StepTrail(kind: step.kind),
+            const SizedBox(height: 20),
+          ],
+          SyllableTiles(
             units: _info!.units,
-            highlightStart: step.spanStart,
-            highlightEnd: step.spanEnd,
-            style: theme.textTheme.displayMedium!,
-            highlightColor: theme.colorScheme.primary,
+            targetStart: step.spanStart,
+            targetEnd: step.spanEnd,
+            fontSize: step.spanStart == null ? 64 : 48,
           ),
           if (step.spanStart != null) ...[
-            const SizedBox(height: 12),
-            Text(
-              _info!.spanLabel(step.spanStart!, step.spanEnd!),
-              style: theme.textTheme.displayLarge!
-                  .copyWith(color: theme.colorScheme.primary),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 8),
+              decoration: BoxDecoration(
+                color: SpeechColors.peach,
+                borderRadius: BorderRadius.circular(SpeechTheme.radius),
+                boxShadow: speechShadow,
+              ),
+              child: Text(
+                _info!.spanLabel(step.spanStart!, step.spanEnd!),
+                style: theme.textTheme.displayLarge!
+                    .copyWith(color: SpeechColors.navy, height: 1.25),
+              ),
             ),
           ],
           const Spacer(),
           if (isListen)
             Column(
               children: [
-                SizedBox(
-                  width: 120,
-                  height: 120,
-                  child: FilledButton(
-                    style: FilledButton.styleFrom(shape: const CircleBorder()),
-                    onPressed: _playListen,
-                    child: const Icon(Icons.volume_up, size: 56),
-                  ),
+                StreamBuilder<PlayerState>(
+                  stream: _player.playerStateStream,
+                  builder: (context, snap) {
+                    final st = snap.data;
+                    final playing = st != null &&
+                        st.playing &&
+                        st.processingState != ProcessingState.completed;
+                    return ListenButton(
+                      playing: playing,
+                      onPressed: _playListen,
+                      label: l10n.speechPlayAgain,
+                    );
+                  },
                 ),
                 const SizedBox(height: 16),
-                FilledButton.tonalIcon(
+                FilledButton.icon(
                   onPressed: _onListened,
-                  icon: const Icon(Icons.arrow_forward),
+                  icon: const Icon(Icons.arrow_forward_rounded),
                   label: Text(l10n.speechNext),
                 ),
               ],
             )
-          else if (_phase == _Phase.checking)
-            const SizedBox(
-                width: 96, height: 96, child: CircularProgressIndicator())
           else
-            SizedBox(
-              width: 120,
-              height: 120,
-              child: FilledButton(
-                style: FilledButton.styleFrom(
-                  shape: const CircleBorder(),
-                  backgroundColor: recording ? theme.colorScheme.error : null,
-                ),
-                onPressed: _onMicTap,
-                child: Icon(recording ? Icons.stop : Icons.mic, size: 56),
-              ),
+            MicButton(
+              recording: recording,
+              label: recording ? l10n.speechRecording : instruction,
+              onPressed: _phase == _Phase.checking ? null : _onMicTap,
             ),
-          const SizedBox(height: 16),
-          Text(
-            recording
-                ? l10n.speechRecording
-                : _phase == _Phase.checking
-                    ? l10n.speechChecking
-                    : instruction,
-            style: theme.textTheme.titleMedium,
-            textAlign: TextAlign.center,
-          ),
-          if (_message != null) ...[
-            const SizedBox(height: 16),
-            Text(_message!,
-                style: theme.textTheme.bodyLarge, textAlign: TextAlign.center),
-            if (_offerSettings)
-              TextButton(
-                  onPressed: openAppSettings,
-                  child: Text(l10n.speechOpenSettings)),
-          ],
-          const Spacer(),
         ],
       ),
-    );
-  }
-}
-
-/// The word with the units being practised highlighted (e.g. අ[ම්මා]).
-class _WordWithHighlight extends StatelessWidget {
-  const _WordWithHighlight({
-    required this.units,
-    required this.highlightStart,
-    required this.highlightEnd,
-    required this.style,
-    required this.highlightColor,
-  });
-
-  final List<String> units;
-  final int? highlightStart;
-  final int? highlightEnd;
-  final TextStyle style;
-  final Color highlightColor;
-
-  @override
-  Widget build(BuildContext context) {
-    final a = highlightStart, b = highlightEnd;
-    return Text.rich(
-      TextSpan(children: [
-        for (var i = 0; i < units.length; i++)
-          TextSpan(
-            text: units[i],
-            style: a != null && i >= a && i <= b!
-                ? style.copyWith(
-                    color: highlightColor, decoration: TextDecoration.underline)
-                : style,
-          ),
-      ]),
-      textAlign: TextAlign.center,
     );
   }
 }

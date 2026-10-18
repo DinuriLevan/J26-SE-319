@@ -39,5 +39,13 @@
   "speechCardUnlocked": "You unlocked a new card!",
   "speechLoading": "Getting ready…",
   "speechChooseLanguage": "Which language do you want to practise?",
-  "speechChangeLanguage": "Change language"
+  "speechChangeLanguage": "Change language",
+  "speechLevel": "Level {level}",
+  "@speechLevel": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  }
 }

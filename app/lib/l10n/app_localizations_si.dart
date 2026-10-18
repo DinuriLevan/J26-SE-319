@@ -102,4 +102,9 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get speechChangeLanguage => 'භාෂාව වෙනස් කරන්න';
+
+  @override
+  String speechLevel(int level) {
+    return 'මට්ටම $level';
+  }
 }

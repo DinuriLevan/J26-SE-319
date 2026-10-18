@@ -97,6 +97,8 @@ class WordInfo(BaseModel):
     units: list[str]
     listen_units: list[int]
     has_word_audio: bool
+    n_refs: int  # reference recordings; >= min_refs_for_bank_threshold means a learned pass mark
+    n_speakers: int
 
 
 class ReferenceResponse(BaseModel):
@@ -253,6 +255,7 @@ def create_app(
 
     @app.get("/words", response_model=list[WordInfo])
     def words() -> list[WordInfo]:
+        refs = {w: bank.reference_set(w) for w in bank.words}
         return [
             WordInfo(
                 word_id=w,
@@ -261,6 +264,8 @@ def create_app(
                 units=spans.units(w),
                 listen_units=spans.listen_units(w),
                 has_word_audio=spans.has_word_audio(w),
+                n_refs=len(refs[w]),
+                n_speakers=len({r["speaker"] for r in refs[w]}),
             )
             for w, row in bank.words.items()
         ]

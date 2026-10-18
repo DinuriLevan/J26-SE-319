@@ -82,6 +82,8 @@ def test_words_lists_units_and_adult_audio(client):
     assert words["w_001"]["units"] == ["c", "a", "t"]
     assert words["w_001"]["listen_units"] == [0, 1, 2] and words["w_001"]["has_word_audio"]
     assert words["w_002"]["listen_units"] == [] and not words["w_002"]["has_word_audio"]
+    assert (words["w_001"]["n_refs"], words["w_001"]["n_speakers"]) == (5, 5)
+    assert (words["w_002"]["n_refs"], words["w_002"]["n_speakers"]) == (2, 2)
 
 
 def test_assess_unit_accepts_right_sound_rejects_wrong(client, make_tone_word, to_wav_bytes):

@@ -277,6 +277,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Change language'**
   String get speechChangeLanguage;
+
+  /// No description provided for @speechLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {level}'**
+  String speechLevel(int level);
 }
 
 class _AppLocalizationsDelegate

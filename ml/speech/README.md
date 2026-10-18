@@ -137,6 +137,25 @@ near-misses. It does not clearly beat it, and it is behind on random wrong words
 - `tests/test_service.py`: a rejected attempt returns segments with the wrong middle unit flagged;
   an accepted attempt returns none.
 
+### Practice words (2026-10-18)
+60 words (`config/words.csv`), easiest first; levels from `src/word_levels.py` (TO VALIDATE WITH A
+TEACHER). Criteria: concrete, everyday, picturable; no function words or inflected forms; English words
+decodable and regularly spelled. *Italic* = curated, which becomes **ready** (shown to children) once it
+has ≥ 4 references (counts as of 2026-10-18 in brackets). Debug builds list unready words greyed, with
+"needs recordings n/4".
+
+| Level | Sinhala | English |
+|---|---|---|
+| 1 | මම, අපි, මට, කිරි, වැඩ, ඇය, *ගස (2)*, *අත (0)*, *ඇස (0)*, *ඉර (2)*, *කට (0)* | cat, hat, rat, ran, fast, runs, *dog (0)*, *sun (3)*, *bus (0)* |
+| 2 | බත්, මල්, පාට, ගෙදර, පොත්, *වතුර (0)*, *හාවා (0)*, *පූසා (2)* | she, sky, play, book, boy, toy, ball, fly, rice, birds, *fish (2)*, *ship (0)*, *frog (2)* |
+| 3 | අම්මා, අක්කා, තාත්තා, පාසල්, මල්ලි, ලස්සන, සෙල්ලම්, පාඩම්, කියවයි, *බල්ලා (2)*, *කෙසෙල් (2)* | school, apple, garden, tasty, *rabbit (0)*, *window (0)*, *sister (0)*, *pencil (2)* |
+
+- Ready now: 20 per language. To make a curated word ready, record it with the reference mode from 4
+  minus its count different adults (one take each).
+- **Risk:** banks from only 2 children have narrow ranges and may reject correct new speakers: hat,
+  toy (std 0.002, threshold 0.148), ඇය, සෙල්ලම්, කියවයි, and others. Adult recordings widen them.
+- Span-embedding cache: first start-up about 126 s (227 spans), later start-ups about 6 s.
+
 ### Stage 5 (2026-10-16)
 - Tested: `tests/test_retry.py` and the Dart `retry_loop_test.dart` both pass the 7 shared scenarios
   (happy path, one retry, exhaustion, two flagged units, no listen audio, single-unit word, blend

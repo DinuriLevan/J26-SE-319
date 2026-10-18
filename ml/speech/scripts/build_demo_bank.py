@@ -1,7 +1,8 @@
 """Build the reference bank for the words in config/words.csv from the child sentence corpus.
 
 For each word, every aligned token said by a DEV child (same filters as the layer sweep) is cut out
-and written as data/reference/<word_id>/<speaker>_t<NN>.wav plus a metadata json. Test children
+and written as data/reference/<word_id>/<speaker>_t<NN>.wav plus a metadata json. Only references
+with "source": "child_corpus" are replaced; other references (e.g. adult app recordings) are kept. Test children
 are never used, so they stay unseen for the final evaluation. Run scripts/build_embeddings.py next.
 
 Usage (from ml/speech):
@@ -12,7 +13,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import shutil
 import sys
 from pathlib import Path
 
@@ -46,8 +46,12 @@ def main() -> None:
         toks = tokens[(tokens.language == w.language) & (tokens.key == key)]
         toks = toks.sort_values(["speaker_id", "utt_id", "word_index"])
         out = ref_root / w.word_id
-        shutil.rmtree(out, ignore_errors=True)
-        out.mkdir(parents=True)
+        out.mkdir(parents=True, exist_ok=True)
+        # Replace only references this script made; adult recordings from the app are kept.
+        for meta_path in out.glob("*.json"):
+            if json.loads(meta_path.read_text(encoding="utf-8")).get("source") == "child_corpus":
+                meta_path.unlink()
+                meta_path.with_suffix(".wav").unlink(missing_ok=True)
         take = {}
         for t in toks.itertuples():
             take[t.speaker_id] = take.get(t.speaker_id, 0) + 1
