@@ -29,6 +29,10 @@ dependencies:
   # Local profile id
   uuid: ^4.5.1
 
+  # Spelling & Phonics: spoken prompts (device TTS) and sound effects
+  flutter_tts: ^4.2.5
+  audioplayers: ^6.8.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -50,6 +54,8 @@ flutter:
   assets:
     - assets/avatars/
     - assets/branding/
+    - assets/spelling/
+    - assets/spelling/model/
 
   fonts:
     - family: Lexend
