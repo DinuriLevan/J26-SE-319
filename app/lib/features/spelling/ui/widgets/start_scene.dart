@@ -7,10 +7,15 @@ import '../spelling_style.dart';
 /// Animated backdrop for the start screen: soft sky, a slowly turning sun,
 /// drifting clouds, rolling hills and colourful letter blocks floating about.
 class StartScene extends StatefulWidget {
-  const StartScene({super.key, required this.child});
+  const StartScene({super.key, required this.child, this.letters, this.fontFamily});
 
   /// Shown in the middle of the scene (the ▶ button).
   final Widget child;
+
+  /// Letters on the floating blocks (default a b c s d m) and their font,
+  /// so the Sinhala game can float Sinhala letters.
+  final List<String>? letters;
+  final String? fontFamily;
 
   @override
   State<StartScene> createState() => _StartSceneState();
@@ -46,13 +51,20 @@ class _StartSceneState extends State<StartScene> with SingleTickerProviderStateM
           return Stack(
             children: [
               Positioned.fill(child: CustomPaint(painter: _SkyPainter(t))),
-              for (final (letter, color, x, y, size, phase) in _blocks)
+              for (final (i, (letter, color, x, y, size, phase)) in _blocks.indexed)
                 Positioned(
                   left: x * box.maxWidth - size / 2,
                   top: y * box.maxHeight - size / 2 + math.sin(t * 2 * math.pi * 6 + phase) * 10,
                   child: Transform.rotate(
                     angle: math.sin(t * 2 * math.pi * 4 + phase) * 0.12,
-                    child: _FloatingBlock(letter: letter, color: color, size: size),
+                    child: _FloatingBlock(
+                      letter: widget.letters == null || widget.letters!.isEmpty
+                          ? letter
+                          : widget.letters![i % widget.letters!.length],
+                      color: color,
+                      size: size,
+                      fontFamily: widget.fontFamily,
+                    ),
                   ),
                 ),
               Center(child: widget.child),
@@ -65,9 +77,10 @@ class _StartSceneState extends State<StartScene> with SingleTickerProviderStateM
 }
 
 class _FloatingBlock extends StatelessWidget {
-  const _FloatingBlock({required this.letter, required this.color, required this.size});
+  const _FloatingBlock({required this.letter, required this.color, required this.size, this.fontFamily});
 
   final String letter;
+  final String? fontFamily;
   final Color color;
   final double size;
 
@@ -85,7 +98,15 @@ class _FloatingBlock extends StatelessWidget {
           BoxShadow(color: color.withValues(alpha: 0.35), blurRadius: 12, offset: const Offset(0, 6)),
         ],
       ),
-      child: Text(letter, style: letterStyle(size * 0.52).copyWith(color: Colors.white)),
+      child: Text(
+        letter,
+        style: letterStyle(size * 0.52).copyWith(
+          color: Colors.white,
+          fontFamily: fontFamily,
+          letterSpacing: fontFamily == null ? null : 0,
+          height: fontFamily == null ? null : 1.25,
+        ),
+      ),
     );
   }
 }

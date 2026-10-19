@@ -81,7 +81,6 @@ class _SpellingStubScreenState extends State<SpellingStubScreen> {
                           letters: const ['අ', 'ආ', 'ඉ'],
                           color: SpellingColors.play,
                           background: const Color(0xFFFFF0D6),
-                          comingSoon: true,
                           onTap: () => _open(const SinhalaSpellingScreen()),
                           onExplain: () => _voice.say(['Sinhala']),
                         ),
@@ -100,7 +99,7 @@ class _SpellingStubScreenState extends State<SpellingStubScreen> {
 }
 
 /// One big, picture-like card: three coloured letter blocks, the language's
-/// name in its own script, and a round ▶ (or ⏳ while it is not ready yet).
+/// name in its own script, and a round ▶.
 /// Shrinks a little under the finger so the child sees it was pressed.
 class _LanguageCard extends StatefulWidget {
   const _LanguageCard({
@@ -112,7 +111,6 @@ class _LanguageCard extends StatefulWidget {
     required this.background,
     required this.onTap,
     required this.onExplain,
-    this.comingSoon = false,
   });
 
   final String name;
@@ -123,7 +121,6 @@ class _LanguageCard extends StatefulWidget {
   final Color background;
   final VoidCallback onTap;
   final VoidCallback onExplain;
-  final bool comingSoon;
 
   @override
   State<_LanguageCard> createState() => _LanguageCardState();
@@ -164,40 +161,47 @@ class _LanguageCardState extends State<_LanguageCard> {
                 Expanded(
                   child: Column(
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          for (var i = 0; i < widget.letters.length; i++)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 6),
-                              child: Transform.rotate(
-                                angle: _tilt[i % _tilt.length],
-                                child: _Block(
-                                  letter: widget.letters[i],
-                                  color: _blockColors[i % _blockColors.length],
-                                  fontFamily: widget.fontFamily,
+                      // Shrinks on narrow phones instead of overflowing.
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            for (var i = 0; i < widget.letters.length; i++)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 6),
+                                child: Transform.rotate(
+                                  angle: _tilt[i % _tilt.length],
+                                  child: _Block(
+                                    letter: widget.letters[i],
+                                    color: _blockColors[i % _blockColors.length],
+                                    fontFamily: widget.fontFamily,
+                                  ),
                                 ),
                               ),
-                            ),
-                        ],
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 18),
-                      Text(
-                        widget.name,
-                        style: TextStyle(
-                          fontFamily: widget.fontFamily,
-                          fontSize: 34,
-                          fontWeight: FontWeight.w600,
-                          color: SpellingColors.ink,
-                          letterSpacing: widget.fontFamily == AppFonts.latin ? 1.5 : 0,
-                          height: 1.3,
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          widget.name,
+                          style: TextStyle(
+                            fontFamily: widget.fontFamily,
+                            fontSize: 34,
+                            fontWeight: FontWeight.w600,
+                            color: SpellingColors.ink,
+                            letterSpacing: widget.fontFamily == AppFonts.latin ? 1.5 : 0,
+                            height: 1.3,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(width: 12),
-                _GoBadge(color: widget.comingSoon ? SpellingColors.neutralButton : widget.color, wait: widget.comingSoon),
+                _GoBadge(color: widget.color),
               ],
             ),
           ),
@@ -243,12 +247,11 @@ class _Block extends StatelessWidget {
   }
 }
 
-/// Round "go" button on the card: ▶ when the game is ready, ⏳ when not yet.
+/// Round "go" button on the card.
 class _GoBadge extends StatelessWidget {
-  const _GoBadge({required this.color, required this.wait});
+  const _GoBadge({required this.color});
 
   final Color color;
-  final bool wait;
 
   @override
   Widget build(BuildContext context) {
@@ -261,9 +264,9 @@ class _GoBadge extends StatelessWidget {
         boxShadow: [BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Icon(
-        wait ? Icons.hourglass_top_rounded : Icons.play_arrow_rounded,
+        Icons.play_arrow_rounded,
         color: Colors.white,
-        size: wait ? 32 : 44,
+        size: 44,
       ),
     );
   }

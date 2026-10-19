@@ -1,58 +1,93 @@
 import 'package:flutter/material.dart';
 
-import '../../core/theme/app_fonts.dart';
+import 'game/spelling_game_controller.dart' show GamePhase;
+import 'sinhala/game/sinhala_game_controller.dart';
+import 'sinhala/teacher/sinhala_teacher_screen.dart';
+import 'sinhala/ui/sinhala_game_view.dart';
+import 'sinhala/ui/sinhala_intro_views.dart';
 import 'ui/spelling_style.dart';
-import 'ui/widgets/big_icon_button.dart';
-import 'ui/widgets/mascot.dart';
+import 'ui/widgets/effects.dart';
 
-/// Placeholder for the Sinhala spelling game. The language picker
-/// (spelling_stub_screen.dart) already opens this screen, so the Sinhala
-/// game only needs to replace this widget.
-class SinhalaSpellingScreen extends StatelessWidget {
+/// The Sinhala listen-and-spell game, opened from the language picker
+/// (spelling_stub_screen.dart). Same look and flow as the English game.
+class SinhalaSpellingScreen extends StatefulWidget {
   const SinhalaSpellingScreen({super.key});
+
+  @override
+  State<SinhalaSpellingScreen> createState() => _SinhalaSpellingScreenState();
+}
+
+class _SinhalaSpellingScreenState extends State<SinhalaSpellingScreen> {
+  final SinhalaGameController _controller = SinhalaGameController();
+
+  /// Stops the voice while the app is in the background.
+  late final AppLifecycleListener _lifecycle = AppLifecycleListener(
+    onHide: () => _act(SinhalaAction.screenHidden),
+    onShow: () => _act(SinhalaAction.screenShown),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _lifecycle;
+    _controller.init();
+  }
+
+  void _act(SinhalaAction type, [Map<String, Object?> data = const {}]) => _controller.handleAction(type, data);
+
+  /// Teacher View for the phone's child. The voice stops while it is open.
+  void _openTeacher() {
+    if (_controller.bank == null) return;
+    _act(SinhalaAction.screenHidden);
+    Navigator.of(context)
+        .push(MaterialPageRoute<void>(builder: (_) => SinhalaTeacherScreen(controller: _controller)))
+        .then((_) => _act(SinhalaAction.screenShown));
+  }
+
+  @override
+  void dispose() {
+    _lifecycle.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: SpellingColors.background,
       body: SafeArea(
-        child: Stack(
-          children: [
-            Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Mascot(size: 120),
-                  const SizedBox(height: 28),
-                  const Text(
-                    'සිංහල',
-                    style: TextStyle(
-                      fontFamily: AppFonts.sinhala,
-                      fontSize: 40,
-                      fontWeight: FontWeight.w600,
-                      color: SpellingColors.ink,
+        child: ListenableBuilder(
+          listenable: _controller,
+          builder: (context, _) {
+            final state = _controller.state;
+            return Stack(
+              children: [
+                Positioned.fill(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 350),
+                    child: KeyedSubtree(
+                      key: ValueKey(state.phase),
+                      child: switch (state.phase) {
+                        GamePhase.loading => const Center(child: CircularProgressIndicator()),
+                        GamePhase.start =>
+                          SinhalaStartView(
+                            act: _act,
+                            onBack: () => Navigator.of(context).maybePop(),
+                            onTeacher: _openTeacher,
+                          ),
+                        GamePhase.demo => SinhalaDemoView(act: _act),
+                        GamePhase.playing => SinhalaGameView(state: state, act: _act),
+                        GamePhase.roundEnd => SinhalaRoundEndView(state: state, act: _act, onTeacher: _openTeacher),
+                        GamePhase.goodbye =>
+                          SinhalaRoundEndView(state: state, act: _act, onTeacher: _openTeacher, sessionOver: true),
+                      },
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  const Icon(Icons.hourglass_top_rounded, size: 72, color: SpellingColors.play),
-                  const SizedBox(height: 12),
-                  Text('Coming soon', style: letterStyle(26).copyWith(letterSpacing: 1)),
-                ],
-              ),
-            ),
-            Positioned(
-              top: 8,
-              left: 12,
-              child: BigIconButton(
-                icon: Icons.arrow_back_rounded,
-                color: SpellingColors.neutralButton,
-                size: 52,
-                semanticLabel: 'Back',
-                onTap: () => Navigator.of(context).maybePop(),
-                onExplain: () {},
-              ),
-            ),
-          ],
+                ),
+                Positioned.fill(child: ConfettiOverlay(signal: state.confettiSignal)),
+              ],
+            );
+          },
         ),
       ),
     );

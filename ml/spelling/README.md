@@ -83,3 +83,22 @@ cross-validated numbers with their spread and treat them as preliminary.
 - XGBoost is pinned to 1.7.6 and trained with `num_parallel_tree=1, base_score=0.5, tree_method="exact"`:
   m2cgen cannot export newer XGBoost multiclass models, and reproduces "hist" trees wrongly.
   `spell_export.py` refuses to export if the generated code differs from the model by more than 1e-6.
+
+## Sinhala audio (recorded)
+
+The Sinhala game plays recordings made by a person; there is no text-to-speech. They live in
+`app/assets/spelling/sinhala/audio/`: the 300 words (`SI0001.wav` …), the 20 spoken prompts
+(`prompts/listen.wav` …) and the sound of every letter and akshara (`tiles/0DB4.wav` = ප,
+`tiles/0DB4-0DD6.wav` = පූ). Pillas have no sound. `.wav`, `.m4a` and `.mp3` all work.
+
+```powershell
+cd ml\spelling
+.venv\Scripts\activate
+python spell_si_audio.py               # checks every recording is there (and lists unused files)
+python spell_si_audio.py --checklist   # data/si_recording_list.csv: file names + what to say (Excel)
+```
+
+To re-record one: save it under the same name in the same folder (e.g. Audacity → Export
+Selected Audio → WAV, mono; Effect → Normalize keeps them equally loud), then rebuild the app
+(`flutter run`). If a word or prompt is added, run the checker to see which file is missing.
+The prompt texts are in `app/lib/features/spelling/sinhala/services/sinhala_voice.dart`.
