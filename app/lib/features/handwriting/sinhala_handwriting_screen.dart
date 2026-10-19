@@ -5,7 +5,7 @@ import 'screens/character_demonstration_screen.dart';
 import 'services/handwriting_classifier.dart';
 import 'widgets/character_selection_view.dart';
 
-// The 36 Sinhala letters supported by the current model label set.
+// Sinhala letters currently offered by the handwriting practice flow.
 const _sinhalaVowels = [
   'අ',
   'ආ',
@@ -43,6 +43,7 @@ const _sinhalaConsonants = [
   'ල',
   'ව',
   'ශ',
+  'ෂ',
   'ස',
   'හ',
   'ළ',

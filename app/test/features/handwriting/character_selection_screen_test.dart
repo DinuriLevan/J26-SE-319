@@ -47,6 +47,12 @@ void main() {
 
     expect(find.text('ව්‍යංජන (Consonants)'), findsOneWidget);
     expect(find.text('ක'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('ෂ'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('ෂ'), findsOneWidget);
     expect(find.text('ළ'), findsOneWidget);
     for (final removedCharacter in ['ඛ', 'ඝ', 'ඡ', 'ඨ', 'ඵ', 'භ', 'ඹ']) {
       expect(find.text(removedCharacter), findsNothing);
