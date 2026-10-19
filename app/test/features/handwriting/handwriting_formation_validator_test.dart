@@ -25,7 +25,7 @@ void main() {
     'X',
     'Y'
   };
-  const legacyIndistinguishableLowercase = {'i', 'l'};
+  const ambiguousLowercase = {'a', 'i', 'l', 'o', 'u', 'v', 'w', 'x'};
 
   for (final character in allEnglish.split('')) {
     test('correct $character formation passes orientation validation', () {
@@ -42,7 +42,7 @@ void main() {
         result.orientationEvaluated,
         character == character.toUpperCase()
             ? !symmetricUppercase.contains(character)
-            : !legacyIndistinguishableLowercase.contains(character),
+            : !ambiguousLowercase.contains(character),
       );
       expect(result.orientationCorrect, isTrue);
       expect(result.formationCorrect, isTrue);
@@ -65,7 +65,7 @@ void main() {
 
       final distinguishable = character == character.toUpperCase()
           ? !symmetricUppercase.contains(character)
-          : !legacyIndistinguishableLowercase.contains(character);
+          : !ambiguousLowercase.contains(character);
       expect(result.orientationEvaluated, distinguishable);
       expect(result.orientationCorrect, !distinguishable);
       expect(result.formationCorrect, !distinguishable);
@@ -153,7 +153,7 @@ void main() {
     expect(activelyValidated, containsAll(requiredMirrorSensitive));
     expect(
       activelyValidated.join(),
-      'BCDEFGJKLNPQRSZabcdefghjkmnopqrstuvwxyz',
+      'BCDEFGJKLNPQRSZbcdefghjkmnpqrstyz',
     );
     expect(notDistinguishable, [
       'A',
@@ -167,8 +167,14 @@ void main() {
       'W',
       'X',
       'Y',
+      'a',
       'i',
       'l',
+      'o',
+      'u',
+      'v',
+      'w',
+      'x',
     ]);
   });
 
@@ -363,6 +369,161 @@ void main() {
     }
   }
 
+  for (final character in 'abcdefghijklmnopqrstuvwxyz'.split('')) {
+    test('accepts a lowercase reverse-traversal $character variant', () {
+      final strokes = _referenceStrokes(character, sourceSize)
+          .map((stroke) => stroke.reversed.toList(growable: false))
+          .toList(growable: false);
+      final result = validator.validate(
+        target: character,
+        language: HandwritingLanguage.english,
+        strokes: strokes,
+        sourceSize: sourceSize,
+      );
+
+      expect(result.orientationCorrect, isTrue);
+      expect(result.formationCorrect, isTrue);
+    });
+
+    test('accepts a slightly imperfect lowercase $character', () {
+      final result = validator.validate(
+        target: character,
+        language: HandwritingLanguage.english,
+        strokes: _jitterStrokes(_referenceStrokes(character, sourceSize)),
+        sourceSize: sourceSize,
+      );
+
+      expect(
+        result.formationCorrect,
+        isTrue,
+        reason: '$character failed with ${result.failureReason}',
+      );
+    });
+
+    final reference = _referenceStrokes(character, sourceSize);
+    if (reference.length > 1) {
+      test('accepts an alternative lowercase stroke order for $character', () {
+        final result = validator.validate(
+          target: character,
+          language: HandwritingLanguage.english,
+          strokes: reference.reversed.toList(growable: false),
+          sourceSize: sourceSize,
+        );
+
+        expect(result.orientationCorrect, isTrue);
+        expect(result.formationCorrect, isTrue);
+      });
+
+      test('accepts a continuous lowercase $character formation', () {
+        final result = validator.validate(
+          target: character,
+          language: HandwritingLanguage.english,
+          strokes: [_joinForTest(reference)],
+          sourceSize: sourceSize,
+        );
+
+        expect(
+          result.formationCorrect,
+          isTrue,
+          reason: '$character failed with ${result.failureReason}',
+        );
+      });
+    } else if (reference.single.length >= 6) {
+      test('accepts a segmented lowercase $character formation', () {
+        final midpoint = reference.single.length ~/ 2;
+        final result = validator.validate(
+          target: character,
+          language: HandwritingLanguage.english,
+          strokes: [
+            reference.single.sublist(0, midpoint + 1),
+            reference.single.sublist(midpoint),
+          ],
+          sourceSize: sourceSize,
+        );
+
+        expect(result.orientationCorrect, isTrue);
+        expect(result.formationCorrect, isTrue);
+      });
+    }
+  }
+
+  test('accepts lowercase d loop-first, stem-first, and reverse-loop', () {
+    final variants = <List<List<Offset>>>[
+      _realisticLowercaseD(),
+      _realisticLowercaseD().reversed.toList(growable: false),
+      [
+        _realisticLowercaseD().first.reversed.toList(growable: false),
+        _realisticLowercaseD().last,
+      ],
+    ];
+
+    for (final strokes in variants) {
+      final result = validator.validate(
+        target: 'd',
+        language: HandwritingLanguage.english,
+        strokes: strokes,
+        sourceSize: sourceSize,
+      );
+      expect(result.orientationCorrect, isTrue);
+      expect(result.formationCorrect, isTrue);
+    }
+  });
+
+  test('accepts a continuous lowercase d', () {
+    final result = validator.validate(
+      target: 'd',
+      language: HandwritingLanguage.english,
+      strokes: [_joinForTest(_realisticLowercaseD())],
+      sourceSize: sourceSize,
+    );
+
+    expect(result.orientationCorrect, isTrue);
+    expect(result.formationCorrect, isTrue);
+    expect(result.matchedValidVariant, contains('continuous'));
+  });
+
+  test('rejects a clearly mirrored lowercase d', () {
+    final result = validator.validate(
+      target: 'd',
+      language: HandwritingLanguage.english,
+      strokes: _mirrorHorizontally(
+        _realisticLowercaseD(),
+        sourceSize.width,
+      ),
+      sourceSize: sourceSize,
+    );
+
+    expect(result.orientationState, 'MIRRORED');
+    expect(result.orientationCorrect, isFalse);
+    expect(result.formationCorrect, isFalse);
+    expect(result.feedback, contains('direction'));
+  });
+
+  test('accepts continuous, multi-stroke, and imperfect lowercase m', () {
+    final variants = <List<List<Offset>>>[
+      [_realisticContinuousLowercaseM()],
+      _realisticMultiStrokeLowercaseM(),
+      _jitterStrokes(_realisticMultiStrokeLowercaseM()),
+    ];
+
+    for (final strokes in variants) {
+      final result = validator.validate(
+        target: 'm',
+        language: HandwritingLanguage.english,
+        strokes: strokes,
+        sourceSize: sourceSize,
+      );
+      expect(
+        result.orientationCorrect,
+        isTrue,
+        reason: 'm state=${result.orientationState} '
+            'correct=${result.correctFormationSimilarity} '
+            'mirror=${result.mirroredFormationSimilarity}',
+      );
+      expect(result.formationCorrect, isTrue);
+    }
+  });
+
   test('accepts Z as one continuous stroke', () {
     final result = validator.validate(
       target: 'Z',
@@ -551,6 +712,62 @@ List<List<Offset>> _jitterStrokes(List<List<Offset>> strokes) {
     }).toList(growable: false);
   }).toList(growable: false);
 }
+
+List<Offset> _joinForTest(List<List<Offset>> strokes) =>
+    strokes.expand((stroke) => stroke).toList(growable: false);
+
+List<List<Offset>> _realisticLowercaseD() => const [
+      [
+        Offset(198, 170),
+        Offset(168, 150),
+        Offset(122, 153),
+        Offset(88, 185),
+        Offset(82, 235),
+        Offset(105, 282),
+        Offset(151, 298),
+        Offset(193, 279),
+        Offset(199, 230),
+        Offset(198, 170),
+      ],
+      [
+        Offset(202, 66),
+        Offset(201, 130),
+        Offset(200, 206),
+        Offset(201, 296),
+      ],
+    ];
+
+List<Offset> _realisticContinuousLowercaseM() => const [
+      Offset(60, 330),
+      Offset(60, 175),
+      Offset(61, 320),
+      Offset(70, 245),
+      Offset(91, 194),
+      Offset(118, 181),
+      Offset(143, 207),
+      Offset(145, 330),
+      Offset(145, 238),
+      Offset(164, 193),
+      Offset(193, 181),
+      Offset(219, 208),
+      Offset(220, 330),
+    ];
+
+List<List<Offset>> _realisticMultiStrokeLowercaseM() => const [
+      [Offset(61, 175), Offset(60, 250), Offset(60, 330)],
+      [
+        Offset(61, 235),
+        Offset(91, 184),
+        Offset(119, 181),
+        Offset(144, 210),
+        Offset(145, 330),
+        Offset(145, 235),
+        Offset(172, 183),
+        Offset(196, 184),
+        Offset(220, 211),
+        Offset(220, 330),
+      ],
+    ];
 
 List<Offset> _zContinuous() => const [
       Offset(60, 48),

@@ -147,6 +147,7 @@ class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
           'Confidence=${prediction.confidence.toStringAsFixed(4)} '
           'RecognitionCorrect=$recognitionCorrect '
           'OrientationPolicy=${formation.orientationPolicy} '
+          'OrientationState=${formation.orientationState} '
           'OrientationEvaluated=${formation.orientationEvaluated} '
           'OrientationCorrect=${formation.orientationCorrect} '
           'StrokeDirectionCorrect=${formation.strokeDirectionCorrect} '

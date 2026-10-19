@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import '../data/character_stroke_repository.dart';
+import '../data/english_lowercase_formation_policies.dart';
 import '../data/english_uppercase_formation_policies.dart';
 import '../models/character_stroke_definition.dart';
 import '../models/formation_validation_policy.dart';
@@ -27,6 +28,7 @@ class FormationValidationResult {
     this.strokeDirectionCorrect,
     this.shapeCorrect = true,
     this.orientationPolicy = 'not-evaluated',
+    this.orientationState = 'NOT_EVALUATED',
     this.matchedValidVariant,
     this.failureReason,
     this.enforceStrokeDirection = false,
@@ -56,6 +58,7 @@ class FormationValidationResult {
   final bool? strokeDirectionCorrect;
   final bool shapeCorrect;
   final String orientationPolicy;
+  final String orientationState;
   final String? matchedValidVariant;
   final String? failureReason;
   final bool enforceStrokeDirection;
@@ -110,6 +113,7 @@ class HandwritingFormationValidator
   static const double _componentMirrorMargin = 0.04;
   static const int _samplesPerStroke = 72;
   static const double uppercaseMirrorDistanceMargin = 0.012;
+  static const double lowercaseMirrorDistanceMargin = 0.018;
   static const double _uppercaseShapeDistanceLimit = 0.075;
 
   @override
@@ -153,6 +157,15 @@ class HandwritingFormationValidator
         child: child,
         expected: expected,
         policy: uppercasePolicy,
+      );
+    }
+    final lowercasePolicy = _lowercasePolicy(target, language);
+    if (lowercasePolicy != null) {
+      return _validateLowercase(
+        target: target,
+        child: child,
+        expected: expected,
+        policy: lowercasePolicy,
       );
     }
 
@@ -258,6 +271,7 @@ class HandwritingFormationValidator
           directionScore >= _minimumDirectionScore,
       shapeCorrect: true,
       orientationPolicy: 'legacy-reference-and-stroke-metadata',
+      orientationState: orientationCorrect ? 'CORRECT' : 'MIRRORED',
       failureReason: orientationCorrect ? null : 'legacy-component-check',
       enforceStrokeDirection: true,
       enforceStrokeOrder: true,
@@ -273,6 +287,16 @@ class HandwritingFormationValidator
       return null;
     }
     return englishUppercaseFormationPolicies[target];
+  }
+
+  FormationValidationPolicy? _lowercasePolicy(
+    String target,
+    HandwritingLanguage language,
+  ) {
+    if (language != HandwritingLanguage.english || target.length != 1) {
+      return null;
+    }
+    return englishLowercaseFormationPolicies[target];
   }
 
   FormationValidationResult _validateUppercase({
@@ -305,6 +329,14 @@ class HandwritingFormationValidator
         mirroredMatch.distance + uppercaseMirrorDistanceMargin <
             correctMatch.distance;
     final orientationCorrect = !mirrored;
+    final orientationState = !policy.validateOrientation
+        ? 'AMBIGUOUS'
+        : mirrored
+            ? 'MIRRORED'
+            : correctMatch.distance + uppercaseMirrorDistanceMargin <
+                    mirroredMatch.distance
+                ? 'CORRECT'
+                : 'AMBIGUOUS';
     final shapeCorrect = correctMatch.distance <= _uppercaseShapeDistanceLimit;
 
     final diagnosticReference = correctMatch.variant.strokes;
@@ -350,6 +382,7 @@ class HandwritingFormationValidator
       strokeDirectionCorrect: directionCorrect,
       shapeCorrect: shapeCorrect,
       orientationPolicy: policy.orientationPolicy.name,
+      orientationState: orientationState,
       matchedValidVariant: correctMatch.variant.name,
       failureReason: failureReason,
       enforceStrokeDirection: policy.enforceStrokeDirection,
@@ -358,6 +391,136 @@ class HandwritingFormationValidator
       enforceShape: policy.enforceShape,
     );
   }
+
+  FormationValidationResult _validateLowercase({
+    required String target,
+    required _NormalizedStrokes child,
+    required _NormalizedStrokes expected,
+    required FormationValidationPolicy policy,
+  }) {
+    final variants = _lowercaseReferenceVariants(target, expected.strokes);
+    final correctMatch = _bestReferenceMatch(
+      child.strokes,
+      variants,
+      useStrokeCorrespondence: policy.useStrokeCorrespondenceForOrientation,
+      preferMatchingStrokeCount: true,
+    );
+    final mirroredVariants = variants
+        .map(
+          (variant) => _ReferenceVariant(
+            variant.name,
+            _mirrorStrokes(variant.strokes),
+          ),
+        )
+        .toList(growable: false);
+    final mirroredMatch = _bestReferenceMatch(
+      child.strokes,
+      mirroredVariants,
+      useStrokeCorrespondence: policy.useStrokeCorrespondenceForOrientation,
+      preferMatchingStrokeCount: true,
+    );
+
+    final clearlyMirrored = policy.validateOrientation &&
+        mirroredMatch.distance + lowercaseMirrorDistanceMargin <
+            correctMatch.distance;
+    final clearlyCorrect = policy.validateOrientation &&
+        correctMatch.distance + lowercaseMirrorDistanceMargin <
+            mirroredMatch.distance;
+    final orientationState = !policy.validateOrientation
+        ? 'AMBIGUOUS'
+        : clearlyMirrored
+            ? 'MIRRORED'
+            : clearlyCorrect
+                ? 'CORRECT'
+                : 'AMBIGUOUS';
+
+    final diagnosticReference = correctMatch.variant.strokes;
+    final sameStrokeCount = child.strokes.length == diagnosticReference.length;
+    final signals = sameStrokeCount
+        ? _strokeSignals(child.strokes, diagnosticReference)
+        : null;
+    final directionCorrect = signals == null ||
+        !signals.directionEvaluated ||
+        signals.directionScore >= _minimumDirectionScore;
+    final orderCorrect = signals == null
+        ? false
+        : signals.strokeOrderScore >= _minimumStrokeOrderScore;
+    final shapeCorrect = correctMatch.distance <= _uppercaseShapeDistanceLimit;
+
+    return FormationValidationResult(
+      orientationEvaluated: policy.validateOrientation,
+      orientationCorrect: !clearlyMirrored,
+      strokeCountCorrect: sameStrokeCount,
+      strokeOrderCorrect: orderCorrect,
+      similarityScore: _distanceToSimilarity(correctMatch.distance),
+      feedback: clearlyMirrored
+          ? 'Good try! Check the direction of the letter.'
+          : null,
+      actualStrokeCount: child.strokes.length,
+      expectedStrokeCount: expected.strokes.length,
+      normalizedBounds: child.bounds,
+      correctFormationSimilarity: _distanceToSimilarity(correctMatch.distance),
+      mirroredFormationSimilarity:
+          _distanceToSimilarity(mirroredMatch.distance),
+      orientationScore: mirroredMatch.distance - correctMatch.distance,
+      directionScore: signals?.directionScore ?? 0,
+      startEndScore: signals?.startEndScore ?? 0,
+      strokeOrderScore: signals?.strokeOrderScore ?? 0,
+      shapeSimilarity: _distanceToSimilarity(correctMatch.distance),
+      strokeDirectionCorrect: directionCorrect,
+      shapeCorrect: shapeCorrect,
+      orientationPolicy: policy.orientationPolicy.name,
+      orientationState: orientationState,
+      matchedValidVariant: correctMatch.variant.name,
+      failureReason:
+          clearlyMirrored ? 'clearly-closer-to-mirrored-reference' : null,
+      enforceStrokeDirection: policy.enforceStrokeDirection,
+      enforceStrokeOrder: policy.enforceStrokeOrder,
+      enforceStrokeCount: policy.enforceStrokeCount,
+      enforceShape: policy.enforceShape,
+    );
+  }
+
+  List<_ReferenceVariant> _lowercaseReferenceVariants(
+    String target,
+    List<List<Offset>> expected,
+  ) {
+    final variants = <_ReferenceVariant>[
+      _ReferenceVariant('${target}_demonstration', expected),
+      _ReferenceVariant(
+        '${target}_reverse_traversal',
+        expected
+            .map((stroke) => stroke.reversed.toList(growable: false))
+            .toList(growable: false),
+      ),
+    ];
+
+    if (expected.length > 1) {
+      final alternativeOrder = expected.reversed.toList(growable: false);
+      variants.add(
+        _ReferenceVariant('${target}_alternative_order', alternativeOrder),
+      );
+      variants.add(
+        _ReferenceVariant('${target}_continuous', [_joinStrokes(expected)]),
+      );
+      variants.add(
+        _ReferenceVariant(
+          '${target}_continuous_alternative_order',
+          [_joinStrokes(alternativeOrder)],
+        ),
+      );
+      variants.add(
+        _ReferenceVariant(
+          '${target}_continuous_reverse_traversal',
+          [_joinStrokes(expected).reversed.toList(growable: false)],
+        ),
+      );
+    }
+    return variants;
+  }
+
+  List<Offset> _joinStrokes(List<List<Offset>> strokes) =>
+      strokes.expand((stroke) => stroke).toList(growable: false);
 
   List<_ReferenceVariant> _uppercaseReferenceVariants(
     String target,
@@ -433,11 +596,21 @@ class HandwritingFormationValidator
     List<List<Offset>> child,
     List<_ReferenceVariant> variants, {
     required bool useStrokeCorrespondence,
+    bool preferMatchingStrokeCount = false,
   }) {
     late _ReferenceVariant bestVariant;
     var bestDistance = double.infinity;
     var bestTieBreaker = double.infinity;
+    final hasMatchingStrokeCount = variants.any(
+      (variant) => variant.strokes.length == child.length,
+    );
     for (final variant in variants) {
+      if (preferMatchingStrokeCount &&
+          useStrokeCorrespondence &&
+          hasMatchingStrokeCount &&
+          variant.strokes.length != child.length) {
+        continue;
+      }
       final structuralDistance = _structuralDistance(child, variant.strokes);
       final correspondenceDistance = child.length == variant.strokes.length
           ? _reversibleOrderedDistance(child, variant.strokes)

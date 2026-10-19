@@ -6,7 +6,7 @@ enum OrientationValidationPolicy {
   referenceMirror,
 }
 
-/// Declares which formation signals may affect an uppercase practice result.
+/// Declares which formation signals may affect an English practice result.
 ///
 /// Stroke metadata remains available for research/debugging even when it is
 /// not enforced. This prevents a valid glyph from being rejected merely
