@@ -12,6 +12,7 @@ class _FakeClassifier implements HandwritingClassifierClient {
   final HandwritingPrediction prediction;
   HandwritingModelType? receivedModelType;
   String? receivedExpectedCharacter;
+  PreprocessedHandwriting? receivedHandwriting;
 
   @override
   Future<HandwritingPrediction> predict({
@@ -21,6 +22,7 @@ class _FakeClassifier implements HandwritingClassifierClient {
   }) async {
     receivedModelType = modelType;
     receivedExpectedCharacter = expectedCharacter;
+    receivedHandwriting = handwriting;
     expect(handwriting.width, 224);
     expect(handwriting.height, 224);
     return prediction;
@@ -99,6 +101,13 @@ void main() {
 
     expect(classifier.receivedModelType, HandwritingModelType.englishUppercase);
     expect(classifier.receivedExpectedCharacter, 'A');
+    final modelInput = classifier.receivedHandwriting!;
+    expect(modelInput.rgbBytes.take(3), everyElement(255));
+    expect(
+      modelInput.rgbBytes.any((channel) => channel < 10),
+      isTrue,
+      reason: 'The hidden model canvas should contain black stroke pixels.',
+    );
     expect(find.text('Target: A   Prediction: A'), findsOneWidget);
     expect(find.text('Confidence: 96%'), findsOneWidget);
     expect(find.text('✓ Correct!'), findsOneWidget);

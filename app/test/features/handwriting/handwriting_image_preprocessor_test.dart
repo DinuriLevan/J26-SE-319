@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'dart:ui';
 
 import 'package:akurin/features/handwriting/services/handwriting_image_preprocessor.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -74,6 +75,65 @@ void main() {
         sourceHeight: 20,
       ),
       throwsA(isA<HandwritingPreprocessingException>()),
+    );
+  });
+
+  test('renders stored strokes onto a centered clean model canvas', () async {
+    final result = await preprocessor.preprocessStrokes(
+      sourceSize: const Size(300, 400),
+      strokes: const [
+        [Offset(80, 300), Offset(150, 80), Offset(220, 300)],
+        [Offset(112, 205), Offset(188, 205)],
+      ],
+    );
+
+    expect(result.width, 224);
+    expect(result.height, 224);
+    expect(result.rgbBytes, hasLength(224 * 224 * 3));
+    expect(result.rgbBytes.take(3), everyElement(255));
+
+    var left = 224;
+    var top = 224;
+    var right = -1;
+    var bottom = -1;
+    var nonGreyPixelFound = false;
+    for (var y = 0; y < 224; y++) {
+      for (var x = 0; x < 224; x++) {
+        final index = (y * 224 + x) * 3;
+        final red = result.rgbBytes[index];
+        final green = result.rgbBytes[index + 1];
+        final blue = result.rgbBytes[index + 2];
+        if (red != green || red != blue) nonGreyPixelFound = true;
+        if (red >= 245) continue;
+        if (x < left) left = x;
+        if (x > right) right = x;
+        if (y < top) top = y;
+        if (y > bottom) bottom = y;
+      }
+    }
+
+    expect(nonGreyPixelFound, isFalse);
+    expect((left + right) / 2, closeTo(111.5, 2));
+    expect((top + bottom) / 2, closeTo(111.5, 2));
+    expect(right - left + 1, lessThanOrEqualTo(176));
+    expect(bottom - top + 1, lessThanOrEqualTo(176));
+  });
+
+  test('rejects an extremely tiny stroke', () async {
+    expect(
+      () => preprocessor.preprocessStrokes(
+        sourceSize: const Size(300, 400),
+        strokes: const [
+          [Offset(100, 100), Offset(104, 104)],
+        ],
+      ),
+      throwsA(
+        isA<HandwritingPreprocessingException>().having(
+          (error) => error.failure,
+          'failure',
+          HandwritingPreprocessingFailure.tooSmall,
+        ),
+      ),
     );
   });
 }

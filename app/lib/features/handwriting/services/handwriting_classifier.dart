@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 
 import '../models/handwriting_prediction.dart';
+import '../models/prediction_score.dart';
+import 'handwriting_debug_config.dart';
 import 'handwriting_image_preprocessor.dart';
 
 enum HandwritingModelType {
@@ -107,12 +109,35 @@ class HandwritingClassifier implements HandwritingClassifierClient {
           predictedIndex = index;
         }
       }
-      return HandwritingPrediction(
+      final rankedIndices = List<int>.generate(
+          rawScores.length, (index) => index)
+        ..sort((left, right) => rawScores[right].compareTo(rawScores[left]));
+      final topPredictions = rankedIndices
+          .take(3)
+          .map(
+            (index) => PredictionScore(
+              character: model.labels[index],
+              confidence: rawScores[index],
+              index: index,
+            ),
+          )
+          .toList(growable: false);
+      final prediction = HandwritingPrediction(
         character: model.labels[predictedIndex],
         confidence: rawScores[predictedIndex],
         predictedIndex: predictedIndex,
         rawScores: List<double>.unmodifiable(rawScores),
+        topPredictions: List<PredictionScore>.unmodifiable(topPredictions),
       );
+      if (HandwritingDebugConfig.enabled) {
+        _logDebugInference(
+          target: expectedCharacter,
+          modelType: modelType,
+          model: model,
+          prediction: prediction,
+        );
+      }
+      return prediction;
     } catch (error, stackTrace) {
       debugPrint('[Handwriting] TFLite inference failed: $error');
       debugPrintStack(stackTrace: stackTrace);
@@ -121,6 +146,31 @@ class HandwritingClassifier implements HandwritingClassifierClient {
         'The handwriting could not be checked. Please try again.',
       );
     }
+  }
+
+  void _logDebugInference({
+    required String target,
+    required HandwritingModelType modelType,
+    required _LoadedHandwritingModel model,
+    required HandwritingPrediction prediction,
+  }) {
+    final topScores = prediction.topPredictions
+        .map(
+          (score) =>
+              '${score.character} = ${(score.confidence * 100).toStringAsFixed(2)}%',
+        )
+        .join('\n');
+    debugPrint(
+      '[Handwriting debug]\n'
+      'Target: $target\n'
+      'Model: ${modelType.name}\n'
+      'Input: ${model.inputShape} ${model.inputType.name}\n'
+      'Output: ${model.outputShape} ${model.outputType.name}\n'
+      'Labels: ${model.labels.length}\n'
+      'Prediction: ${prediction.character} '
+      '(${(prediction.confidence * 100).toStringAsFixed(2)}%)\n'
+      'Top predictions:\n$topScores',
+    );
   }
 
   Uint8List _floatInputBytes(Uint8List rgbBytes) {
@@ -245,9 +295,11 @@ class HandwritingClassifier implements HandwritingClassifierClient {
       return _LoadedHandwritingModel(
         interpreter: interpreter,
         labels: labels,
+        inputShape: List<int>.unmodifiable(input.shape),
         inputWidth: input.shape[2],
         inputHeight: input.shape[1],
         inputType: input.type,
+        outputShape: List<int>.unmodifiable(output.shape),
         outputClasses: outputClasses,
         outputType: output.type,
       );
@@ -285,18 +337,22 @@ class _LoadedHandwritingModel {
   const _LoadedHandwritingModel({
     required this.interpreter,
     required this.labels,
+    required this.inputShape,
     required this.inputWidth,
     required this.inputHeight,
     required this.inputType,
+    required this.outputShape,
     required this.outputClasses,
     required this.outputType,
   });
 
   final Interpreter interpreter;
   final List<String> labels;
+  final List<int> inputShape;
   final int inputWidth;
   final int inputHeight;
   final TensorType inputType;
+  final List<int> outputShape;
   final int outputClasses;
   final TensorType outputType;
 }

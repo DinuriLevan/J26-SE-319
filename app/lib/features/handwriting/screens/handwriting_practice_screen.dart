@@ -1,10 +1,10 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 
 import '../models/handwriting_prediction.dart';
 import '../services/handwriting_classifier.dart';
+import '../services/handwriting_debug_config.dart';
 import '../services/handwriting_image_preprocessor.dart';
 
 class HandwritingPracticeScreen extends StatefulWidget {
@@ -26,13 +26,14 @@ class HandwritingPracticeScreen extends StatefulWidget {
 
 class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
   final List<List<Offset>> _penStrokes = [];
-  final GlobalKey _canvasBoundaryKey = GlobalKey();
+  final GlobalKey _canvasKey = GlobalKey();
   final HandwritingImagePreprocessor _preprocessor =
       const HandwritingImagePreprocessor();
 
   late final HandwritingClassifierClient _classifier;
   late final bool _ownsClassifier;
   HandwritingPrediction? _prediction;
+  ui.Image? _debugModelInput;
   String? _errorMessage;
   bool _isSubmitting = false;
 
@@ -45,6 +46,7 @@ class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
 
   @override
   void dispose() {
+    _debugModelInput?.dispose();
     if (_ownsClassifier) _classifier.dispose();
     super.dispose();
   }
@@ -52,6 +54,7 @@ class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
   void _startStroke(DragStartDetails details) {
     if (_isSubmitting) return;
     setState(() {
+      _replaceDebugImage(null);
       _prediction = null;
       _errorMessage = null;
       _penStrokes.add([details.localPosition]);
@@ -67,6 +70,7 @@ class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
     if (_isSubmitting) return;
     setState(() {
       _penStrokes.clear();
+      _replaceDebugImage(null);
       _prediction = null;
       _errorMessage = null;
     });
@@ -89,14 +93,24 @@ class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
       _errorMessage = null;
     });
 
-    ui.Image? canvasImage;
     try {
-      final boundary = _canvasBoundaryKey.currentContext?.findRenderObject();
-      if (boundary is! RenderRepaintBoundary) {
+      final canvasBox = _canvasKey.currentContext?.findRenderObject();
+      if (canvasBox is! RenderBox || !canvasBox.hasSize) {
         throw StateError('The handwriting canvas is not available.');
       }
-      canvasImage = await boundary.toImage(pixelRatio: 1);
-      final handwriting = await _preprocessor.preprocess(canvasImage);
+      final handwriting = await _preprocessor.preprocessStrokes(
+        strokes: _penStrokes,
+        sourceSize: canvasBox.size,
+        sourceStrokeWidth: _PracticePainter.strokeWidth,
+      );
+      if (HandwritingDebugConfig.enabled) {
+        final debugImage = await _preprocessor.createDebugImage(handwriting);
+        if (!mounted) {
+          debugImage.dispose();
+          return;
+        }
+        setState(() => _replaceDebugImage(debugImage));
+      }
       final prediction = await _classifier.predict(
         modelType: widget.modelType,
         handwriting: handwriting,
@@ -107,7 +121,7 @@ class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
     } on HandwritingPreprocessingException catch (error, stackTrace) {
       debugPrint('[Handwriting] Canvas preprocessing failed: $error');
       debugPrintStack(stackTrace: stackTrace);
-      if (mounted) setState(() => _errorMessage = 'Write the letter first.');
+      if (mounted) setState(() => _errorMessage = error.userMessage);
     } on HandwritingClassifierException catch (error) {
       if (mounted) setState(() => _errorMessage = error.message);
     } catch (error, stackTrace) {
@@ -120,9 +134,14 @@ class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
         );
       }
     } finally {
-      canvasImage?.dispose();
       if (mounted) setState(() => _isSubmitting = false);
     }
+  }
+
+  void _replaceDebugImage(ui.Image? image) {
+    if (identical(_debugModelInput, image)) return;
+    _debugModelInput?.dispose();
+    _debugModelInput = image;
   }
 
   @override
@@ -172,15 +191,30 @@ class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
                       onPanStart: _isSubmitting ? null : _startStroke,
                       onPanUpdate: _isSubmitting ? null : _continueStroke,
                       child: RepaintBoundary(
-                        key: _canvasBoundaryKey,
+                        key: _canvasKey,
                         child: ColoredBox(
                           color: Colors.white,
-                          child: CustomPaint(
-                            painter: _PracticePainter(
-                              penStrokes: _penStrokes,
-                              inkColor: Colors.black,
-                            ),
-                            child: const SizedBox.expand(),
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              CustomPaint(
+                                painter: _PracticePainter(
+                                  penStrokes: _penStrokes,
+                                  inkColor: Colors.black,
+                                ),
+                              ),
+                              if (HandwritingDebugConfig.enabled &&
+                                  _debugModelInput != null)
+                                Positioned(
+                                  right: 10,
+                                  bottom: 10,
+                                  child: IgnorePointer(
+                                    child: _ModelInputDebugPreview(
+                                      image: _debugModelInput!,
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
                       ),
@@ -334,12 +368,14 @@ class _PracticePainter extends CustomPainter {
 
   final List<List<Offset>> penStrokes;
   final Color inkColor;
+  static const double strokeWidth =
+      HandwritingImagePreprocessor.defaultSourceStrokeWidth;
 
   @override
   void paint(Canvas canvas, Size size) {
     final inkPaint = Paint()
       ..color = inkColor
-      ..strokeWidth = 8
+      ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
       ..style = PaintingStyle.stroke;
@@ -359,4 +395,46 @@ class _PracticePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_PracticePainter oldDelegate) => true;
+}
+
+class _ModelInputDebugPreview extends StatelessWidget {
+  const _ModelInputDebugPreview({required this.image});
+
+  final ui.Image image;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: Colors.redAccent, width: 2),
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: const [BoxShadow(blurRadius: 4, color: Colors.black26)],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'DEBUG 224×224 input',
+              style: TextStyle(
+                color: Colors.redAccent,
+                fontSize: 9,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 2),
+            RawImage(
+              image: image,
+              width: 112,
+              height: 112,
+              fit: BoxFit.contain,
+              filterQuality: FilterQuality.none,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

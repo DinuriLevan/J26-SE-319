@@ -1,10 +1,23 @@
+import 'dart:async';
+import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+enum HandwritingPreprocessingFailure { invalidImage, empty, tooSmall }
+
 class HandwritingPreprocessingException implements Exception {
-  const HandwritingPreprocessingException(this.message);
+  const HandwritingPreprocessingException(this.message, this.failure);
 
   final String message;
+  final HandwritingPreprocessingFailure failure;
+
+  String get userMessage => switch (failure) {
+        HandwritingPreprocessingFailure.tooSmall =>
+          'Make the letter a little bigger and try again.',
+        HandwritingPreprocessingFailure.empty => 'Write the letter first.',
+        HandwritingPreprocessingFailure.invalidImage =>
+          'We couldn’t prepare that writing. Please try again.',
+      };
 
   @override
   String toString() => 'HandwritingPreprocessingException: $message';
@@ -29,6 +42,188 @@ class HandwritingImagePreprocessor {
   static const int _trainingContentSize = 176;
   static const int _trainingCanvasSize = 224;
   static const int _minimumInkStrength = 20;
+  static const double defaultSourceStrokeWidth = 8;
+  static const double _minimumExtentFraction = 0.12;
+  static const double _minimumPathLengthFraction = 0.08;
+
+  /// Builds the model input directly from touch coordinates. No widget,
+  /// guide line, target glyph, or surrounding UI can enter this image.
+  Future<PreprocessedHandwriting> preprocessStrokes({
+    required List<List<ui.Offset>> strokes,
+    required ui.Size sourceSize,
+    double sourceStrokeWidth = defaultSourceStrokeWidth,
+    int outputSize = defaultOutputSize,
+  }) async {
+    if (sourceSize.isEmpty ||
+        !sourceSize.width.isFinite ||
+        !sourceSize.height.isFinite ||
+        sourceStrokeWidth <= 0 ||
+        outputSize <= 0) {
+      throw const HandwritingPreprocessingException(
+        'The handwriting canvas has invalid dimensions.',
+        HandwritingPreprocessingFailure.invalidImage,
+      );
+    }
+
+    final usableStrokes = strokes
+        .map(
+          (stroke) => stroke
+              .where((point) => point.dx.isFinite && point.dy.isFinite)
+              .toList(growable: false),
+        )
+        .where((stroke) => stroke.isNotEmpty)
+        .toList(growable: false);
+    if (usableStrokes.isEmpty) {
+      throw const HandwritingPreprocessingException(
+        'No handwriting was detected.',
+        HandwritingPreprocessingFailure.empty,
+      );
+    }
+
+    var left = double.infinity;
+    var top = double.infinity;
+    var right = double.negativeInfinity;
+    var bottom = double.negativeInfinity;
+    var pathLength = 0.0;
+    for (final stroke in usableStrokes) {
+      for (var index = 0; index < stroke.length; index++) {
+        final point = stroke[index];
+        left = math.min(left, point.dx);
+        top = math.min(top, point.dy);
+        right = math.max(right, point.dx);
+        bottom = math.max(bottom, point.dy);
+        if (index > 0) pathLength += (point - stroke[index - 1]).distance;
+      }
+    }
+
+    final shortestCanvasSide = math.min(sourceSize.width, sourceSize.height);
+    final pointWidth = right - left;
+    final pointHeight = bottom - top;
+    final pointExtent = math.max(pointWidth, pointHeight);
+    if (pointExtent < shortestCanvasSide * _minimumExtentFraction ||
+        pathLength < shortestCanvasSide * _minimumPathLengthFraction) {
+      throw const HandwritingPreprocessingException(
+        'The handwriting is too small to classify reliably.',
+        HandwritingPreprocessingFailure.tooSmall,
+      );
+    }
+
+    // Include the round pen caps in the crop, then apply the same 4% crop
+    // padding and 176px content target used by prepare_dataset.py.
+    final penRadius = sourceStrokeWidth / 2;
+    left -= penRadius;
+    top -= penRadius;
+    right += penRadius;
+    bottom += penRadius;
+    final inkWidth = right - left;
+    final inkHeight = bottom - top;
+    final cropPadding = math.max(2.0, math.max(inkWidth, inkHeight) * 0.04);
+    final cropLeft = left - cropPadding;
+    final cropTop = top - cropPadding;
+    final cropWidth = inkWidth + cropPadding * 2;
+    final cropHeight = inkHeight + cropPadding * 2;
+    final targetContentSize =
+        outputSize * _trainingContentSize / _trainingCanvasSize;
+    final scale = math.min(
+      targetContentSize / cropWidth,
+      targetContentSize / cropHeight,
+    );
+    final destinationWidth = cropWidth * scale;
+    final destinationHeight = cropHeight * scale;
+    final offsetX = (outputSize - destinationWidth) / 2;
+    final offsetY = (outputSize - destinationHeight) / 2;
+
+    ui.Offset mapPoint(ui.Offset point) => ui.Offset(
+          offsetX + (point.dx - cropLeft) * scale,
+          offsetY + (point.dy - cropTop) * scale,
+        );
+
+    final recorder = ui.PictureRecorder();
+    final canvas = ui.Canvas(recorder);
+    canvas.drawRect(
+      ui.Rect.fromLTWH(0, 0, outputSize.toDouble(), outputSize.toDouble()),
+      ui.Paint()..color = const ui.Color(0xFFFFFFFF),
+    );
+    final inkPaint = ui.Paint()
+      ..color = const ui.Color(0xFF000000)
+      ..strokeWidth = sourceStrokeWidth * scale
+      ..strokeCap = ui.StrokeCap.round
+      ..strokeJoin = ui.StrokeJoin.round
+      ..style = ui.PaintingStyle.stroke
+      ..isAntiAlias = true;
+    final dotPaint = ui.Paint()
+      ..color = const ui.Color(0xFF000000)
+      ..style = ui.PaintingStyle.fill
+      ..isAntiAlias = true;
+
+    for (final stroke in usableStrokes) {
+      if (stroke.length == 1) {
+        canvas.drawCircle(
+          mapPoint(stroke.single),
+          inkPaint.strokeWidth / 2,
+          dotPaint,
+        );
+        continue;
+      }
+      final first = mapPoint(stroke.first);
+      final path = ui.Path()..moveTo(first.dx, first.dy);
+      for (final point in stroke.skip(1)) {
+        final mapped = mapPoint(point);
+        path.lineTo(mapped.dx, mapped.dy);
+      }
+      canvas.drawPath(path, inkPaint);
+    }
+
+    final picture = recorder.endRecording();
+    final image = await picture.toImage(outputSize, outputSize);
+    picture.dispose();
+    try {
+      final byteData =
+          await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+      if (byteData == null) {
+        throw const HandwritingPreprocessingException(
+          'The standardized handwriting image could not be read.',
+          HandwritingPreprocessingFailure.invalidImage,
+        );
+      }
+      return PreprocessedHandwriting(
+        rgbBytes: _rgbaToRgb(
+          byteData.buffer.asUint8List(
+            byteData.offsetInBytes,
+            byteData.lengthInBytes,
+          ),
+        ),
+        width: outputSize,
+        height: outputSize,
+      );
+    } finally {
+      image.dispose();
+    }
+  }
+
+  /// Produces an in-app debug preview from the exact RGB bytes sent to TFLite.
+  Future<ui.Image> createDebugImage(PreprocessedHandwriting handwriting) {
+    final rgba = Uint8List(handwriting.width * handwriting.height * 4);
+    for (var pixel = 0;
+        pixel < handwriting.width * handwriting.height;
+        pixel++) {
+      final rgbIndex = pixel * 3;
+      final rgbaIndex = pixel * 4;
+      rgba[rgbaIndex] = handwriting.rgbBytes[rgbIndex];
+      rgba[rgbaIndex + 1] = handwriting.rgbBytes[rgbIndex + 1];
+      rgba[rgbaIndex + 2] = handwriting.rgbBytes[rgbIndex + 2];
+      rgba[rgbaIndex + 3] = 255;
+    }
+    final completer = Completer<ui.Image>();
+    ui.decodeImageFromPixels(
+      rgba,
+      handwriting.width,
+      handwriting.height,
+      ui.PixelFormat.rgba8888,
+      completer.complete,
+    );
+    return completer.future;
+  }
 
   Future<PreprocessedHandwriting> preprocess(
     ui.Image image, {
@@ -39,6 +234,7 @@ class HandwritingImagePreprocessor {
     if (byteData == null) {
       throw const HandwritingPreprocessingException(
         'The handwriting image could not be read.',
+        HandwritingPreprocessingFailure.invalidImage,
       );
     }
     return preprocessRgba(
@@ -67,6 +263,7 @@ class HandwritingImagePreprocessor {
         rgbaBytes.length != sourceWidth * sourceHeight * 4) {
       throw const HandwritingPreprocessingException(
         'The handwriting image has invalid dimensions.',
+        HandwritingPreprocessingFailure.invalidImage,
       );
     }
 
@@ -93,6 +290,7 @@ class HandwritingImagePreprocessor {
     if (right < left || bottom < top || inkPixels < 4) {
       throw const HandwritingPreprocessingException(
         'No handwriting was detected.',
+        HandwritingPreprocessingFailure.empty,
       );
     }
 
@@ -185,5 +383,17 @@ class HandwritingImagePreprocessor {
     final alpha = rgbaBytes[index + 3];
     final luminance = (red * 299 + green * 587 + blue * 114) ~/ 1000;
     return ((255 - luminance) * alpha / 255).round();
+  }
+
+  Uint8List _rgbaToRgb(Uint8List rgbaBytes) {
+    final rgb = Uint8List(rgbaBytes.length ~/ 4 * 3);
+    for (var source = 0, destination = 0;
+        source < rgbaBytes.length;
+        source += 4, destination += 3) {
+      rgb[destination] = rgbaBytes[source];
+      rgb[destination + 1] = rgbaBytes[source + 1];
+      rgb[destination + 2] = rgbaBytes[source + 2];
+    }
+    return rgb;
   }
 }
