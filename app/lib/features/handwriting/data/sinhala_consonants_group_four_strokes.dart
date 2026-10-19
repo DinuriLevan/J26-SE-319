@@ -182,96 +182,97 @@ const sinhalaConsonantsGroupFourStrokes = <String, CharacterStrokeDefinition>{
     language: HandwritingLanguage.sinhala,
     strokes: [
       StrokeDefinition(
-        // Follow the natural one-pen formation shown in the Sinhala writing
-        // lesson: begin with the small upper-left loop, enter the large body,
-        // form its inner loop, and finish with the upper-right loop.
+        // Use one continuous, pen-like movement. The two upper forms are
+        // narrow leaves rather than circles, the lower bowl is broad and
+        // slightly flattened, and the centre is a compact inward curl.
         start: Offset(0.355, 0.245),
         segments: [
           // Make the compact upper-left loop and return to its starting point.
           StrokeSegment.cubic(
-            control1: Offset(0.305, 0.230),
-            control2: Offset(0.275, 0.270),
-            end: Offset(0.285, 0.315),
+            control1: Offset(0.305, 0.220),
+            control2: Offset(0.265, 0.250),
+            end: Offset(0.275, 0.305),
           ),
           StrokeSegment.cubic(
-            control1: Offset(0.295, 0.360),
-            control2: Offset(0.350, 0.365),
-            end: Offset(0.385, 0.335),
+            control1: Offset(0.282, 0.345),
+            control2: Offset(0.335, 0.350),
+            end: Offset(0.375, 0.315),
           ),
           StrokeSegment.cubic(
-            control1: Offset(0.420, 0.300),
-            control2: Offset(0.400, 0.255),
+            control1: Offset(0.405, 0.287),
+            control2: Offset(0.395, 0.252),
             end: Offset(0.355, 0.245),
           ),
           // Sweep diagonally to the centre, then back along the shoulder into
           // the large outer bowl.
           StrokeSegment.cubic(
-            control1: Offset(0.415, 0.245),
-            control2: Offset(0.485, 0.290),
+            control1: Offset(0.425, 0.250),
+            control2: Offset(0.485, 0.305),
             end: Offset(0.505, 0.365),
           ),
           StrokeSegment.cubic(
-            control1: Offset(0.445, 0.365),
-            control2: Offset(0.360, 0.360),
-            end: Offset(0.300, 0.380),
+            control1: Offset(0.440, 0.360),
+            control2: Offset(0.350, 0.360),
+            end: Offset(0.290, 0.390),
           ),
           // Continue without lifting around the wide lower body.
           StrokeSegment.cubic(
-            control1: Offset(0.220, 0.415),
-            control2: Offset(0.205, 0.560),
-            end: Offset(0.270, 0.665),
+            control1: Offset(0.215, 0.445),
+            control2: Offset(0.205, 0.575),
+            end: Offset(0.275, 0.680),
           ),
           StrokeSegment.cubic(
-            control1: Offset(0.345, 0.785),
-            control2: Offset(0.560, 0.805),
-            end: Offset(0.700, 0.715),
+            control1: Offset(0.360, 0.785),
+            control2: Offset(0.575, 0.790),
+            end: Offset(0.705, 0.710),
           ),
           StrokeSegment.cubic(
-            control1: Offset(0.795, 0.655),
-            control2: Offset(0.800, 0.495),
+            control1: Offset(0.790, 0.650),
+            control2: Offset(0.790, 0.500),
             end: Offset(0.705, 0.410),
           ),
-          // Turn inward from the right junction and make the centre loop.
+          // Turn inward from the right junction and form the small, angled
+          // centre curl. Avoid the wide geometric oval used previously.
           StrokeSegment.cubic(
-            control1: Offset(0.665, 0.435),
-            control2: Offset(0.625, 0.455),
-            end: Offset(0.590, 0.470),
+            control1: Offset(0.655, 0.430),
+            control2: Offset(0.590, 0.445),
+            end: Offset(0.545, 0.465),
           ),
           StrokeSegment.cubic(
-            control1: Offset(0.535, 0.470),
-            control2: Offset(0.465, 0.465),
-            end: Offset(0.420, 0.490),
+            control1: Offset(0.490, 0.475),
+            control2: Offset(0.435, 0.490),
+            end: Offset(0.405, 0.530),
           ),
           StrokeSegment.cubic(
-            control1: Offset(0.360, 0.525),
-            control2: Offset(0.375, 0.600),
-            end: Offset(0.445, 0.625),
+            control1: Offset(0.380, 0.575),
+            control2: Offset(0.410, 0.625),
+            end: Offset(0.465, 0.635),
           ),
           StrokeSegment.cubic(
-            control1: Offset(0.510, 0.650),
-            control2: Offset(0.610, 0.625),
-            end: Offset(0.630, 0.570),
+            control1: Offset(0.520, 0.645),
+            control2: Offset(0.580, 0.610),
+            end: Offset(0.595, 0.560),
           ),
           StrokeSegment.cubic(
-            control1: Offset(0.650, 0.525),
-            control2: Offset(0.625, 0.485),
-            end: Offset(0.590, 0.470),
+            control1: Offset(0.610, 0.520),
+            control2: Offset(0.580, 0.485),
+            end: Offset(0.545, 0.465),
           ),
           StrokeSegment.line(Offset(0.705, 0.410)),
           // Finish by travelling around the upper-right loop in one motion.
           StrokeSegment.cubic(
-            control1: Offset(0.760, 0.350),
-            control2: Offset(0.750, 0.255),
-            end: Offset(0.675, 0.225),
+            control1: Offset(0.750, 0.360),
+            control2: Offset(0.745, 0.285),
+            end: Offset(0.685, 0.245),
           ),
           StrokeSegment.cubic(
-            control1: Offset(0.595, 0.195),
-            control2: Offset(0.520, 0.245),
-            end: Offset(0.525, 0.330),
+            control1: Offset(0.620, 0.205),
+            control2: Offset(0.550, 0.235),
+            end: Offset(0.535, 0.305),
           ),
           StrokeSegment.cubic(
-            control1: Offset(0.570, 0.330),
-            control2: Offset(0.635, 0.345),
+            control1: Offset(0.525, 0.335),
+            control2: Offset(0.600, 0.350),
             end: Offset(0.705, 0.410),
           ),
         ],
