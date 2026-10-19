@@ -177,6 +177,109 @@ const sinhalaConsonantsGroupFourStrokes = <String, CharacterStrokeDefinition>{
       ),
     ],
   ),
+  'ෂ': CharacterStrokeDefinition(
+    character: 'ෂ',
+    language: HandwritingLanguage.sinhala,
+    strokes: [
+      StrokeDefinition(
+        // Follow the natural one-pen formation shown in the Sinhala writing
+        // lesson: begin with the small upper-left loop, enter the large body,
+        // form its inner loop, and finish with the upper-right loop.
+        start: Offset(0.355, 0.245),
+        segments: [
+          // Make the compact upper-left loop and return to its starting point.
+          StrokeSegment.cubic(
+            control1: Offset(0.305, 0.230),
+            control2: Offset(0.275, 0.270),
+            end: Offset(0.285, 0.315),
+          ),
+          StrokeSegment.cubic(
+            control1: Offset(0.295, 0.360),
+            control2: Offset(0.350, 0.365),
+            end: Offset(0.385, 0.335),
+          ),
+          StrokeSegment.cubic(
+            control1: Offset(0.420, 0.300),
+            control2: Offset(0.400, 0.255),
+            end: Offset(0.355, 0.245),
+          ),
+          // Sweep diagonally to the centre, then back along the shoulder into
+          // the large outer bowl.
+          StrokeSegment.cubic(
+            control1: Offset(0.415, 0.245),
+            control2: Offset(0.485, 0.290),
+            end: Offset(0.505, 0.365),
+          ),
+          StrokeSegment.cubic(
+            control1: Offset(0.445, 0.365),
+            control2: Offset(0.360, 0.360),
+            end: Offset(0.300, 0.380),
+          ),
+          // Continue without lifting around the wide lower body.
+          StrokeSegment.cubic(
+            control1: Offset(0.220, 0.415),
+            control2: Offset(0.205, 0.560),
+            end: Offset(0.270, 0.665),
+          ),
+          StrokeSegment.cubic(
+            control1: Offset(0.345, 0.785),
+            control2: Offset(0.560, 0.805),
+            end: Offset(0.700, 0.715),
+          ),
+          StrokeSegment.cubic(
+            control1: Offset(0.795, 0.655),
+            control2: Offset(0.800, 0.495),
+            end: Offset(0.705, 0.410),
+          ),
+          // Turn inward from the right junction and make the centre loop.
+          StrokeSegment.cubic(
+            control1: Offset(0.665, 0.435),
+            control2: Offset(0.625, 0.455),
+            end: Offset(0.590, 0.470),
+          ),
+          StrokeSegment.cubic(
+            control1: Offset(0.535, 0.470),
+            control2: Offset(0.465, 0.465),
+            end: Offset(0.420, 0.490),
+          ),
+          StrokeSegment.cubic(
+            control1: Offset(0.360, 0.525),
+            control2: Offset(0.375, 0.600),
+            end: Offset(0.445, 0.625),
+          ),
+          StrokeSegment.cubic(
+            control1: Offset(0.510, 0.650),
+            control2: Offset(0.610, 0.625),
+            end: Offset(0.630, 0.570),
+          ),
+          StrokeSegment.cubic(
+            control1: Offset(0.650, 0.525),
+            control2: Offset(0.625, 0.485),
+            end: Offset(0.590, 0.470),
+          ),
+          StrokeSegment.line(Offset(0.705, 0.410)),
+          // Finish by travelling around the upper-right loop in one motion.
+          StrokeSegment.cubic(
+            control1: Offset(0.760, 0.350),
+            control2: Offset(0.750, 0.255),
+            end: Offset(0.675, 0.225),
+          ),
+          StrokeSegment.cubic(
+            control1: Offset(0.595, 0.195),
+            control2: Offset(0.520, 0.245),
+            end: Offset(0.525, 0.330),
+          ),
+          StrokeSegment.cubic(
+            control1: Offset(0.570, 0.330),
+            control2: Offset(0.635, 0.345),
+            end: Offset(0.705, 0.410),
+          ),
+        ],
+        instruction:
+            'Start at the upper-left loop, then draw the large body, centre loop, and upper-right loop in one flowing movement.',
+      ),
+    ],
+  ),
   'ස': CharacterStrokeDefinition(
     character: 'ස',
     language: HandwritingLanguage.sinhala,

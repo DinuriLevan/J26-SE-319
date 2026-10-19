@@ -524,6 +524,165 @@ void main() {
     }
   });
 
+  test('accepts normal loop-first lowercase q', () {
+    final result = validator.validate(
+      target: 'q',
+      language: HandwritingLanguage.english,
+      strokes: _realisticLowercaseQ(),
+      sourceSize: sourceSize,
+    );
+
+    expect(result.orientationState, 'CORRECT');
+    expect(result.orientationCorrect, isTrue);
+    expect(result.shapeCorrect, isTrue);
+    expect(result.formationCorrect, isTrue);
+    expect(result.matchedValidVariant, startsWith('q_'));
+  });
+
+  test('accepts tail-first lowercase q', () {
+    final result = validator.validate(
+      target: 'q',
+      language: HandwritingLanguage.english,
+      strokes: _realisticLowercaseQ().reversed.toList(growable: false),
+      sourceSize: sourceSize,
+    );
+
+    expect(result.orientationCorrect, isTrue);
+    expect(result.shapeCorrect, isTrue);
+    expect(result.formationCorrect, isTrue);
+    expect(result.matchedValidVariant, contains('tail_first'));
+  });
+
+  test('accepts continuous lowercase q', () {
+    final result = validator.validate(
+      target: 'q',
+      language: HandwritingLanguage.english,
+      strokes: [_joinForTest(_realisticLowercaseQ())],
+      sourceSize: sourceSize,
+    );
+
+    expect(result.orientationCorrect, isTrue);
+    expect(result.shapeCorrect, isTrue);
+    expect(result.formationCorrect, isTrue);
+    expect(result.matchedValidVariant, contains('continuous'));
+  });
+
+  test('accepts reverse loop traversal for correctly oriented lowercase q', () {
+    final strokes = _realisticLowercaseQ();
+    strokes[0] = strokes[0].reversed.toList(growable: false);
+    final result = validator.validate(
+      target: 'q',
+      language: HandwritingLanguage.english,
+      strokes: strokes,
+      sourceSize: sourceSize,
+    );
+
+    expect(result.orientationCorrect, isTrue);
+    expect(result.shapeCorrect, isTrue);
+    expect(result.formationCorrect, isTrue);
+  });
+
+  test('rejects clearly mirrored lowercase q', () {
+    final result = validator.validate(
+      target: 'q',
+      language: HandwritingLanguage.english,
+      strokes: _mirrorHorizontally(
+        _realisticLowercaseQ(),
+        sourceSize.width,
+      ),
+      sourceSize: sourceSize,
+    );
+
+    expect(result.orientationState, 'MIRRORED');
+    expect(result.orientationCorrect, isFalse);
+    expect(result.formationCorrect, isFalse);
+    expect(result.failureReason, 'q-descender-on-wrong-side');
+  });
+
+  test('accepts a normal uppercase V', () {
+    final result = validator.validate(
+      target: 'V',
+      language: HandwritingLanguage.english,
+      strokes: _realisticUppercaseV(),
+      sourceSize: sourceSize,
+    );
+
+    expect(result.detectedMainDiagonals, isTrue);
+    expect(result.detectedBottomVertex, isTrue);
+    expect(result.detectedTopHorizontalStroke, isFalse);
+    expect(result.shapeCorrect, isTrue);
+    expect(result.formationCorrect, isTrue);
+  });
+
+  test('accepts a slightly imperfect uppercase V', () {
+    final result = validator.validate(
+      target: 'V',
+      language: HandwritingLanguage.english,
+      strokes: _imperfectUppercaseV(),
+      sourceSize: sourceSize,
+    );
+
+    expect(result.detectedMainDiagonals, isTrue);
+    expect(result.detectedBottomVertex, isTrue);
+    expect(result.detectedTopHorizontalStroke, isFalse);
+    expect(result.formationCorrect, isTrue);
+  });
+
+  test('rejects uppercase V with an extra top horizontal stroke', () {
+    final result = validator.validate(
+      target: 'V',
+      language: HandwritingLanguage.english,
+      strokes: [
+        ..._realisticUppercaseV(),
+        const [Offset(60, 50), Offset(150, 52), Offset(240, 50)],
+      ],
+      sourceSize: sourceSize,
+    );
+
+    expect(result.detectedMainDiagonals, isTrue);
+    expect(result.detectedBottomVertex, isTrue);
+    expect(result.detectedTopHorizontalStroke, isTrue);
+    expect(result.shapeCorrect, isFalse);
+    expect(result.formationCorrect, isFalse);
+    expect(result.failureReason, 'meaningful-top-horizontal-stroke');
+  });
+
+  test('rejects a triangle-like closed uppercase V', () {
+    final result = validator.validate(
+      target: 'V',
+      language: HandwritingLanguage.english,
+      strokes: const [
+        [
+          Offset(60, 50),
+          Offset(150, 350),
+          Offset(240, 50),
+          Offset(60, 50),
+        ],
+      ],
+      sourceSize: sourceSize,
+    );
+
+    expect(result.detectedTopHorizontalStroke, isTrue);
+    expect(result.shapeCorrect, isFalse);
+    expect(result.formationCorrect, isFalse);
+  });
+
+  test('accepts uppercase V with only a tiny noisy top mark', () {
+    final result = validator.validate(
+      target: 'V',
+      language: HandwritingLanguage.english,
+      strokes: [
+        ..._realisticUppercaseV(),
+        const [Offset(128, 52), Offset(145, 51), Offset(160, 54)],
+      ],
+      sourceSize: sourceSize,
+    );
+
+    expect(result.detectedTopHorizontalStroke, isFalse);
+    expect(result.shapeCorrect, isTrue);
+    expect(result.formationCorrect, isTrue);
+  });
+
   test('accepts Z as one continuous stroke', () {
     final result = validator.validate(
       target: 'Z',
@@ -767,6 +926,38 @@ List<List<Offset>> _realisticMultiStrokeLowercaseM() => const [
         Offset(220, 211),
         Offset(220, 330),
       ],
+    ];
+
+List<List<Offset>> _realisticLowercaseQ() => [
+      const [
+        Offset(198, 150),
+        Offset(176, 118),
+        Offset(130, 105),
+        Offset(88, 125),
+        Offset(70, 175),
+        Offset(76, 230),
+        Offset(112, 268),
+        Offset(158, 272),
+        Offset(193, 242),
+        Offset(202, 190),
+        Offset(198, 150),
+      ],
+      const [
+        Offset(202, 142),
+        Offset(203, 220),
+        Offset(207, 295),
+        Offset(211, 360),
+      ],
+    ];
+
+List<List<Offset>> _realisticUppercaseV() => const [
+      [Offset(60, 50), Offset(88, 145), Offset(120, 252), Offset(150, 350)],
+      [Offset(150, 350), Offset(180, 250), Offset(210, 145), Offset(240, 50)],
+    ];
+
+List<List<Offset>> _imperfectUppercaseV() => const [
+      [Offset(62, 55), Offset(91, 151), Offset(119, 246), Offset(148, 344)],
+      [Offset(148, 344), Offset(181, 251), Offset(211, 149), Offset(238, 58)],
     ];
 
 List<Offset> _zContinuous() => const [

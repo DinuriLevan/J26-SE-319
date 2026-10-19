@@ -42,7 +42,10 @@ const englishUppercaseFormationPolicies = <String, FormationValidationPolicy>{
   'S': _mirrorSensitive,
   'T': _symmetric,
   'U': _symmetric,
-  'V': _symmetric,
+  'V': FormationValidationPolicy(
+    orientationPolicy: OrientationValidationPolicy.symmetricOrAmbiguous,
+    enforceShape: true,
+  ),
   'W': _symmetric,
   'X': _symmetric,
   'Y': _symmetric,

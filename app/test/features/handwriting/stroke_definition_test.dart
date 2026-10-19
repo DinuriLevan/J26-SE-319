@@ -51,6 +51,7 @@ void main() {
     'ල',
     'ව',
     'ශ',
+    'ෂ',
     'ස',
     'හ',
     'ළ',
@@ -82,9 +83,9 @@ void main() {
     }
   });
 
-  test('provides exactly the 43 Sinhala selection definitions', () {
-    expect(sinhalaStrokes, hasLength(43));
-    expect(sinhalaCharacters, hasLength(43));
+  test('provides exactly the 44 Sinhala selection definitions', () {
+    expect(sinhalaStrokes, hasLength(44));
+    expect(sinhalaCharacters, hasLength(44));
 
     for (final character in sinhalaCharacters) {
       expect(
@@ -145,6 +146,16 @@ void main() {
         greaterThanOrEqualTo(8),
       );
     }
+  });
+
+  test('ෂ provides its natural continuous teaching path', () {
+    final definition = sinhalaStrokes['ෂ'];
+
+    expect(definition, isNotNull);
+    expect(definition!.character, 'ෂ');
+    expect(definition.strokes, hasLength(1));
+    expect(definition.strokes.single.segments, hasLength(17));
+    expect(definition.strokes.single.start, const Offset(0.355, 0.245));
   });
 
   test('අ follows the corrected natural single-stroke proportions', () {

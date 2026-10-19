@@ -211,6 +211,50 @@ void main() {
     expect(find.text('Step 1 of 2'), findsOneWidget);
   });
 
+  testWidgets('ෂ opens its continuous human-writing demonstration', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      buildSubject(
+        const CharacterDemonstrationScreen(
+          character: 'ෂ',
+          language: HandwritingLanguage.sinhala,
+        ),
+      ),
+    );
+
+    expect(find.text('Let’s learn ෂ'), findsOneWidget);
+    expect(find.byType(StrokeDemonstrationCanvas), findsOneWidget);
+    expect(
+      find.text('Demonstration is not available for this character yet.'),
+      findsNothing,
+    );
+
+    await tester.scrollUntilVisible(
+      find.text('Step 1 of 1'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+
+    expect(find.text('Step 1 of 1'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('Next Step'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(
+      tester
+          .widget<OutlinedButton>(
+            find.widgetWithText(OutlinedButton, 'Next Step'),
+          )
+          .onPressed,
+      isNull,
+    );
+
+    expect(find.text('My Turn!'), findsOneWidget);
+  });
+
   testWidgets('unsupported letters show a safe fallback', (tester) async {
     await tester.pumpWidget(
       buildSubject(

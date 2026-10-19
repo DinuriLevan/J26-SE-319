@@ -35,6 +35,9 @@ class FormationValidationResult {
     this.enforceStrokeOrder = false,
     this.enforceStrokeCount = false,
     this.enforceShape = false,
+    this.detectedMainDiagonals,
+    this.detectedBottomVertex,
+    this.detectedTopHorizontalStroke,
   });
 
   final bool orientationEvaluated;
@@ -65,6 +68,9 @@ class FormationValidationResult {
   final bool enforceStrokeOrder;
   final bool enforceStrokeCount;
   final bool enforceShape;
+  final bool? detectedMainDiagonals;
+  final bool? detectedBottomVertex;
+  final bool? detectedTopHorizontalStroke;
 
   bool get formationCorrect {
     if (orientationEvaluated && !orientationCorrect) return false;
@@ -337,7 +343,11 @@ class HandwritingFormationValidator
                     mirroredMatch.distance
                 ? 'CORRECT'
                 : 'AMBIGUOUS';
-    final shapeCorrect = correctMatch.distance <= _uppercaseShapeDistanceLimit;
+    final vStructure = target == 'V'
+        ? _evaluateUppercaseVStructure(child.strokes, child.bounds)
+        : null;
+    final shapeCorrect = vStructure?.shapeCorrect ??
+        correctMatch.distance <= _uppercaseShapeDistanceLimit;
 
     final diagnosticReference = correctMatch.variant.strokes;
     final sameStrokeCount = child.strokes.length == diagnosticReference.length;
@@ -354,7 +364,8 @@ class HandwritingFormationValidator
     final failureReason = mirrored
         ? 'clearly-closer-to-mirrored-reference'
         : formationFailsShape
-            ? 'shape-does-not-match-valid-$target-reference'
+            ? vStructure?.failureReason ??
+                'shape-does-not-match-valid-$target-reference'
             : null;
 
     return FormationValidationResult(
@@ -389,6 +400,9 @@ class HandwritingFormationValidator
       enforceStrokeOrder: policy.enforceStrokeOrder,
       enforceStrokeCount: policy.enforceStrokeCount,
       enforceShape: policy.enforceShape,
+      detectedMainDiagonals: vStructure?.mainDiagonals,
+      detectedBottomVertex: vStructure?.bottomVertex,
+      detectedTopHorizontalStroke: vStructure?.topHorizontalStroke,
     );
   }
 
@@ -420,12 +434,29 @@ class HandwritingFormationValidator
       preferMatchingStrokeCount: true,
     );
 
-    final clearlyMirrored = policy.validateOrientation &&
+    final referenceClearlyMirrored = policy.validateOrientation &&
         mirroredMatch.distance + lowercaseMirrorDistanceMargin <
             correctMatch.distance;
-    final clearlyCorrect = policy.validateOrientation &&
+    final referenceClearlyCorrect = policy.validateOrientation &&
         correctMatch.distance + lowercaseMirrorDistanceMargin <
             mirroredMatch.distance;
+    final qStructure = target == 'q'
+        ? _evaluateLowercaseQStructure(child.strokes, child.bounds)
+        : null;
+    final clearlyMirrored = qStructure == null
+        ? referenceClearlyMirrored
+        : qStructure.orientation == _SpatialOrientation.mirrored
+            ? true
+            : qStructure.orientation == _SpatialOrientation.correct
+                ? false
+                : referenceClearlyMirrored;
+    final clearlyCorrect = qStructure == null
+        ? referenceClearlyCorrect
+        : qStructure.orientation == _SpatialOrientation.correct
+            ? true
+            : qStructure.orientation == _SpatialOrientation.mirrored
+                ? false
+                : referenceClearlyCorrect;
     final orientationState = !policy.validateOrientation
         ? 'AMBIGUOUS'
         : clearlyMirrored
@@ -445,7 +476,9 @@ class HandwritingFormationValidator
     final orderCorrect = signals == null
         ? false
         : signals.strokeOrderScore >= _minimumStrokeOrderScore;
-    final shapeCorrect = correctMatch.distance <= _uppercaseShapeDistanceLimit;
+    final shapeCorrect = qStructure?.shapeCorrect ??
+        correctMatch.distance <= _uppercaseShapeDistanceLimit;
+    final formationFailsShape = policy.enforceShape && !shapeCorrect;
 
     return FormationValidationResult(
       orientationEvaluated: policy.validateOrientation,
@@ -455,7 +488,9 @@ class HandwritingFormationValidator
       similarityScore: _distanceToSimilarity(correctMatch.distance),
       feedback: clearlyMirrored
           ? 'Good try! Check the direction of the letter.'
-          : null,
+          : formationFailsShape
+              ? 'Good try! Make the letter shape a little clearer.'
+              : null,
       actualStrokeCount: child.strokes.length,
       expectedStrokeCount: expected.strokes.length,
       normalizedBounds: child.bounds,
@@ -472,8 +507,13 @@ class HandwritingFormationValidator
       orientationPolicy: policy.orientationPolicy.name,
       orientationState: orientationState,
       matchedValidVariant: correctMatch.variant.name,
-      failureReason:
-          clearlyMirrored ? 'clearly-closer-to-mirrored-reference' : null,
+      failureReason: clearlyMirrored
+          ? qStructure == null
+              ? 'clearly-closer-to-mirrored-reference'
+              : 'q-descender-on-wrong-side'
+          : formationFailsShape
+              ? 'q-missing-loop-or-descender-structure'
+              : null,
       enforceStrokeDirection: policy.enforceStrokeDirection,
       enforceStrokeOrder: policy.enforceStrokeOrder,
       enforceStrokeCount: policy.enforceStrokeCount,
@@ -485,6 +525,26 @@ class HandwritingFormationValidator
     String target,
     List<List<Offset>> expected,
   ) {
+    if (target == 'q' && expected.length == 2) {
+      final loop = expected[0];
+      final tail = expected[1];
+      final reversedLoop = loop.reversed.toList(growable: false);
+      final loopFirst = _joinStrokes([loop, tail]);
+      final tailFirst = _joinStrokes([tail, loop]);
+      return [
+        _ReferenceVariant('q_loop_first', [loop, tail]),
+        _ReferenceVariant('q_loop_first_reverse_loop', [reversedLoop, tail]),
+        _ReferenceVariant('q_tail_first', [tail, loop]),
+        _ReferenceVariant('q_tail_first_reverse_loop', [tail, reversedLoop]),
+        _ReferenceVariant('q_continuous_loop_first', [loopFirst]),
+        _ReferenceVariant('q_continuous_tail_first', [tailFirst]),
+        _ReferenceVariant(
+          'q_continuous_reverse_traversal',
+          [loopFirst.reversed.toList(growable: false)],
+        ),
+      ];
+    }
+
     final variants = <_ReferenceVariant>[
       _ReferenceVariant('${target}_demonstration', expected),
       _ReferenceVariant(
@@ -521,6 +581,192 @@ class HandwritingFormationValidator
 
   List<Offset> _joinStrokes(List<List<Offset>> strokes) =>
       strokes.expand((stroke) => stroke).toList(growable: false);
+
+  _QStructureEvaluation _evaluateLowercaseQStructure(
+    List<List<Offset>> strokes,
+    Rect bounds,
+  ) {
+    if (strokes.isEmpty || bounds.isEmpty) {
+      return const _QStructureEvaluation(
+        orientation: _SpatialOrientation.ambiguous,
+        shapeCorrect: false,
+      );
+    }
+
+    Rect? bodyBounds;
+    double? tailX;
+    var descenderPresent = false;
+
+    if (strokes.length > 1) {
+      final strokeBounds =
+          strokes.map(_boundsForPoints).toList(growable: false);
+      var tailIndex = -1;
+      var bestTailScore = double.negativeInfinity;
+      for (var index = 0; index < strokeBounds.length; index++) {
+        final candidate = strokeBounds[index];
+        if (candidate.height < bounds.height * 0.38) continue;
+        final narrowness = 1 -
+            (candidate.width / math.max(candidate.height, 0.0001))
+                .clamp(0.0, 1.0);
+        final score = candidate.height * 0.70 + narrowness * 0.30;
+        if (score > bestTailScore) {
+          bestTailScore = score;
+          tailIndex = index;
+        }
+      }
+      if (tailIndex >= 0) {
+        final tailBounds = strokeBounds[tailIndex];
+        tailX = tailBounds.center.dx;
+        descenderPresent = tailBounds.height >= bounds.height * 0.38;
+        final bodyCandidates = <Rect>[
+          for (var index = 0; index < strokeBounds.length; index++)
+            if (index != tailIndex) strokeBounds[index],
+        ];
+        if (bodyCandidates.isNotEmpty) {
+          bodyBounds = bodyCandidates.reduce(
+            (best, candidate) =>
+                candidate.width * candidate.height > best.width * best.height
+                    ? candidate
+                    : best,
+          );
+          descenderPresent = descenderPresent &&
+              tailBounds.bottom >= bodyBounds.bottom + bounds.height * 0.08;
+        }
+      }
+    } else {
+      final stroke = strokes.single;
+      final maximumY = stroke.map((point) => point.dy).reduce(math.max);
+      final minimumY = stroke.map((point) => point.dy).reduce(math.min);
+      final height = maximumY - minimumY;
+      final tailBand = stroke
+          .where((point) => point.dy >= maximumY - height * 0.10)
+          .toList(growable: false);
+      final bodyPoints = stroke
+          .where((point) => point.dy <= maximumY - height * 0.20)
+          .toList(growable: false);
+      if (tailBand.isNotEmpty && bodyPoints.length >= 4) {
+        tailX = tailBand.map((point) => point.dx).reduce((a, b) => a + b) /
+            tailBand.length;
+        bodyBounds = _boundsForPoints(bodyPoints);
+        descenderPresent =
+            height >= 0.55 && maximumY >= bodyBounds.bottom + height * 0.12;
+      }
+    }
+
+    if (tailX == null || bodyBounds == null) {
+      return const _QStructureEvaluation(
+        orientation: _SpatialOrientation.ambiguous,
+        shapeCorrect: false,
+      );
+    }
+
+    final bodyIsLoopSized = bodyBounds.width >= bounds.width * 0.38 &&
+        bodyBounds.height >= bounds.height * 0.24;
+    final sideMargin = math.max(0.045, bounds.width * 0.08);
+    final orientation = tailX >= bodyBounds.center.dx + sideMargin
+        ? _SpatialOrientation.correct
+        : tailX <= bodyBounds.center.dx - sideMargin
+            ? _SpatialOrientation.mirrored
+            : _SpatialOrientation.ambiguous;
+    return _QStructureEvaluation(
+      orientation: orientation,
+      shapeCorrect: bodyIsLoopSized && descenderPresent,
+    );
+  }
+
+  _VStructureEvaluation _evaluateUppercaseVStructure(
+    List<List<Offset>> strokes,
+    Rect bounds,
+  ) {
+    if (strokes.isEmpty || bounds.isEmpty) {
+      return const _VStructureEvaluation(
+        mainDiagonals: false,
+        bottomVertex: false,
+        topHorizontalStroke: false,
+      );
+    }
+
+    final topLimit = bounds.top + bounds.height * 0.30;
+    var positiveDiagonalLength = 0.0;
+    var negativeDiagonalLength = 0.0;
+    var longestTopHorizontalRun = 0.0;
+
+    for (final stroke in strokes) {
+      var currentHorizontalRun = 0.0;
+      for (var index = 1; index < stroke.length; index++) {
+        final start = stroke[index - 1];
+        final end = stroke[index];
+        final delta = end - start;
+        final length = delta.distance;
+        if (length == 0) continue;
+
+        final midpointY = (start.dy + end.dy) / 2;
+        final isTopHorizontal =
+            midpointY <= topLimit && delta.dx.abs() >= delta.dy.abs() * 2.5;
+        if (isTopHorizontal) {
+          currentHorizontalRun += length;
+          longestTopHorizontalRun =
+              math.max(longestTopHorizontalRun, currentHorizontalRun);
+        } else {
+          currentHorizontalRun = 0;
+        }
+
+        final isDiagonal = delta.dx.abs() >= delta.dy.abs() * 0.28 &&
+            delta.dy.abs() >= delta.dx.abs() * 0.45;
+        if (isDiagonal) {
+          if (delta.dx * delta.dy > 0) {
+            positiveDiagonalLength += length;
+          } else {
+            negativeDiagonalLength += length;
+          }
+        }
+      }
+    }
+
+    final points = strokes.expand((stroke) => stroke).toList(growable: false);
+    final bottomPoint = points.reduce(
+      (lowest, point) => point.dy > lowest.dy ? point : lowest,
+    );
+    final upperPoints = points
+        .where((point) => point.dy <= bounds.top + bounds.height * 0.36)
+        .toList(growable: false);
+    final horizontalVertexMargin = bounds.width * 0.14;
+    final hasUpperLeft = upperPoints.any(
+      (point) => point.dx <= bottomPoint.dx - horizontalVertexMargin,
+    );
+    final hasUpperRight = upperPoints.any(
+      (point) => point.dx >= bottomPoint.dx + horizontalVertexMargin,
+    );
+    final bottomVertex = bottomPoint.dy >= bounds.top + bounds.height * 0.78 &&
+        hasUpperLeft &&
+        hasUpperRight;
+    final diagonalThreshold = math.max(0.30, bounds.height * 0.42);
+    final mainDiagonals = positiveDiagonalLength >= diagonalThreshold &&
+        negativeDiagonalLength >= diagonalThreshold;
+    final meaningfulHorizontalThreshold = math.max(0.22, bounds.width * 0.36);
+    final topHorizontalStroke =
+        longestTopHorizontalRun >= meaningfulHorizontalThreshold;
+
+    return _VStructureEvaluation(
+      mainDiagonals: mainDiagonals,
+      bottomVertex: bottomVertex,
+      topHorizontalStroke: topHorizontalStroke,
+    );
+  }
+
+  Rect _boundsForPoints(List<Offset> points) {
+    var left = double.infinity;
+    var top = double.infinity;
+    var right = double.negativeInfinity;
+    var bottom = double.negativeInfinity;
+    for (final point in points) {
+      left = math.min(left, point.dx);
+      top = math.min(top, point.dy);
+      right = math.max(right, point.dx);
+      bottom = math.max(bottom, point.dy);
+    }
+    return Rect.fromLTRB(left, top, right, bottom);
+  }
 
   List<_ReferenceVariant> _uppercaseReferenceVariants(
     String target,
@@ -989,4 +1235,37 @@ class _ReferenceMatch {
 
   final _ReferenceVariant variant;
   final double distance;
+}
+
+enum _SpatialOrientation { correct, mirrored, ambiguous }
+
+class _QStructureEvaluation {
+  const _QStructureEvaluation({
+    required this.orientation,
+    required this.shapeCorrect,
+  });
+
+  final _SpatialOrientation orientation;
+  final bool shapeCorrect;
+}
+
+class _VStructureEvaluation {
+  const _VStructureEvaluation({
+    required this.mainDiagonals,
+    required this.bottomVertex,
+    required this.topHorizontalStroke,
+  });
+
+  final bool mainDiagonals;
+  final bool bottomVertex;
+  final bool topHorizontalStroke;
+
+  bool get shapeCorrect =>
+      mainDiagonals && bottomVertex && !topHorizontalStroke;
+
+  String get failureReason {
+    if (topHorizontalStroke) return 'meaningful-top-horizontal-stroke';
+    if (!mainDiagonals) return 'missing-two-main-diagonals';
+    return 'missing-bottom-vertex';
+  }
 }

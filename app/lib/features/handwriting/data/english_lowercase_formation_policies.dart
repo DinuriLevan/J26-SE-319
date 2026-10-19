@@ -36,7 +36,11 @@ const englishLowercaseFormationPolicies = <String, FormationValidationPolicy>{
   'n': _mirrorSensitive,
   'o': _ambiguous,
   'p': _pairedMirrorSensitive,
-  'q': _pairedMirrorSensitive,
+  'q': FormationValidationPolicy(
+    orientationPolicy: OrientationValidationPolicy.referenceMirror,
+    enforceShape: true,
+    useStrokeCorrespondenceForOrientation: true,
+  ),
   'r': _mirrorSensitive,
   's': _mirrorSensitive,
   't': _mirrorSensitive,
