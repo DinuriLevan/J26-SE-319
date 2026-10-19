@@ -48,6 +48,9 @@ void main() {
     expect(find.text('ව්‍යංජන (Consonants)'), findsOneWidget);
     expect(find.text('ක'), findsOneWidget);
     expect(find.text('ළ'), findsOneWidget);
+    for (final removedCharacter in ['ඛ', 'ඝ', 'ඡ', 'ඨ', 'ඵ', 'භ', 'ඹ']) {
+      expect(find.text(removedCharacter), findsNothing);
+    }
     expect(find.text('ඟ'), findsNothing);
     expect(find.text('ෆ'), findsNothing);
   });
