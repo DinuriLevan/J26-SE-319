@@ -17,6 +17,11 @@ class FormationValidationResult {
     required this.normalizedBounds,
     this.correctFormationSimilarity = 0,
     this.mirroredFormationSimilarity = 0,
+    this.orientationScore = 0,
+    this.directionScore = 0,
+    this.startEndScore = 0,
+    this.strokeOrderScore = 0,
+    this.shapeSimilarity = 0,
   });
 
   final bool orientationEvaluated;
@@ -32,8 +37,17 @@ class FormationValidationResult {
   final Rect normalizedBounds;
   final double correctFormationSimilarity;
   final double mirroredFormationSimilarity;
+  final double orientationScore;
+  final double directionScore;
+  final double startEndScore;
+  final double strokeOrderScore;
+  final double shapeSimilarity;
 
-  bool get formationCorrect => !orientationEvaluated || orientationCorrect;
+  bool get formationCorrect =>
+      !orientationEvaluated ||
+      (orientationCorrect &&
+          (strokeCountCorrect ?? true) &&
+          (strokeOrderCorrect ?? true));
 
   bool finalCorrect({required bool recognitionCorrect}) =>
       recognitionCorrect && formationCorrect;
@@ -59,10 +73,16 @@ class HandwritingFormationValidator
 
   /// A mirrored score must win by this much before the child is rejected.
   /// Small/noisy differences are deliberately treated as inconclusive.
-  static const double mirrorSimilarityMargin = 0.035;
+  static const double mirrorSimilarityMargin = 0.010;
   static const double _geometryDistinguishability = 0.035;
   static const double _orderedDistinguishability = 0.055;
-  static const double _geometryWeight = 0.70;
+  static const double _tangentWeight = 0.18;
+  static const double _startEndTolerance = 0.34;
+  static const double _minimumStartEndScore = 0.55;
+  static const double _minimumDirectionScore = 0.45;
+  static const double _minimumStrokeOrderScore = 0.50;
+  static const double _minimumOrientationScore = 0.58;
+  static const double _componentMirrorMargin = 0.04;
   static const int _samplesPerStroke = 72;
 
   @override
@@ -99,8 +119,6 @@ class HandwritingFormationValidator
     }
 
     final expected = _normalize(_sampleDefinition(definition, sourceSize));
-    final childPoints = child.strokes.expand((stroke) => stroke).toList();
-    final expectedPoints = expected.strokes.expand((stroke) => stroke).toList();
     final mirroredExpectedStrokes = expected.strokes
         .map(
           (stroke) => stroke
@@ -108,12 +126,16 @@ class HandwritingFormationValidator
               .toList(growable: false),
         )
         .toList(growable: false);
-    final mirroredExpected =
-        mirroredExpectedStrokes.expand((stroke) => stroke).toList();
-    final expectedDistance = _symmetricChamfer(childPoints, expectedPoints);
-    final mirroredDistance = _symmetricChamfer(childPoints, mirroredExpected);
+    final expectedDistance = _structuralDistance(
+      child.strokes,
+      expected.strokes,
+    );
+    final mirroredDistance = _structuralDistance(
+      child.strokes,
+      mirroredExpectedStrokes,
+    );
     final referenceGeometrySeparation =
-        _symmetricChamfer(expectedPoints, mirroredExpected);
+        _structuralDistance(expected.strokes, mirroredExpectedStrokes);
     final geometryIsDistinguishable =
         referenceGeometrySeparation >= _geometryDistinguishability;
 
@@ -128,34 +150,58 @@ class HandwritingFormationValidator
 
     var correctSimilarity = _distanceToSimilarity(expectedDistance);
     var mirroredSimilarity = _distanceToSimilarity(mirroredDistance);
-    if (orderedFormationIsDistinguishable) {
+    if (!geometryIsDistinguishable && orderedFormationIsDistinguishable) {
       final orderedCorrect = _distanceToSimilarity(
         _orderedDistance(child.strokes, expected.strokes),
       );
       final orderedMirrored = _distanceToSimilarity(
         _orderedDistance(child.strokes, mirroredExpectedStrokes),
       );
-      if (geometryIsDistinguishable) {
-        correctSimilarity = _geometryWeight * correctSimilarity +
-            (1 - _geometryWeight) * orderedCorrect;
-        mirroredSimilarity = _geometryWeight * mirroredSimilarity +
-            (1 - _geometryWeight) * orderedMirrored;
-      } else {
-        correctSimilarity = orderedCorrect;
-        mirroredSimilarity = orderedMirrored;
-      }
+      correctSimilarity = orderedCorrect;
+      mirroredSimilarity = orderedMirrored;
     }
+
+    final correctSignals = orderedComparisonAvailable
+        ? _strokeSignals(child.strokes, expected.strokes)
+        : null;
+    final mirroredSignals = orderedComparisonAvailable
+        ? _strokeSignals(child.strokes, mirroredExpectedStrokes)
+        : null;
+    final startEndScore = correctSignals?.startEndScore ?? 0;
+    final directionScore = correctSignals?.directionScore ?? 0;
+    final strokeOrderScore = correctSignals?.strokeOrderScore ?? 0;
+    final orientationScore = correctSignals == null
+        ? correctSimilarity
+        : correctSimilarity * 0.30 +
+            startEndScore * 0.30 +
+            directionScore * 0.20 +
+            strokeOrderScore * 0.20;
+
+    final componentMirrorWins = correctSignals != null &&
+        mirroredSignals != null &&
+        mirroredSignals.combinedScore - correctSignals.combinedScore >=
+            _componentMirrorMargin;
+    final componentChecksPass = correctSignals == null ||
+        (startEndScore >= _minimumStartEndScore &&
+            (!correctSignals.directionEvaluated ||
+                directionScore >= _minimumDirectionScore) &&
+            strokeOrderScore >= _minimumStrokeOrderScore &&
+            orientationScore >= _minimumOrientationScore);
 
     final orientationEvaluated =
         geometryIsDistinguishable || orderedFormationIsDistinguishable;
-    final orientationCorrect = !orientationEvaluated ||
+    final mirrorShapePasses =
         mirroredSimilarity - correctSimilarity < mirrorSimilarityMargin;
+    final orientationCorrect = !orientationEvaluated ||
+        (mirrorShapePasses && !componentMirrorWins && componentChecksPass);
 
     return FormationValidationResult(
       orientationEvaluated: orientationEvaluated,
       orientationCorrect: orientationCorrect,
       strokeCountCorrect: orderedComparisonAvailable,
-      strokeOrderCorrect: null,
+      strokeOrderCorrect: correctSignals == null
+          ? null
+          : strokeOrderScore >= _minimumStrokeOrderScore,
       similarityScore: correctSimilarity,
       feedback: orientationCorrect
           ? null
@@ -165,8 +211,63 @@ class HandwritingFormationValidator
       normalizedBounds: child.bounds,
       correctFormationSimilarity: correctSimilarity,
       mirroredFormationSimilarity: mirroredSimilarity,
+      orientationScore: orientationScore,
+      directionScore: directionScore,
+      startEndScore: startEndScore,
+      strokeOrderScore: strokeOrderScore,
+      shapeSimilarity: correctSimilarity,
     );
   }
+
+  _StrokeSignals _strokeSignals(
+    List<List<Offset>> actual,
+    List<List<Offset>> expected,
+  ) {
+    var endpointTotal = 0.0;
+    var endpointCount = 0;
+    var minimumDirection = 1.0;
+    var directionCount = 0;
+
+    for (var index = 0; index < actual.length; index++) {
+      final actualStroke = actual[index];
+      final expectedStroke = expected[index];
+      if (actualStroke.isEmpty || expectedStroke.isEmpty) continue;
+
+      endpointTotal += _regionScore(actualStroke.first, expectedStroke.first);
+      endpointTotal += _regionScore(actualStroke.last, expectedStroke.last);
+      endpointCount += 2;
+
+      final actualDirection = actualStroke.last - actualStroke.first;
+      final expectedDirection = expectedStroke.last - expectedStroke.first;
+      if (actualDirection.distance >= 0.08 &&
+          expectedDirection.distance >= 0.08) {
+        final cosine = (actualDirection.dx * expectedDirection.dx +
+                actualDirection.dy * expectedDirection.dy) /
+            (actualDirection.distance * expectedDirection.distance);
+        minimumDirection = math.min(
+          minimumDirection,
+          (cosine.clamp(-1.0, 1.0) + 1) / 2,
+        );
+        directionCount++;
+      }
+    }
+
+    final startEndScore =
+        endpointCount == 0 ? 0.0 : endpointTotal / endpointCount;
+    final directionScore = directionCount == 0 ? 1.0 : minimumDirection;
+    final strokeOrderScore = _distanceToSimilarity(
+      _orderedDistance(actual, expected),
+    );
+    return _StrokeSignals(
+      startEndScore: startEndScore,
+      directionScore: directionScore,
+      strokeOrderScore: strokeOrderScore,
+      directionEvaluated: directionCount > 0,
+    );
+  }
+
+  double _regionScore(Offset actual, Offset expected) =>
+      (1 - (actual - expected).distance / _startEndTolerance).clamp(0.0, 1.0);
 
   List<List<Offset>> _sampleDefinition(
     CharacterStrokeDefinition definition,
@@ -284,6 +385,75 @@ class HandwritingFormationValidator
     return (directed(left, right) + directed(right, left)) / 2;
   }
 
+  /// A stroke-count-independent shape distance that also compares local line
+  /// orientation. This prevents a straight stem on the wrong side from being
+  /// cheaply matched to a nearby curved edge with a different tangent.
+  double _structuralDistance(
+    List<List<Offset>> source,
+    List<List<Offset>> destination,
+  ) {
+    final sourcePoints = source.expand((stroke) => stroke).toList();
+    final destinationPoints = destination.expand((stroke) => stroke).toList();
+    final positional = _symmetricChamfer(sourcePoints, destinationPoints);
+    final oriented = _symmetricOrientedDistance(source, destination);
+    return positional * 0.35 + oriented * 0.65;
+  }
+
+  double _symmetricOrientedDistance(
+    List<List<Offset>> left,
+    List<List<Offset>> right,
+  ) {
+    final leftPoints = _orientedPoints(left);
+    final rightPoints = _orientedPoints(right);
+    if (leftPoints.isEmpty || rightPoints.isEmpty) return double.infinity;
+
+    double directed(
+      List<_OrientedPoint> source,
+      List<_OrientedPoint> destination,
+    ) {
+      var total = 0.0;
+      for (final point in source) {
+        var nearest = double.infinity;
+        for (final candidate in destination) {
+          final spatial = (point.position - candidate.position).distance;
+          final alignment = (point.tangent.dx * candidate.tangent.dx +
+                  point.tangent.dy * candidate.tangent.dy)
+              .abs()
+              .clamp(0.0, 1.0);
+          final cost = spatial + _tangentWeight * (1 - alignment);
+          nearest = math.min(nearest, cost);
+        }
+        total += nearest;
+      }
+      return total / source.length;
+    }
+
+    return (directed(leftPoints, rightPoints) +
+            directed(rightPoints, leftPoints)) /
+        2;
+  }
+
+  List<_OrientedPoint> _orientedPoints(List<List<Offset>> strokes) {
+    final result = <_OrientedPoint>[];
+    for (final stroke in strokes) {
+      if (stroke.length < 2) continue;
+      for (var index = 0; index < stroke.length; index++) {
+        final before = stroke[index == 0 ? 0 : index - 1];
+        final after = stroke[index == stroke.length - 1 ? index : index + 1];
+        final delta = after - before;
+        final length = delta.distance;
+        if (length == 0) continue;
+        result.add(
+          _OrientedPoint(
+            stroke[index],
+            Offset(delta.dx / length, delta.dy / length),
+          ),
+        );
+      }
+    }
+    return result;
+  }
+
   double _orderedDistance(
     List<List<Offset>> source,
     List<List<Offset>> destination,
@@ -323,4 +493,28 @@ class _NormalizedStrokes {
 
   final List<List<Offset>> strokes;
   final Rect bounds;
+}
+
+class _OrientedPoint {
+  const _OrientedPoint(this.position, this.tangent);
+
+  final Offset position;
+  final Offset tangent;
+}
+
+class _StrokeSignals {
+  const _StrokeSignals({
+    required this.startEndScore,
+    required this.directionScore,
+    required this.strokeOrderScore,
+    required this.directionEvaluated,
+  });
+
+  final double startEndScore;
+  final double directionScore;
+  final double strokeOrderScore;
+  final bool directionEvaluated;
+
+  double get combinedScore =>
+      startEndScore * 0.45 + directionScore * 0.25 + strokeOrderScore * 0.30;
 }

@@ -148,6 +148,8 @@ class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
           'RecognitionCorrect=$recognitionCorrect '
           'OrientationEvaluated=${formation.orientationEvaluated} '
           'OrientationCorrect=${formation.orientationCorrect} '
+          'StrokeCountCorrect=${formation.strokeCountCorrect} '
+          'StrokeOrderCorrect=${formation.strokeOrderCorrect} '
           'StrokeCount=${formation.actualStrokeCount} '
           'ExpectedStrokeCount=${formation.expectedStrokeCount ?? 'not evaluated'} '
           'NormalizedBounds=${formation.normalizedBounds} '
@@ -155,6 +157,12 @@ class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
           '${formation.correctFormationSimilarity.toStringAsFixed(4)} '
           'MirroredFormationSimilarity='
           '${formation.mirroredFormationSimilarity.toStringAsFixed(4)} '
+          'StartEndScore=${formation.startEndScore.toStringAsFixed(4)} '
+          'DirectionScore=${formation.directionScore.toStringAsFixed(4)} '
+          'StrokeOrderScore=${formation.strokeOrderScore.toStringAsFixed(4)} '
+          'OrientationScore=${formation.orientationScore.toStringAsFixed(4)} '
+          'ShapeSimilarity=${formation.shapeSimilarity.toStringAsFixed(4)} '
+          'FormationCorrect=${formation.formationCorrect} '
           'FinalCorrect=$finalCorrect',
         );
       }
