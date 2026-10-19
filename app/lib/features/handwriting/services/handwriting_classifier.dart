@@ -165,6 +165,8 @@ class HandwritingClassifier implements HandwritingClassifierClient {
       'Target: $target\n'
       'Model: ${modelType.name}\n'
       'Input: ${model.inputShape} ${model.inputType.name}\n'
+      'Input quantization: scale=${model.inputQuantizationScale}, '
+      'zeroPoint=${model.inputQuantizationZeroPoint}\n'
       'Output: ${model.outputShape} ${model.outputType.name}\n'
       'Labels: ${model.labels.length}\n'
       'Prediction: ${prediction.character} '
@@ -289,7 +291,9 @@ class HandwritingClassifier implements HandwritingClassifierClient {
 
       debugPrint(
         '[Handwriting] Loaded ${modelType.name}: '
-        'input=${input.shape} ${input.type}, '
+        'input=${input.shape} ${input.type} '
+        'quantization(scale=${input.params.scale}, '
+        'zeroPoint=${input.params.zeroPoint}), '
         'output=${output.shape} ${output.type}.',
       );
       return _LoadedHandwritingModel(
@@ -299,6 +303,8 @@ class HandwritingClassifier implements HandwritingClassifierClient {
         inputWidth: input.shape[2],
         inputHeight: input.shape[1],
         inputType: input.type,
+        inputQuantizationScale: input.params.scale,
+        inputQuantizationZeroPoint: input.params.zeroPoint,
         outputShape: List<int>.unmodifiable(output.shape),
         outputClasses: outputClasses,
         outputType: output.type,
@@ -341,6 +347,8 @@ class _LoadedHandwritingModel {
     required this.inputWidth,
     required this.inputHeight,
     required this.inputType,
+    required this.inputQuantizationScale,
+    required this.inputQuantizationZeroPoint,
     required this.outputShape,
     required this.outputClasses,
     required this.outputType,
@@ -352,6 +360,8 @@ class _LoadedHandwritingModel {
   final int inputWidth;
   final int inputHeight;
   final TensorType inputType;
+  final double inputQuantizationScale;
+  final int inputQuantizationZeroPoint;
   final List<int> outputShape;
   final int outputClasses;
   final TensorType outputType;

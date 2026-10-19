@@ -13,7 +13,7 @@ class HandwritingPreprocessingException implements Exception {
 
   String get userMessage => switch (failure) {
         HandwritingPreprocessingFailure.tooSmall =>
-          'Make the letter a little bigger and try again.',
+          'Please write the letter a little larger.',
         HandwritingPreprocessingFailure.empty => 'Write the letter first.',
         HandwritingPreprocessingFailure.invalidImage =>
           'We couldn’t prepare that writing. Please try again.',
@@ -42,7 +42,8 @@ class HandwritingImagePreprocessor {
   static const int _trainingContentSize = 176;
   static const int _trainingCanvasSize = 224;
   static const int _minimumInkStrength = 20;
-  static const double defaultSourceStrokeWidth = 8;
+  static const double modelStrokeWidth = 18;
+  static const double _trainingCropPaddingFraction = 0.04;
   static const double _minimumExtentFraction = 0.12;
   static const double _minimumPathLengthFraction = 0.08;
 
@@ -51,13 +52,13 @@ class HandwritingImagePreprocessor {
   Future<PreprocessedHandwriting> preprocessStrokes({
     required List<List<ui.Offset>> strokes,
     required ui.Size sourceSize,
-    double sourceStrokeWidth = defaultSourceStrokeWidth,
+    double outputStrokeWidth = modelStrokeWidth,
     int outputSize = defaultOutputSize,
   }) async {
     if (sourceSize.isEmpty ||
         !sourceSize.width.isFinite ||
         !sourceSize.height.isFinite ||
-        sourceStrokeWidth <= 0 ||
+        outputStrokeWidth <= 0 ||
         outputSize <= 0) {
       throw const HandwritingPreprocessingException(
         'The handwriting canvas has invalid dimensions.',
@@ -108,34 +109,26 @@ class HandwritingImagePreprocessor {
       );
     }
 
-    // Include the round pen caps in the crop, then apply the same 4% crop
-    // padding and 176px content target used by prepare_dataset.py.
-    final penRadius = sourceStrokeWidth / 2;
-    left -= penRadius;
-    top -= penRadius;
-    right += penRadius;
-    bottom += penRadius;
-    final inkWidth = right - left;
-    final inkHeight = bottom - top;
-    final cropPadding = math.max(2.0, math.max(inkWidth, inkHeight) * 0.04);
-    final cropLeft = left - cropPadding;
-    final cropTop = top - cropPadding;
-    final cropWidth = inkWidth + cropPadding * 2;
-    final cropHeight = inkHeight + cropPadding * 2;
+    // prepare_dataset.py places the padded crop in a 176px content box. Work
+    // backwards from that exact box so the final ink, including round caps,
+    // has a stable scale while its stroke stays a fixed model-space width.
     final targetContentSize =
         outputSize * _trainingContentSize / _trainingCanvasSize;
-    final scale = math.min(
-      targetContentSize / cropWidth,
-      targetContentSize / cropHeight,
+    final targetInkExtent =
+        targetContentSize / (1 + _trainingCropPaddingFraction * 2);
+    final targetCenterlineExtent = math.max(
+      1.0,
+      targetInkExtent - outputStrokeWidth,
     );
-    final destinationWidth = cropWidth * scale;
-    final destinationHeight = cropHeight * scale;
+    final scale = targetCenterlineExtent / pointExtent;
+    final destinationWidth = pointWidth * scale;
+    final destinationHeight = pointHeight * scale;
     final offsetX = (outputSize - destinationWidth) / 2;
     final offsetY = (outputSize - destinationHeight) / 2;
 
     ui.Offset mapPoint(ui.Offset point) => ui.Offset(
-          offsetX + (point.dx - cropLeft) * scale,
-          offsetY + (point.dy - cropTop) * scale,
+          offsetX + (point.dx - left) * scale,
+          offsetY + (point.dy - top) * scale,
         );
 
     final recorder = ui.PictureRecorder();
@@ -146,7 +139,7 @@ class HandwritingImagePreprocessor {
     );
     final inkPaint = ui.Paint()
       ..color = const ui.Color(0xFF000000)
-      ..strokeWidth = sourceStrokeWidth * scale
+      ..strokeWidth = outputStrokeWidth
       ..strokeCap = ui.StrokeCap.round
       ..strokeJoin = ui.StrokeJoin.round
       ..style = ui.PaintingStyle.stroke

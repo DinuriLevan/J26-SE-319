@@ -101,7 +101,6 @@ class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
       final handwriting = await _preprocessor.preprocessStrokes(
         strokes: _penStrokes,
         sourceSize: canvasBox.size,
-        sourceStrokeWidth: _PracticePainter.strokeWidth,
       );
       if (HandwritingDebugConfig.enabled) {
         final debugImage = await _preprocessor.createDebugImage(handwriting);
@@ -368,8 +367,7 @@ class _PracticePainter extends CustomPainter {
 
   final List<List<Offset>> penStrokes;
   final Color inkColor;
-  static const double strokeWidth =
-      HandwritingImagePreprocessor.defaultSourceStrokeWidth;
+  static const double strokeWidth = 8;
 
   @override
   void paint(Canvas canvas, Size size) {

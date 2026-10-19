@@ -136,4 +136,22 @@ void main() {
       ),
     );
   });
+
+  test('uses the fixed training-matched model stroke width', () async {
+    expect(HandwritingImagePreprocessor.modelStrokeWidth, 18);
+    final result = await preprocessor.preprocessStrokes(
+      sourceSize: const Size(300, 400),
+      strokes: const [
+        [Offset(150, 60), Offset(150, 340)],
+      ],
+    );
+
+    var darkPixelsAcrossCenter = 0;
+    for (var x = 0; x < result.width; x++) {
+      if (result.rgbBytes[(112 * result.width + x) * 3] < 128) {
+        darkPixelsAcrossCenter++;
+      }
+    }
+    expect(darkPixelsAcrossCenter, closeTo(18, 2));
+  });
 }
