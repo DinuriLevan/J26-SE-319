@@ -2,9 +2,11 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import '../models/character_stroke_definition.dart';
 import '../models/handwriting_prediction.dart';
 import '../services/handwriting_classifier.dart';
 import '../services/handwriting_debug_config.dart';
+import '../services/handwriting_formation_validator.dart';
 import '../services/handwriting_image_preprocessor.dart';
 
 class HandwritingPracticeScreen extends StatefulWidget {
@@ -13,11 +15,13 @@ class HandwritingPracticeScreen extends StatefulWidget {
     required this.character,
     required this.modelType,
     this.classifier,
+    this.formationValidator,
   });
 
   final String character;
   final HandwritingModelType modelType;
   final HandwritingClassifierClient? classifier;
+  final HandwritingFormationValidatorClient? formationValidator;
 
   @override
   State<HandwritingPracticeScreen> createState() =>
@@ -31,8 +35,10 @@ class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
       const HandwritingImagePreprocessor();
 
   late final HandwritingClassifierClient _classifier;
+  late final HandwritingFormationValidatorClient _formationValidator;
   late final bool _ownsClassifier;
   HandwritingPrediction? _prediction;
+  FormationValidationResult? _formationResult;
   ui.Image? _debugModelInput;
   String? _errorMessage;
   bool _isSubmitting = false;
@@ -42,6 +48,8 @@ class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
     super.initState();
     _ownsClassifier = widget.classifier == null;
     _classifier = widget.classifier ?? HandwritingClassifier();
+    _formationValidator =
+        widget.formationValidator ?? const HandwritingFormationValidator();
   }
 
   @override
@@ -56,6 +64,7 @@ class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
     setState(() {
       _replaceDebugImage(null);
       _prediction = null;
+      _formationResult = null;
       _errorMessage = null;
       _penStrokes.add([details.localPosition]);
     });
@@ -72,6 +81,7 @@ class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
       _penStrokes.clear();
       _replaceDebugImage(null);
       _prediction = null;
+      _formationResult = null;
       _errorMessage = null;
     });
   }
@@ -90,6 +100,7 @@ class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
     setState(() {
       _isSubmitting = true;
       _prediction = null;
+      _formationResult = null;
       _errorMessage = null;
     });
 
@@ -116,8 +127,42 @@ class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
         handwriting: handwriting,
         expectedCharacter: widget.character,
       );
+      final formation = _formationValidator.validate(
+        target: widget.character,
+        language: widget.modelType == HandwritingModelType.sinhala
+            ? HandwritingLanguage.sinhala
+            : HandwritingLanguage.english,
+        strokes: _penStrokes,
+        sourceSize: canvasBox.size,
+      );
+      final recognitionCorrect = prediction.character == widget.character &&
+          prediction.confidence >= HandwritingClassifier.confidenceThreshold;
+      final finalCorrect = formation.finalCorrect(
+        recognitionCorrect: recognitionCorrect,
+      );
+      if (HandwritingDebugConfig.enabled) {
+        debugPrint(
+          '[HandwritingFormation] Target=${widget.character} '
+          'Prediction=${prediction.character} '
+          'Confidence=${prediction.confidence.toStringAsFixed(4)} '
+          'RecognitionCorrect=$recognitionCorrect '
+          'OrientationEvaluated=${formation.orientationEvaluated} '
+          'OrientationCorrect=${formation.orientationCorrect} '
+          'StrokeCount=${formation.actualStrokeCount} '
+          'ExpectedStrokeCount=${formation.expectedStrokeCount ?? 'not evaluated'} '
+          'NormalizedBounds=${formation.normalizedBounds} '
+          'CorrectFormationSimilarity='
+          '${formation.correctFormationSimilarity.toStringAsFixed(4)} '
+          'MirroredFormationSimilarity='
+          '${formation.mirroredFormationSimilarity.toStringAsFixed(4)} '
+          'FinalCorrect=$finalCorrect',
+        );
+      }
       if (!mounted) return;
-      setState(() => _prediction = prediction);
+      setState(() {
+        _prediction = prediction;
+        _formationResult = formation;
+      });
     } on HandwritingPreprocessingException catch (error, stackTrace) {
       debugPrint('[Handwriting] Canvas preprocessing failed: $error');
       debugPrintStack(stackTrace: stackTrace);
@@ -230,6 +275,7 @@ class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
                         key: const ValueKey('prediction-result'),
                         target: widget.character,
                         prediction: prediction,
+                        formation: _formationResult!,
                       )
                     : errorMessage != null
                         ? _PracticeMessage(
@@ -281,16 +327,26 @@ class _PredictionResultCard extends StatelessWidget {
     super.key,
     required this.target,
     required this.prediction,
+    required this.formation,
   });
 
   final String target;
   final HandwritingPrediction prediction;
+  final FormationValidationResult formation;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isCorrect = prediction.character == target &&
+    final recognitionCorrect = prediction.character == target &&
         prediction.confidence >= HandwritingClassifier.confidenceThreshold;
+    final isCorrect = formation.finalCorrect(
+      recognitionCorrect: recognitionCorrect,
+    );
+    final statusMessage = recognitionCorrect && !formation.formationCorrect
+        ? formation.feedback ?? 'Good try! Check the direction of the letter.'
+        : isCorrect
+            ? '✓ Correct!'
+            : 'Needs Practice — Try Again';
     final statusColor =
         isCorrect ? Colors.green.shade700 : Colors.orange.shade800;
 
@@ -320,7 +376,7 @@ class _PredictionResultCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              isCorrect ? '✓ Correct!' : 'Needs Practice — Try Again',
+              statusMessage,
               style: theme.textTheme.titleMedium?.copyWith(
                 color: statusColor,
                 fontWeight: FontWeight.bold,
