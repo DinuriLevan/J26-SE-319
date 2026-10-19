@@ -146,10 +146,13 @@ class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
           'Prediction=${prediction.character} '
           'Confidence=${prediction.confidence.toStringAsFixed(4)} '
           'RecognitionCorrect=$recognitionCorrect '
+          'OrientationPolicy=${formation.orientationPolicy} '
           'OrientationEvaluated=${formation.orientationEvaluated} '
           'OrientationCorrect=${formation.orientationCorrect} '
+          'StrokeDirectionCorrect=${formation.strokeDirectionCorrect} '
           'StrokeCountCorrect=${formation.strokeCountCorrect} '
           'StrokeOrderCorrect=${formation.strokeOrderCorrect} '
+          'ShapeCorrect=${formation.shapeCorrect} '
           'StrokeCount=${formation.actualStrokeCount} '
           'ExpectedStrokeCount=${formation.expectedStrokeCount ?? 'not evaluated'} '
           'NormalizedBounds=${formation.normalizedBounds} '
@@ -162,8 +165,10 @@ class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
           'StrokeOrderScore=${formation.strokeOrderScore.toStringAsFixed(4)} '
           'OrientationScore=${formation.orientationScore.toStringAsFixed(4)} '
           'ShapeSimilarity=${formation.shapeSimilarity.toStringAsFixed(4)} '
+          'MatchedValidVariant=${formation.matchedValidVariant ?? 'none'} '
           'FormationCorrect=${formation.formationCorrect} '
-          'FinalCorrect=$finalCorrect',
+          'FinalCorrect=$finalCorrect '
+          'FailureReason=${formation.failureReason ?? 'none'}',
         );
       }
       if (!mounted) return;

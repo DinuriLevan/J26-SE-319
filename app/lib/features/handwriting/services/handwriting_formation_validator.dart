@@ -2,7 +2,9 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import '../data/character_stroke_repository.dart';
+import '../data/english_uppercase_formation_policies.dart';
 import '../models/character_stroke_definition.dart';
+import '../models/formation_validation_policy.dart';
 
 class FormationValidationResult {
   const FormationValidationResult({
@@ -22,6 +24,15 @@ class FormationValidationResult {
     this.startEndScore = 0,
     this.strokeOrderScore = 0,
     this.shapeSimilarity = 0,
+    this.strokeDirectionCorrect,
+    this.shapeCorrect = true,
+    this.orientationPolicy = 'not-evaluated',
+    this.matchedValidVariant,
+    this.failureReason,
+    this.enforceStrokeDirection = false,
+    this.enforceStrokeOrder = false,
+    this.enforceStrokeCount = false,
+    this.enforceShape = false,
   });
 
   final bool orientationEvaluated;
@@ -42,12 +53,26 @@ class FormationValidationResult {
   final double startEndScore;
   final double strokeOrderScore;
   final double shapeSimilarity;
+  final bool? strokeDirectionCorrect;
+  final bool shapeCorrect;
+  final String orientationPolicy;
+  final String? matchedValidVariant;
+  final String? failureReason;
+  final bool enforceStrokeDirection;
+  final bool enforceStrokeOrder;
+  final bool enforceStrokeCount;
+  final bool enforceShape;
 
-  bool get formationCorrect =>
-      !orientationEvaluated ||
-      (orientationCorrect &&
-          (strokeCountCorrect ?? true) &&
-          (strokeOrderCorrect ?? true));
+  bool get formationCorrect {
+    if (orientationEvaluated && !orientationCorrect) return false;
+    if (enforceStrokeDirection && !(strokeDirectionCorrect ?? true)) {
+      return false;
+    }
+    if (enforceStrokeOrder && !(strokeOrderCorrect ?? true)) return false;
+    if (enforceStrokeCount && !(strokeCountCorrect ?? true)) return false;
+    if (enforceShape && !shapeCorrect) return false;
+    return true;
+  }
 
   bool finalCorrect({required bool recognitionCorrect}) =>
       recognitionCorrect && formationCorrect;
@@ -84,6 +109,8 @@ class HandwritingFormationValidator
   static const double _minimumOrientationScore = 0.58;
   static const double _componentMirrorMargin = 0.04;
   static const int _samplesPerStroke = 72;
+  static const double uppercaseMirrorDistanceMargin = 0.012;
+  static const double _uppercaseShapeDistanceLimit = 0.075;
 
   @override
   FormationValidationResult validate({
@@ -119,6 +146,16 @@ class HandwritingFormationValidator
     }
 
     final expected = _normalize(_sampleDefinition(definition, sourceSize));
+    final uppercasePolicy = _uppercasePolicy(target, language);
+    if (uppercasePolicy != null) {
+      return _validateUppercase(
+        target: target,
+        child: child,
+        expected: expected,
+        policy: uppercasePolicy,
+      );
+    }
+
     final mirroredExpectedStrokes = expected.strokes
         .map(
           (stroke) => stroke
@@ -216,8 +253,256 @@ class HandwritingFormationValidator
       startEndScore: startEndScore,
       strokeOrderScore: strokeOrderScore,
       shapeSimilarity: correctSimilarity,
+      strokeDirectionCorrect: correctSignals == null ||
+          !correctSignals.directionEvaluated ||
+          directionScore >= _minimumDirectionScore,
+      shapeCorrect: true,
+      orientationPolicy: 'legacy-reference-and-stroke-metadata',
+      failureReason: orientationCorrect ? null : 'legacy-component-check',
+      enforceStrokeDirection: true,
+      enforceStrokeOrder: true,
+      enforceStrokeCount: true,
     );
   }
+
+  FormationValidationPolicy? _uppercasePolicy(
+    String target,
+    HandwritingLanguage language,
+  ) {
+    if (language != HandwritingLanguage.english || target.length != 1) {
+      return null;
+    }
+    return englishUppercaseFormationPolicies[target];
+  }
+
+  FormationValidationResult _validateUppercase({
+    required String target,
+    required _NormalizedStrokes child,
+    required _NormalizedStrokes expected,
+    required FormationValidationPolicy policy,
+  }) {
+    final variants = _uppercaseReferenceVariants(target, expected.strokes);
+    final correctMatch = _bestReferenceMatch(
+      child.strokes,
+      variants,
+      useStrokeCorrespondence: policy.useStrokeCorrespondenceForOrientation,
+    );
+    final mirroredVariants = variants
+        .map(
+          (variant) => _ReferenceVariant(
+            variant.name,
+            _mirrorStrokes(variant.strokes),
+          ),
+        )
+        .toList(growable: false);
+    final mirroredMatch = _bestReferenceMatch(
+      child.strokes,
+      mirroredVariants,
+      useStrokeCorrespondence: policy.useStrokeCorrespondenceForOrientation,
+    );
+
+    final mirrored = policy.validateOrientation &&
+        mirroredMatch.distance + uppercaseMirrorDistanceMargin <
+            correctMatch.distance;
+    final orientationCorrect = !mirrored;
+    final shapeCorrect = correctMatch.distance <= _uppercaseShapeDistanceLimit;
+
+    final diagnosticReference = correctMatch.variant.strokes;
+    final sameStrokeCount = child.strokes.length == diagnosticReference.length;
+    final signals = sameStrokeCount
+        ? _strokeSignals(child.strokes, diagnosticReference)
+        : null;
+    final directionCorrect = signals == null ||
+        !signals.directionEvaluated ||
+        signals.directionScore >= _minimumDirectionScore;
+    final orderCorrect = signals == null
+        ? false
+        : signals.strokeOrderScore >= _minimumStrokeOrderScore;
+    final formationFailsShape = policy.enforceShape && !shapeCorrect;
+    final failureReason = mirrored
+        ? 'clearly-closer-to-mirrored-reference'
+        : formationFailsShape
+            ? 'shape-does-not-match-valid-$target-reference'
+            : null;
+
+    return FormationValidationResult(
+      orientationEvaluated: policy.validateOrientation,
+      orientationCorrect: orientationCorrect,
+      strokeCountCorrect: sameStrokeCount,
+      strokeOrderCorrect: orderCorrect,
+      similarityScore: _distanceToSimilarity(correctMatch.distance),
+      feedback: mirrored
+          ? 'Good try! Check the direction of the letter.'
+          : formationFailsShape
+              ? 'Good try! Make the letter shape a little clearer.'
+              : null,
+      actualStrokeCount: child.strokes.length,
+      expectedStrokeCount: expected.strokes.length,
+      normalizedBounds: child.bounds,
+      correctFormationSimilarity: _distanceToSimilarity(correctMatch.distance),
+      mirroredFormationSimilarity:
+          _distanceToSimilarity(mirroredMatch.distance),
+      orientationScore: mirroredMatch.distance - correctMatch.distance,
+      directionScore: signals?.directionScore ?? 0,
+      startEndScore: signals?.startEndScore ?? 0,
+      strokeOrderScore: signals?.strokeOrderScore ?? 0,
+      shapeSimilarity: _distanceToSimilarity(correctMatch.distance),
+      strokeDirectionCorrect: directionCorrect,
+      shapeCorrect: shapeCorrect,
+      orientationPolicy: policy.orientationPolicy.name,
+      matchedValidVariant: correctMatch.variant.name,
+      failureReason: failureReason,
+      enforceStrokeDirection: policy.enforceStrokeDirection,
+      enforceStrokeOrder: policy.enforceStrokeOrder,
+      enforceStrokeCount: policy.enforceStrokeCount,
+      enforceShape: policy.enforceShape,
+    );
+  }
+
+  List<_ReferenceVariant> _uppercaseReferenceVariants(
+    String target,
+    List<List<Offset>> expected,
+  ) {
+    if (target == 'D' && expected.length == 2) {
+      final stem = expected[0];
+      final curve = expected[1];
+      final insetCurve = <Offset>[];
+      for (var index = 0; index < curve.length; index++) {
+        final progress = index / (curve.length - 1);
+        final endpointWeight = math.pow((progress * 2 - 1).abs(), 4).toDouble();
+        insetCurve.add(
+          Offset(curve[index].dx - 0.14 * endpointWeight, curve[index].dy),
+        );
+      }
+      return [
+        _ReferenceVariant('D_STEM_FIRST', [stem, curve]),
+        _ReferenceVariant('D_CURVE_FIRST', [curve, stem]),
+        _ReferenceVariant('D_INSET_STEM_FIRST', [stem, insetCurve]),
+        _ReferenceVariant('D_INSET_CURVE_FIRST', [insetCurve, stem]),
+      ];
+    }
+
+    if (target == 'Z' && expected.length == 1) {
+      final stroke = expected.single;
+      final topLeft = stroke.first;
+      final bottomRight = stroke.last;
+      final topRight = stroke.reduce(
+        (best, point) => point.dx - point.dy > best.dx - best.dy ? point : best,
+      );
+      final bottomLeft = stroke.reduce(
+        (best, point) => point.dy - point.dx > best.dy - best.dx ? point : best,
+      );
+      final segmented = <List<Offset>>[
+        _resample([topLeft, topRight], _samplesPerStroke),
+        _resample([topRight, bottomLeft], _samplesPerStroke),
+        _resample([bottomLeft, bottomRight], _samplesPerStroke),
+      ];
+      return [
+        _ReferenceVariant('Z_CONTINUOUS', expected),
+        _ReferenceVariant('Z_THREE_STROKE', segmented),
+        _ReferenceVariant(
+          'Z_REVERSE_TRAVERSAL',
+          expected
+              .map((stroke) => stroke.reversed.toList(growable: false))
+              .toList(growable: false),
+        ),
+      ];
+    }
+
+    final variants = <_ReferenceVariant>[
+      _ReferenceVariant('${target}_DEMONSTRATION', expected),
+      _ReferenceVariant(
+        '${target}_REVERSE_TRAVERSAL',
+        expected
+            .map((stroke) => stroke.reversed.toList(growable: false))
+            .toList(growable: false),
+      ),
+    ];
+    if (expected.length > 1) {
+      variants.add(
+        _ReferenceVariant(
+          '${target}_ALTERNATIVE_ORDER',
+          expected.reversed.toList(growable: false),
+        ),
+      );
+    }
+    return variants;
+  }
+
+  _ReferenceMatch _bestReferenceMatch(
+    List<List<Offset>> child,
+    List<_ReferenceVariant> variants, {
+    required bool useStrokeCorrespondence,
+  }) {
+    late _ReferenceVariant bestVariant;
+    var bestDistance = double.infinity;
+    var bestTieBreaker = double.infinity;
+    for (final variant in variants) {
+      final structuralDistance = _structuralDistance(child, variant.strokes);
+      final correspondenceDistance = child.length == variant.strokes.length
+          ? _reversibleOrderedDistance(child, variant.strokes)
+          : double.infinity;
+      final distance =
+          useStrokeCorrespondence && correspondenceDistance.isFinite
+              ? structuralDistance * 0.55 + correspondenceDistance * 0.45
+              : structuralDistance;
+      final tieBreaker = child.length == variant.strokes.length
+          ? _orderedDistance(child, variant.strokes)
+          : double.infinity;
+      if (distance < bestDistance - 0.000001 ||
+          ((distance - bestDistance).abs() <= 0.000001 &&
+              tieBreaker < bestTieBreaker)) {
+        bestVariant = variant;
+        bestDistance = distance;
+        bestTieBreaker = tieBreaker;
+      }
+    }
+    return _ReferenceMatch(bestVariant, bestDistance);
+  }
+
+  double _reversibleOrderedDistance(
+    List<List<Offset>> source,
+    List<List<Offset>> destination,
+  ) {
+    if (source.length != destination.length || source.isEmpty) {
+      return double.infinity;
+    }
+    var total = 0.0;
+    for (var index = 0; index < source.length; index++) {
+      final direct =
+          _pointwiseStrokeDistance(source[index], destination[index]);
+      final reverse = _pointwiseStrokeDistance(
+        source[index].reversed.toList(growable: false),
+        destination[index],
+      );
+      total += math.min(direct, reverse);
+    }
+    return total / source.length;
+  }
+
+  double _pointwiseStrokeDistance(List<Offset> left, List<Offset> right) {
+    if (left.isEmpty || right.isEmpty) return double.infinity;
+    final samples = math.min(left.length, right.length);
+    var total = 0.0;
+    for (var sample = 0; sample < samples; sample++) {
+      final leftIndex = samples == 1
+          ? 0
+          : (sample * (left.length - 1) / (samples - 1)).round();
+      final rightIndex = samples == 1
+          ? 0
+          : (sample * (right.length - 1) / (samples - 1)).round();
+      total += (left[leftIndex] - right[rightIndex]).distance;
+    }
+    return total / samples;
+  }
+
+  List<List<Offset>> _mirrorStrokes(List<List<Offset>> strokes) => strokes
+      .map(
+        (stroke) => stroke
+            .map((point) => Offset(1 - point.dx, point.dy))
+            .toList(growable: false),
+      )
+      .toList(growable: false);
 
   _StrokeSignals _strokeSignals(
     List<List<Offset>> actual,
@@ -517,4 +802,18 @@ class _StrokeSignals {
 
   double get combinedScore =>
       startEndScore * 0.45 + directionScore * 0.25 + strokeOrderScore * 0.30;
+}
+
+class _ReferenceVariant {
+  const _ReferenceVariant(this.name, this.strokes);
+
+  final String name;
+  final List<List<Offset>> strokes;
+}
+
+class _ReferenceMatch {
+  const _ReferenceMatch(this.variant, this.distance);
+
+  final _ReferenceVariant variant;
+  final double distance;
 }

@@ -12,7 +12,20 @@ void main() {
   const validator = HandwritingFormationValidator();
   const sourceSize = Size(300, 400);
   const allEnglish = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-  const geometryAndDirectionIndistinguishable = {'i', 'l'};
+  const symmetricUppercase = {
+    'A',
+    'H',
+    'I',
+    'M',
+    'O',
+    'T',
+    'U',
+    'V',
+    'W',
+    'X',
+    'Y'
+  };
+  const legacyIndistinguishableLowercase = {'i', 'l'};
 
   for (final character in allEnglish.split('')) {
     test('correct $character formation passes orientation validation', () {
@@ -27,7 +40,9 @@ void main() {
 
       expect(
         result.orientationEvaluated,
-        !geometryAndDirectionIndistinguishable.contains(character),
+        character == character.toUpperCase()
+            ? !symmetricUppercase.contains(character)
+            : !legacyIndistinguishableLowercase.contains(character),
       );
       expect(result.orientationCorrect, isTrue);
       expect(result.formationCorrect, isTrue);
@@ -35,7 +50,7 @@ void main() {
       expect(result.strokeOrderCorrect, isTrue);
     });
 
-    test('horizontally mirrored $character fails orientation validation', () {
+    test('handles horizontally mirrored $character according to policy', () {
       final strokes = _mirrorHorizontally(
         _referenceStrokes(character, sourceSize),
         sourceSize.width,
@@ -48,8 +63,9 @@ void main() {
         sourceSize: sourceSize,
       );
 
-      final distinguishable =
-          !geometryAndDirectionIndistinguishable.contains(character);
+      final distinguishable = character == character.toUpperCase()
+          ? !symmetricUppercase.contains(character)
+          : !legacyIndistinguishableLowercase.contains(character);
       expect(result.orientationEvaluated, distinguishable);
       expect(result.orientationCorrect, !distinguishable);
       expect(result.formationCorrect, !distinguishable);
@@ -137,9 +153,23 @@ void main() {
     expect(activelyValidated, containsAll(requiredMirrorSensitive));
     expect(
       activelyValidated.join(),
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghjkmnopqrstuvwxyz',
+      'BCDEFGJKLNPQRSZabcdefghjkmnopqrstuvwxyz',
     );
-    expect(notDistinguishable, ['i', 'l']);
+    expect(notDistinguishable, [
+      'A',
+      'H',
+      'I',
+      'M',
+      'O',
+      'T',
+      'U',
+      'V',
+      'W',
+      'X',
+      'Y',
+      'i',
+      'l',
+    ]);
   });
 
   for (final character in ['B', 'E', 'J']) {
@@ -177,22 +207,39 @@ void main() {
     });
   }
 
-  test('rejects real-canvas mirrored D with stem on the right', () {
-    for (final strokes in _realisticMirroredDStrokes()) {
-      final result = validator.validate(
-        target: 'D',
-        language: HandwritingLanguage.english,
-        strokes: strokes,
-        sourceSize: sourceSize,
-      );
+  test('rejects a clearly mirrored trajectory D', () {
+    final result = validator.validate(
+      target: 'D',
+      language: HandwritingLanguage.english,
+      strokes: _realisticDStrokes().first,
+      sourceSize: sourceSize,
+    );
 
-      expect(result.orientationEvaluated, isTrue);
-      expect(result.orientationCorrect, isFalse);
-      expect(result.formationCorrect, isFalse);
-    }
+    expect(result.orientationEvaluated, isTrue);
+    expect(result.orientationCorrect, isFalse);
+    expect(result.formationCorrect, isFalse);
   });
 
-  test('rejects D when a required stroke is travelled backwards', () {
+  test('does not call a normal inset D mirrored', () {
+    final result = validator.validate(
+      target: 'D',
+      language: HandwritingLanguage.english,
+      strokes: _realisticDStrokes().last,
+      sourceSize: sourceSize,
+    );
+
+    expect(result.orientationEvaluated, isTrue);
+    expect(
+      result.orientationCorrect,
+      isTrue,
+      reason: 'correct=${result.correctFormationSimilarity} '
+          'mirror=${result.mirroredFormationSimilarity} '
+          'variant=${result.matchedValidVariant}',
+    );
+    expect(result.formationCorrect, isTrue);
+  });
+
+  test('accepts D when a stroke is travelled backwards', () {
     final strokes =
         _referenceStrokes('D', sourceSize).map((stroke) => stroke).toList();
     strokes[0] = strokes[0].reversed.toList(growable: false);
@@ -203,8 +250,9 @@ void main() {
       sourceSize: sourceSize,
     );
 
-    expect(result.directionScore, lessThan(0.45));
-    expect(result.orientationCorrect, isFalse);
+    expect(result.strokeDirectionCorrect, isFalse);
+    expect(result.orientationCorrect, isTrue);
+    expect(result.formationCorrect, isTrue);
   });
 
   test('rejects Q with its tail on the wrong side', () {
@@ -220,10 +268,16 @@ void main() {
       sourceSize: sourceSize,
     );
 
-    expect(result.orientationCorrect, isFalse);
+    expect(
+      result.orientationCorrect,
+      isFalse,
+      reason: 'correct=${result.correctFormationSimilarity} '
+          'mirror=${result.mirroredFormationSimilarity} '
+          'shape=${result.shapeSimilarity}',
+    );
   });
 
-  test('rejects Q when the tail is travelled backwards', () {
+  test('accepts Q when the visible tail is travelled backwards', () {
     final strokes =
         _referenceStrokes('Q', sourceSize).map((stroke) => stroke).toList();
     strokes[1] = strokes[1].reversed.toList(growable: false);
@@ -234,8 +288,9 @@ void main() {
       sourceSize: sourceSize,
     );
 
-    expect(result.directionScore, lessThan(0.45));
-    expect(result.orientationCorrect, isFalse);
+    expect(result.strokeDirectionCorrect, isFalse);
+    expect(result.orientationCorrect, isTrue);
+    expect(result.formationCorrect, isTrue);
   });
 
   test('rejects real-canvas Q tail in the upper-left region', () {
@@ -248,6 +303,153 @@ void main() {
 
     expect(result.startEndScore, lessThan(0.55));
     expect(result.orientationCorrect, isFalse);
+  });
+
+  for (final character in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')) {
+    test('accepts a natural reverse-traversal $character variant', () {
+      final strokes = _referenceStrokes(character, sourceSize)
+          .map((stroke) => stroke.reversed.toList(growable: false))
+          .toList(growable: false);
+      final result = validator.validate(
+        target: character,
+        language: HandwritingLanguage.english,
+        strokes: strokes,
+        sourceSize: sourceSize,
+      );
+
+      expect(result.orientationCorrect, isTrue);
+      expect(result.formationCorrect, isTrue);
+    });
+
+    test('accepts a slightly imperfect handwritten $character', () {
+      final strokes = _jitterStrokes(
+        _referenceStrokes(character, sourceSize),
+      );
+      final result = validator.validate(
+        target: character,
+        language: HandwritingLanguage.english,
+        strokes: strokes,
+        sourceSize: sourceSize,
+      );
+
+      expect(
+        result.formationCorrect,
+        isTrue,
+        reason: '$character failed with ${result.failureReason}',
+      );
+    });
+
+    final referenceStrokeCount = CharacterStrokeRepository.find(
+      character: character,
+      language: HandwritingLanguage.english,
+    )!
+        .strokes
+        .length;
+    if (referenceStrokeCount > 1) {
+      test('accepts an alternative stroke order for $character', () {
+        final strokes = _referenceStrokes(character, sourceSize)
+            .reversed
+            .toList(growable: false);
+        final result = validator.validate(
+          target: character,
+          language: HandwritingLanguage.english,
+          strokes: strokes,
+          sourceSize: sourceSize,
+        );
+
+        expect(result.orientationCorrect, isTrue);
+        expect(result.formationCorrect, isTrue);
+      });
+    }
+  }
+
+  test('accepts Z as one continuous stroke', () {
+    final result = validator.validate(
+      target: 'Z',
+      language: HandwritingLanguage.english,
+      strokes: [_zContinuous()],
+      sourceSize: sourceSize,
+    );
+
+    expect(result.orientationCorrect, isTrue);
+    expect(result.shapeCorrect, isTrue);
+    expect(result.formationCorrect, isTrue);
+    expect(result.matchedValidVariant, 'Z_CONTINUOUS');
+  });
+
+  test('accepts Z as three separate strokes', () {
+    final result = validator.validate(
+      target: 'Z',
+      language: HandwritingLanguage.english,
+      strokes: _zThreeStroke(),
+      sourceSize: sourceSize,
+    );
+
+    expect(result.orientationCorrect, isTrue);
+    expect(result.shapeCorrect, isTrue);
+    expect(result.formationCorrect, isTrue);
+    expect(result.matchedValidVariant, 'Z_THREE_STROKE');
+    expect(result.strokeCountCorrect, isTrue);
+  });
+
+  test('accepts reverse traversal of a correctly shaped Z', () {
+    final result = validator.validate(
+      target: 'Z',
+      language: HandwritingLanguage.english,
+      strokes: [_zContinuous().reversed.toList(growable: false)],
+      sourceSize: sourceSize,
+    );
+
+    expect(result.orientationCorrect, isTrue);
+    expect(result.formationCorrect, isTrue);
+    expect(result.matchedValidVariant, 'Z_REVERSE_TRAVERSAL');
+  });
+
+  test('accepts a slightly imperfect but recognizable Z', () {
+    final result = validator.validate(
+      target: 'Z',
+      language: HandwritingLanguage.english,
+      strokes: const [
+        [
+          Offset(58, 55),
+          Offset(145, 50),
+          Offset(239, 58),
+          Offset(205, 115),
+          Offset(152, 201),
+          Offset(105, 278),
+          Offset(63, 344),
+          Offset(151, 349),
+          Offset(242, 343),
+        ],
+      ],
+      sourceSize: sourceSize,
+    );
+
+    expect(result.orientationCorrect, isTrue);
+    expect(result.shapeCorrect, isTrue);
+    expect(result.formationCorrect, isTrue);
+  });
+
+  test('rejects malformed non-Z geometry without direction feedback', () {
+    final result = validator.validate(
+      target: 'Z',
+      language: HandwritingLanguage.english,
+      strokes: const [
+        [Offset(60, 50), Offset(240, 50)],
+        [Offset(240, 50), Offset(240, 350)],
+        [Offset(60, 350), Offset(240, 350)],
+      ],
+      sourceSize: sourceSize,
+    );
+
+    expect(result.orientationCorrect, isTrue);
+    expect(
+      result.shapeCorrect,
+      isFalse,
+      reason: 'shapeSimilarity=${result.shapeSimilarity}',
+    );
+    expect(result.formationCorrect, isFalse);
+    expect(result.feedback, isNot(contains('direction')));
   });
 
   test('unsupported characters retain recognition-only behavior', () {
@@ -338,6 +540,38 @@ List<List<Offset>> _mirrorHorizontally(
       .toList(growable: false);
 }
 
+List<List<Offset>> _jitterStrokes(List<List<Offset>> strokes) {
+  var pointIndex = 0;
+  return strokes.map((stroke) {
+    return stroke.map((point) {
+      final dx = (pointIndex % 5 - 2) * 0.7;
+      final dy = (pointIndex % 7 - 3) * 0.55;
+      pointIndex++;
+      return Offset(point.dx + dx, point.dy + dy);
+    }).toList(growable: false);
+  }).toList(growable: false);
+}
+
+List<Offset> _zContinuous() => const [
+      Offset(60, 48),
+      Offset(120, 48),
+      Offset(180, 48),
+      Offset(240, 48),
+      Offset(195, 124),
+      Offset(150, 200),
+      Offset(105, 276),
+      Offset(60, 352),
+      Offset(120, 352),
+      Offset(180, 352),
+      Offset(240, 352),
+    ];
+
+List<List<Offset>> _zThreeStroke() => const [
+      [Offset(60, 48), Offset(150, 48), Offset(240, 48)],
+      [Offset(240, 48), Offset(150, 200), Offset(60, 352)],
+      [Offset(60, 352), Offset(150, 352), Offset(240, 352)],
+    ];
+
 List<List<Offset>> _realisticMirroredStrokes(String character) {
   return switch (character) {
     'B' => const [
@@ -399,7 +633,7 @@ List<List<Offset>> _realisticCorrectStrokes(String character, Size size) {
   return strokes;
 }
 
-List<List<List<Offset>>> _realisticMirroredDStrokes() => const [
+List<List<List<Offset>>> _realisticDStrokes() => const [
       [
         [
           Offset(218, 84),
