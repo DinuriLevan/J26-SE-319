@@ -101,6 +101,7 @@ class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
       final handwriting = await _preprocessor.preprocessStrokes(
         strokes: _penStrokes,
         sourceSize: canvasBox.size,
+        outputStrokeWidth: widget.modelType.modelInputStrokeWidth,
       );
       if (HandwritingDebugConfig.enabled) {
         final debugImage = await _preprocessor.createDebugImage(handwriting);

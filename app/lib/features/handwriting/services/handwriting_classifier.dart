@@ -31,6 +31,16 @@ extension HandwritingModelTypeAssets on HandwritingModelType {
           'assets/models/english_lowercase_labels.txt',
         HandwritingModelType.sinhala => 'assets/models/sinhala_labels.txt',
       };
+
+  /// Matches the median ink width measured in each processed training set.
+  /// This affects only the clean off-screen image supplied to TFLite.
+  double get modelInputStrokeWidth => switch (this) {
+        HandwritingModelType.englishLowercase =>
+          HandwritingImagePreprocessor.englishLowercaseModelStrokeWidth,
+        HandwritingModelType.englishUppercase ||
+        HandwritingModelType.sinhala =>
+          HandwritingImagePreprocessor.modelStrokeWidth,
+      };
 }
 
 class HandwritingClassifierException implements Exception {
@@ -91,6 +101,13 @@ class HandwritingClassifier implements HandwritingClassifierClient {
       );
     }
 
+    if (HandwritingDebugConfig.enabled) {
+      debugPrint(
+        '[Handwriting debug] Selected model: ${modelType.name} '
+        '(${modelType.modelAsset})',
+      );
+    }
+
     final inputBytes = switch (model.inputType) {
       TensorType.float32 => _floatInputBytes(handwriting.rgbBytes),
       TensorType.uint8 => handwriting.rgbBytes,
@@ -113,7 +130,7 @@ class HandwritingClassifier implements HandwritingClassifierClient {
           rawScores.length, (index) => index)
         ..sort((left, right) => rawScores[right].compareTo(rawScores[left]));
       final topPredictions = rankedIndices
-          .take(3)
+          .take(5)
           .map(
             (index) => PredictionScore(
               character: model.labels[index],
@@ -135,6 +152,7 @@ class HandwritingClassifier implements HandwritingClassifierClient {
           modelType: modelType,
           model: model,
           prediction: prediction,
+          handwriting: handwriting,
         );
       }
       return prediction;
@@ -153,13 +171,46 @@ class HandwritingClassifier implements HandwritingClassifierClient {
     required HandwritingModelType modelType,
     required _LoadedHandwritingModel model,
     required HandwritingPrediction prediction,
+    required PreprocessedHandwriting handwriting,
   }) {
-    final topScores = prediction.topPredictions
-        .map(
-          (score) =>
-              '${score.character} = ${(score.confidence * 100).toStringAsFixed(2)}%',
+    final topScores = <String>[];
+    for (var index = 0; index < prediction.topPredictions.length; index++) {
+      final score = prediction.topPredictions[index];
+      topScores.add(
+        '${index + 1}. ${score.character} = '
+        '${(score.confidence * 100).toStringAsFixed(2)}%',
+      );
+    }
+    final diagnosticPairs = switch (modelType) {
+      HandwritingModelType.englishUppercase => const [('S', 'C')],
+      HandwritingModelType.englishLowercase => const [
+          ('b', 'd'),
+          ('s', 'c'),
+          ('p', 'q'),
+        ],
+      HandwritingModelType.sinhala => const <(String, String)>[],
+    };
+    final confusionScores = StringBuffer();
+    for (final (firstCharacter, secondCharacter) in diagnosticPairs) {
+      final firstIndex = model.labels.indexOf(firstCharacter);
+      final secondIndex = model.labels.indexOf(secondCharacter);
+      if (firstIndex < 0 || secondIndex < 0) continue;
+      confusionScores
+        ..writeln(
+          '$firstCharacter score [index $firstIndex] = '
+          '${prediction.rawScores[firstIndex].toStringAsFixed(6)}',
         )
-        .join('\n');
+        ..writeln(
+          '$secondCharacter score [index $secondIndex] = '
+          '${prediction.rawScores[secondIndex].toStringAsFixed(6)}',
+        );
+    }
+    var minimumInput = 255;
+    var maximumInput = 0;
+    for (final value in handwriting.rgbBytes) {
+      if (value < minimumInput) minimumInput = value;
+      if (value > maximumInput) maximumInput = value;
+    }
     debugPrint(
       '[Handwriting debug]\n'
       'Target: $target\n'
@@ -167,11 +218,13 @@ class HandwritingClassifier implements HandwritingClassifierClient {
       'Input: ${model.inputShape} ${model.inputType.name}\n'
       'Input quantization: scale=${model.inputQuantizationScale}, '
       'zeroPoint=${model.inputQuantizationZeroPoint}\n'
+      'Input range: $minimumInput..$maximumInput\n'
       'Output: ${model.outputShape} ${model.outputType.name}\n'
-      'Labels: ${model.labels.length}\n'
+      'Labels (${model.labels.length}): '
+      '${model.labels.indexed.map((entry) => '${entry.$1}->${entry.$2}').join(', ')}\n'
       'Prediction: ${prediction.character} '
       '(${(prediction.confidence * 100).toStringAsFixed(2)}%)\n'
-      'Top predictions:\n$topScores',
+      '${confusionScores}Top predictions:\n${topScores.join('\n')}',
     );
   }
 

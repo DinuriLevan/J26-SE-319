@@ -79,6 +79,7 @@ void main() {
   });
 
   test('renders stored strokes onto a centered clean model canvas', () async {
+    expect(HandwritingImagePreprocessor.modelPaddingRatio, 0.136);
     final result = await preprocessor.preprocessStrokes(
       sourceSize: const Size(300, 400),
       strokes: const [
@@ -115,8 +116,10 @@ void main() {
     expect(nonGreyPixelFound, isFalse);
     expect((left + right) / 2, closeTo(111.5, 2));
     expect((top + bottom) / 2, closeTo(111.5, 2));
-    expect(right - left + 1, lessThanOrEqualTo(176));
-    expect(bottom - top + 1, lessThanOrEqualTo(176));
+    final inkWidth = right - left + 1;
+    final inkHeight = bottom - top + 1;
+    final longestInkDimension = inkWidth > inkHeight ? inkWidth : inkHeight;
+    expect(longestInkDimension, inInclusiveRange(161, 165));
   });
 
   test('rejects an extremely tiny stroke', () async {
@@ -137,10 +140,63 @@ void main() {
     );
   });
 
+  test('preserves left-right orientation of a d-like character', () async {
+    final result = await preprocessor.preprocessStrokes(
+      sourceSize: const Size(300, 400),
+      strokes: const [
+        [
+          Offset(210, 45),
+          Offset(210, 330),
+        ],
+        [
+          Offset(210, 175),
+          Offset(175, 145),
+          Offset(115, 150),
+          Offset(80, 205),
+          Offset(82, 275),
+          Offset(125, 325),
+          Offset(210, 330),
+        ],
+      ],
+    );
+
+    var upperInkXTotal = 0;
+    var upperInkPixels = 0;
+    for (var y = 0; y < result.height ~/ 3; y++) {
+      for (var x = 0; x < result.width; x++) {
+        if (result.rgbBytes[(y * result.width + x) * 3] >= 128) continue;
+        upperInkXTotal += x;
+        upperInkPixels++;
+      }
+    }
+    expect(upperInkPixels, greaterThan(0));
+    expect(upperInkXTotal / upperInkPixels, greaterThan(112));
+  });
+
   test('uses the fixed training-matched model stroke width', () async {
     expect(HandwritingImagePreprocessor.modelStrokeWidth, 18);
     final result = await preprocessor.preprocessStrokes(
       sourceSize: const Size(300, 400),
+      strokes: const [
+        [Offset(150, 60), Offset(150, 340)],
+      ],
+    );
+
+    var darkPixelsAcrossCenter = 0;
+    for (var x = 0; x < result.width; x++) {
+      if (result.rgbBytes[(112 * result.width + x) * 3] < 128) {
+        darkPixelsAcrossCenter++;
+      }
+    }
+    expect(darkPixelsAcrossCenter, closeTo(18, 2));
+  });
+
+  test('uses the configured lowercase model stroke width', () async {
+    expect(HandwritingImagePreprocessor.englishLowercaseModelStrokeWidth, 18);
+    final result = await preprocessor.preprocessStrokes(
+      sourceSize: const Size(300, 400),
+      outputStrokeWidth:
+          HandwritingImagePreprocessor.englishLowercaseModelStrokeWidth,
       strokes: const [
         [Offset(150, 60), Offset(150, 340)],
       ],

@@ -43,7 +43,8 @@ class HandwritingImagePreprocessor {
   static const int _trainingCanvasSize = 224;
   static const int _minimumInkStrength = 20;
   static const double modelStrokeWidth = 18;
-  static const double _trainingCropPaddingFraction = 0.04;
+  static const double englishLowercaseModelStrokeWidth = 18;
+  static const double modelPaddingRatio = 0.136;
   static const double _minimumExtentFraction = 0.12;
   static const double _minimumPathLengthFraction = 0.08;
 
@@ -109,13 +110,10 @@ class HandwritingImagePreprocessor {
       );
     }
 
-    // prepare_dataset.py places the padded crop in a 176px content box. Work
-    // backwards from that exact box so the final ink, including round caps,
-    // has a stable scale while its stroke stays a fixed model-space width.
-    final targetContentSize =
-        outputSize * _trainingContentSize / _trainingCanvasSize;
-    final targetInkExtent =
-        targetContentSize / (1 + _trainingCropPaddingFraction * 2);
+    // Keep a consistent white margin around the actual ink. At 224px, 13.6%
+    // per side leaves about 163px for the longest ink dimension. This mirrors
+    // prepare_dataset.py's 176px padded crop while preserving terminal strokes.
+    final targetInkExtent = outputSize * (1 - modelPaddingRatio * 2);
     final targetCenterlineExtent = math.max(
       1.0,
       targetInkExtent - outputStrokeWidth,

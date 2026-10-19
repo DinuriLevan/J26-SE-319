@@ -1,0 +1,110 @@
+{
+  "dataset": "D:\\Study Materials\\Research Project\\J26-SE-319\\ml\\handwriting\\datasets\\processed\\english_lowercase",
+  "total": 2395,
+  "class_counts": {
+    "a": 163,
+    "b": 154,
+    "c": 92,
+    "d": 59,
+    "e": 82,
+    "f": 121,
+    "g": 50,
+    "h": 62,
+    "i": 83,
+    "j": 100,
+    "k": 102,
+    "l": 60,
+    "m": 92,
+    "n": 65,
+    "o": 122,
+    "p": 110,
+    "q": 62,
+    "r": 87,
+    "s": 58,
+    "t": 96,
+    "u": 85,
+    "v": 108,
+    "w": 94,
+    "x": 88,
+    "y": 82,
+    "z": 118
+  },
+  "minimum_class_count": 50,
+  "maximum_class_count": 163,
+  "imbalance_ratio_max_to_min": 3.26,
+  "problem_class_counts": {
+    "b": 154,
+    "d": 59,
+    "p": 110,
+    "q": 62,
+    "s": 58,
+    "c": 92,
+    "e": 82
+  },
+  "quality_issues": [],
+  "exact_duplicate_groups": [
+    {
+      "sha256": "9c3dc28ebd14f9987ada22815381fcb799fa197b202b6e32e9dc9be05c107ed6",
+      "files": [
+        [
+          "k",
+          "D:\\Study Materials\\Research Project\\J26-SE-319\\ml\\handwriting\\datasets\\processed\\english_lowercase\\k\\k_00001.png"
+        ],
+        [
+          "k",
+          "D:\\Study Materials\\Research Project\\J26-SE-319\\ml\\handwriting\\datasets\\processed\\english_lowercase\\k\\k_00003.png"
+        ]
+      ],
+      "cross_class": false
+    },
+    {
+      "sha256": "e37539f4311d2a29770d3a4efac8b0818a50cd2db0ad84edea0b851ebd2ae44b",
+      "files": [
+        [
+          "w",
+          "D:\\Study Materials\\Research Project\\J26-SE-319\\ml\\handwriting\\datasets\\processed\\english_lowercase\\w\\w_00085.png"
+        ],
+        [
+          "w",
+          "D:\\Study Materials\\Research Project\\J26-SE-319\\ml\\handwriting\\datasets\\processed\\english_lowercase\\w\\w_00086.png"
+        ]
+      ],
+      "cross_class": false
+    },
+    {
+      "sha256": "3e8bb3bb3f56ac472da59cf6ec4a0182586b39c52198499109ad006ca30b922e",
+      "files": [
+        [
+          "w",
+          "D:\\Study Materials\\Research Project\\J26-SE-319\\ml\\handwriting\\datasets\\processed\\english_lowercase\\w\\w_00087.png"
+        ],
+        [
+          "w",
+          "D:\\Study Materials\\Research Project\\J26-SE-319\\ml\\handwriting\\datasets\\processed\\english_lowercase\\w\\w_00088.png"
+        ]
+      ],
+      "cross_class": false
+    }
+  ],
+  "cross_class_exact_duplicate_groups": [],
+  "near_cross_class_problem_pairs_hamming_le_10": [
+    {
+      "distance": 8,
+      "left_class": "p",
+      "left": "D:\\Study Materials\\Research Project\\J26-SE-319\\ml\\handwriting\\datasets\\processed\\english_lowercase\\p\\p_00100.png",
+      "right_class": "q",
+      "right": "D:\\Study Materials\\Research Project\\J26-SE-319\\ml\\handwriting\\datasets\\processed\\english_lowercase\\q\\q_00027.png"
+    },
+    {
+      "distance": 10,
+      "left_class": "c",
+      "left": "D:\\Study Materials\\Research Project\\J26-SE-319\\ml\\handwriting\\datasets\\processed\\english_lowercase\\c\\c_00035.png",
+      "right_class": "e",
+      "right": "D:\\Study Materials\\Research Project\\J26-SE-319\\ml\\handwriting\\datasets\\processed\\english_lowercase\\e\\e_00016.png"
+    }
+  ],
+  "notes": [
+    "Perceptual-hash matches are review candidates, not automatic relabel decisions.",
+    "The audit never changes or deletes source images."
+  ]
+}
