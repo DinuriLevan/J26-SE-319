@@ -3,13 +3,20 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 
+import '../../engine/event_logger.dart';
+import '../../engine/feature_extractor.dart' show FeatureRow;
 import '../../engine/spelling_config.dart';
 import '../../game/spelling_game_controller.dart' show GamePhase, SpellingGameController, WordFeedback, WordOutcome;
+import '../../model/difficulty_classifier.dart';
 import '../../services/sound_effects.dart';
 import '../data/akshara.dart';
 import '../data/sinhala_progress.dart';
 import '../data/sinhala_word_bank.dart';
 import '../engine/sinhala_errors.dart';
+import '../engine/sinhala_features.dart';
+import '../engine/sinhala_learner.dart';
+import '../engine/sinhala_selector.dart';
+import '../model/difficulty_model_si_m2cgen.dart';
 import '../services/sinhala_voice.dart';
 
 /// Every user action in the Sinhala game. All of them go through
@@ -129,10 +136,15 @@ class SinhalaGameState {
 /// Runs the Sinhala listen-and-spell game: hear the word, drag the letters
 /// onto the line, then drag each pilla onto its letter (ප + ූ → පූ).
 ///
-/// Words come in a fixed order: the warm-up, then stage by stage, with words
-/// whose answer was shown coming back two rounds later. Every word's result
-/// is saved for the Teacher View. (The learner model and difficulty model
-/// are the next steps.) One phone = one child.
+/// The adaptive Sinhala game, built like the English one:
+/// - every tap and drag is logged (EventLogger) and each word becomes a
+///   feature row (sinhala_features.dart);
+/// - the learner model (BKT, sinhala_learner.dart) keeps a "knows it"
+///   estimate per stage; the first game (warm-up) finds the weak stages;
+/// - the trained difficulty classifier predicts easy / medium / hard after
+///   every word;
+/// - the selector (sinhala_selector.dart) plans the next round from both.
+/// One phone = one child.
 class SinhalaGameController extends ChangeNotifier {
   SinhalaGameController({
     SinhalaVoice? voice,
@@ -140,6 +152,7 @@ class SinhalaGameController extends ChangeNotifier {
     math.Random? random,
     Future<SinhalaWordBank> Function()? loadBank,
     SinhalaProgressStore? store,
+    this.loadClassifier = true,
   })  : voice = voice ?? SinhalaVoice(),
         sounds = sounds ?? SoundEffects(),
         store = store ?? FileSinhalaProgressStore(),
@@ -155,16 +168,25 @@ class SinhalaGameController extends ChangeNotifier {
 
   SinhalaWordBank? bank;
 
-  /// The phone's child: saved results, rounds and place in the word list.
+  /// The phone's child: results, learner model and the planned next round.
   SinhalaProgress progress = SinhalaProgress();
 
-  static const wordsPerRound = 10;
+  /// The trained difficulty model (assets/spelling/model_si), or the BKT
+  /// rule if it is missing.
+  DifficultyClassifier classifier = const FallbackDifficultyClassifier();
+  final bool loadClassifier;
+  static const modelDir = 'assets/spelling/model_si';
+
+  final EventLogger logger = EventLogger();
+
+  /// When each tile landed (for msSincePlaced: quick take-backs are slips).
+  final Map<int, double> _placedAt = {};
+
+  /// The round being played is the warm-up (placement).
+  bool _warmUpRound = false;
 
   /// A word whose answer was shown comes back this many rounds later.
   static const retryAfterRounds = 2;
-
-  /// At most this many returning words per round.
-  static const maxRetriesPerRound = 3;
 
   int _roundsThisSession = 0;
   String _sessionId = '';
@@ -181,6 +203,9 @@ class SinhalaGameController extends ChangeNotifier {
   Future<void> init() async {
     bank = await _loadBank();
     progress = await store.load();
+    if (loadClassifier) {
+      classifier = await MlDifficultyClassifier.load(dir: modelDir, score: difficultyModelScoreSi);
+    }
     state.phase = GamePhase.start;
     _notify();
   }
@@ -208,6 +233,7 @@ class SinhalaGameController extends ChangeNotifier {
         if (state.phase == GamePhase.demo) _startRound();
       case SinhalaAction.replayWord:
         if (state.phase != GamePhase.playing || state.inputLocked) return;
+        logger.log(SpellingEventType.replay);
         _speakWord(_flow, intro: false);
       case SinhalaAction.tapTile:
         if (state.inputLocked) return;
@@ -239,8 +265,9 @@ class SinhalaGameController extends ChangeNotifier {
         voice.say([SinhalaClip.prompt(data['prompt']! as String)]);
       case SinhalaAction.screenHidden:
         voice.stop();
+        logger.pause();
       case SinhalaAction.screenShown:
-        break;
+        logger.resume();
     }
   }
 
@@ -257,41 +284,22 @@ class SinhalaGameController extends ChangeNotifier {
     if (flow == _flow && state.phase == GamePhase.demo) _startRound();
   }
 
-  /// Warm-up words first; then words whose answer was shown (when they are
-  /// due), then practice words from the easiest stage up.
-  List<SinhalaWord> _nextWords() => nextWords(bank!, progress);
-
-  /// The next round's words for [p] (moves p's place in the word list on).
-  static List<SinhalaWord> nextWords(SinhalaWordBank b, SinhalaProgress p) {
-    if (!p.warmUpDone && b.placement.isNotEmpty) {
-      p.warmUpDone = true;
-      return b.placement.take(wordsPerRound).toList();
+  /// The planned round (made when the last round ended), or a new plan.
+  List<SinhalaWord> _nextWords() {
+    final b = bank!;
+    final planned = [for (final id in progress.pendingPlan ?? const <String>[]) b.byId(id)].whereType<SinhalaWord>();
+    final plan = planned.isEmpty ? SinhalaSelector.plan(b, progress) : null;
+    final words = plan?.words ?? planned.toList();
+    _warmUpRound = !progress.warmUpDone && (plan?.kind == 'warmup' || words.every((w) => w.role == 'placement'));
+    for (final w in words) {
+      progress.retryDue.remove(w.id);
     }
-    p.warmUpDone = true;
-    final practice = b.practiceInOrder;
-    if (practice.isEmpty) return b.words.take(wordsPerRound).toList();
-
-    final roundNo = p.nextRoundNo;
-    final due = [
-      for (final e in p.retryDue.entries)
-        if (e.value <= roundNo && b.byId(e.key) != null) e.key,
-    ].take(maxRetriesPerRound).toList();
-    for (final id in due) {
-      p.retryDue.remove(id);
-    }
-    final out = [for (final id in due) b.byId(id)!];
-    var guard = 0;
-    while (out.length < math.min(wordsPerRound, practice.length) && guard++ < practice.length) {
-      final w = practice[p.cursor % practice.length];
-      p.cursor = (p.cursor + 1) % practice.length;
-      if (!out.contains(w)) out.add(w);
-    }
-    return out;
+    progress
+      ..pendingPlan = null
+      ..pendingReason = null
+      ..pendingFocus = null;
+    return words;
   }
-
-  /// The words of the next round, without moving on (for the Teacher View).
-  static List<SinhalaWord> previewNext(SinhalaWordBank b, SinhalaProgress p) =>
-      nextWords(b, SinhalaProgress.fromJson(p.toJson()));
 
   void _startRound() {
     _roundResults.clear();
@@ -314,6 +322,8 @@ class SinhalaGameController extends ChangeNotifier {
       ..spokenIndex = null;
     _firstWrong = null;
     _firstErrors = {};
+    logger.takeWord(); // drop anything left over from the previous word
+    _placedAt.clear();
 
     final tray = trayFor(state.word, _random);
     state.tiles = [for (var i = 0; i < tray.length; i++) SinhalaTile(id: i, text: tray[i])];
@@ -325,7 +335,13 @@ class SinhalaGameController extends ChangeNotifier {
   Future<void> _speakWord(int flow, {required bool intro}) async {
     if (flow != _flow || state.phase != GamePhase.playing) return;
     final w = SinhalaClip.word(state.word);
-    await _sayIf(flow, [if (intro) SinhalaClip.prompt('listen'), w, w]);
+    final index = state.wordIndex;
+    logger.log(SpellingEventType.audioStart);
+    try {
+      await _sayIf(flow, [if (intro) SinhalaClip.prompt('listen'), w, w]);
+    } finally {
+      if (flow == _flow && state.wordIndex == index) logger.log(SpellingEventType.audioEnd);
+    }
   }
 
   /// The tray: the word's letters (shuffled), then its pillas (shuffled),
@@ -354,15 +370,28 @@ class SinhalaGameController extends ChangeNotifier {
     if (state.tileById(tileId).isMark) return;
     final line = state.line;
     final from = state.lineIndexOfLetter(tileId);
+    final text = state.tileById(tileId).text;
+    final now = logger.now;
     if (from == null) {
       final at = index.clamp(0, line.length);
       line.insert(at, LineAkshara(tileId));
+      logger.log(SpellingEventType.tilePlace, {'tile': text, 'mark': false, 'index': at});
+      _placedAt[tileId] = now;
       _afterDrop(at);
     } else {
       final moved = line.removeAt(from);
       final at = index.clamp(0, line.length);
       line.insert(at, moved);
-      if (at != from) _afterDrop(at);
+      if (at != from) {
+        logger.log(SpellingEventType.tileMove, {
+          'tile': text,
+          'fromIndex': from,
+          'toIndex': at,
+          'msSincePlaced': now - (_placedAt[tileId] ?? now),
+        });
+        _placedAt[tileId] = now;
+        _afterDrop(at);
+      }
     }
   }
 
@@ -377,8 +406,23 @@ class SinhalaGameController extends ChangeNotifier {
     final from = state.lineIndexOfMark(tileId);
     if (from != null) state.line[from].markIds.remove(tileId);
     final target = state.line[lineIndex];
+    final before = target.markIds.length;
     target.markIds.removeWhere((id) => clashes(state.tileById(id).text, mark.text));
+    final replaced = before - target.markIds.length;
     target.markIds.add(tileId);
+    final now = logger.now;
+    if (from == null) {
+      logger.log(SpellingEventType.tilePlace, {'tile': mark.text, 'mark': true, 'onAkshara': lineIndex, 'replaced': replaced});
+    } else {
+      logger.log(SpellingEventType.tileMove, {
+        'tile': mark.text,
+        'fromIndex': from,
+        'toIndex': lineIndex,
+        'replaced': replaced,
+        'msSincePlaced': now - (_placedAt[tileId] ?? now),
+      });
+    }
+    _placedAt[tileId] = now;
     _afterDrop(lineIndex);
   }
 
@@ -397,6 +441,12 @@ class SinhalaGameController extends ChangeNotifier {
 
   void _dropOnTray(int tileId) {
     if (state.inputLocked) return;
+    if (!state.isPlaced(tileId)) return;
+    final now = logger.now;
+    logger.log(SpellingEventType.tileRemove, {
+      'tile': state.tileById(tileId).text,
+      'msSincePlaced': now - (_placedAt.remove(tileId) ?? now),
+    });
     final letterAt = state.lineIndexOfLetter(tileId);
     if (letterAt != null) {
       state.line.removeAt(letterAt); // its pillas go back with it
@@ -420,6 +470,12 @@ class SinhalaGameController extends ChangeNotifier {
           .counts
         ..removeWhere((_, n) => n == 0);
     }
+    logger.log(SpellingEventType.check, {
+      'answer': state.answer,
+      'correct': correct,
+      'attemptNo': state.triesThisWord,
+      'aksharas': state.line.length,
+    });
     if (correct) {
       _onCorrect();
     } else if (state.triesThisWord >= SpellingConfig.maxAttempts) {
@@ -462,9 +518,12 @@ class SinhalaGameController extends ChangeNotifier {
     if (flow != _flow) return;
     // Aksharas that are right and in order stay; the rest go back to the tray.
     final keep = SpellingGameController.keptOnLine(state.lineTexts, state.word.aksharaTexts);
+    final returned = <String>[];
     for (var i = state.line.length - 1; i >= 0; i--) {
+      if (!keep.contains(i)) returned.insert(0, state.lineTexts[i]);
       if (!keep.contains(i)) state.line.removeAt(i);
     }
+    logger.log(SpellingEventType.autoReturn, {'aksharas': returned.join()});
     sounds.play(SoundEffect.backToTray);
     state.inputLocked = false;
     _notify();
@@ -500,9 +559,35 @@ class SinhalaGameController extends ChangeNotifier {
     if (flow == _flow) _next();
   }
 
-  /// Saves how the word went (and brings shown words back later).
+  /// Turns the word's events into a feature row, updates the learner model,
+  /// asks the classifier how hard the stage is now, and saves it all.
   void _finishWord({required bool finalCorrect}) {
     final w = state.word;
+    logger.log(SpellingEventType.wordEnd, {'finalCorrect': finalCorrect, 'attempts': state.triesThisWord});
+    final features = featurizeSinhala(
+      events: logger.takeWord(),
+      word: w,
+      progress: progress,
+      sessionId: _sessionId,
+      roundNo: progress.nextRoundNo,
+      wordIndex: state.wordIndex,
+      mode: _warmUpRound ? 'placement' : 'adaptive',
+      errors: _firstErrors,
+      firstWrongAnswer: _firstWrong,
+    );
+    SinhalaLearner.recordTiming(
+      progress,
+      (features['first_input_ms']! as num).toDouble(),
+      (features['max_gap_ms']! as num).toDouble(),
+    );
+    final (before, after) =
+        SinhalaLearner.applyWord(progress, features, roundNo: progress.nextRoundNo, warmUp: _warmUpRound);
+    features
+      ..['evidence_weight'] = SinhalaLearner.evidenceWeight(features)
+      ..['p_before'] = before
+      ..['p_after'] = after;
+    _predict(features);
+
     final result = SinhalaWordResult(
       wordId: w.id,
       word: w.word,
@@ -515,11 +600,28 @@ class SinhalaGameController extends ChangeNotifier {
       at: DateTime.now(),
       firstWrongAnswer: _firstWrong,
       errors: _firstErrors,
+      features: features,
     );
     progress.results.add(result);
     _roundResults.add(result);
     if (!finalCorrect) progress.retryDue[w.id] = progress.nextRoundNo + retryAfterRounds;
     _save();
+  }
+
+  /// The classifier's prediction for the word's stage: kept (last 3) and
+  /// written into the row. "Mastered" is held back while BKT and the
+  /// classifier strongly disagree (classifier said hard twice in a row).
+  void _predict(Map<String, Object?> features) {
+    final skill = features['phonics_skill']! as String;
+    final prediction = classifier.predict(FeatureRow(features));
+    final list = progress.predictions.putIfAbsent(skill, () => [])..add(prediction);
+    if (list.length > 3) list.removeAt(0);
+    features
+      ..['clf_label'] = prediction.label
+      ..['clf_p_hard'] = prediction.probs['hard']
+      ..['clf_source'] = prediction.source;
+    final hardTwice = list.length >= 2 && list.reversed.take(2).every((p) => p.label == 'hard');
+    progress.skill(skill).masteryHeld = SinhalaLearner.bktMastered(progress, skill) && hardTwice;
   }
 
   Future<void> _save() => _saving = _saving.then((_) async {
@@ -566,7 +668,19 @@ class SinhalaGameController extends ChangeNotifier {
       shown: _roundResults.where((r) => !r.finalCorrect).length,
       finishedAt: DateTime.now(),
     ));
+    if (_warmUpRound) {
+      // The first game: set every stage's starting estimate (weak areas).
+      SinhalaLearner.applyPlacement(progress, [for (final r in _roundResults) r.features], bank!);
+      progress.warmUpDone = true;
+      _warmUpRound = false;
+    }
     _roundResults.clear();
+    // Plan the next round now, so the Teacher View shows exactly what comes.
+    final plan = SinhalaSelector.plan(bank!, progress);
+    progress
+      ..pendingPlan = [for (final w in plan.words) w.id]
+      ..pendingReason = plan.reason
+      ..pendingFocus = plan.focusSkill;
     _save();
     final over = _roundsThisSession >= SpellingConfig.roundsPerSession;
     state

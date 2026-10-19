@@ -14,6 +14,8 @@ Outputs (results/): <tag>_table1.csv/.md, <tag>_ab_tests.csv, <tag>_per_class.cs
 best_model.json, RESULTS.md
 
 Usage:  python spell_evaluate.py --tag sim --control-tag sim_control --data data/sim_labelled.csv
+        python spell_evaluate.py --lang si --tag sim_si --control-tag sim_si_control --data data/sim_si_labelled.csv
+        (Sinhala files are prefixed si_: si_best_model.json, si_shap_summary.png, si_RESULTS.md)
 """
 from __future__ import annotations
 
@@ -30,7 +32,7 @@ import pandas as pd  # noqa: E402
 from scipy.stats import wilcoxon  # noqa: E402
 from sklearn.metrics import classification_report, confusion_matrix  # noqa: E402
 
-from spell_common import CLASSES, RESULTS, banner_for, read_features_csv, write_csv_with_banner, write_json  # noqa: E402
+from spell_common import CLASSES, LANGS, RESULTS, banner_for, read_features_csv, write_csv_with_banner, write_json  # noqa: E402
 from spell_features import build_matrix, recipes  # noqa: E402
 from spell_train import MODELS, fit_tuned  # noqa: E402
 
@@ -126,11 +128,11 @@ def confusion(tag: str, preds: pd.DataFrame, banner: str) -> tuple[pd.DataFrame,
     return pd.DataFrame(cm_rows), pd.DataFrame(report_rows)
 
 
-def shap_plot(data: Path, model_name: str, fs: str, banner: str) -> pd.DataFrame:
+def shap_plot(data: Path, model_name: str, fs: str, banner: str, lang: str = "en") -> pd.DataFrame:
     import shap
 
     df = read_features_csv(data)
-    rs = recipes(fs)
+    rs = recipes(fs, lang=lang)
     names = [r["name"] for r in rs]
     X = build_matrix(df, rs)
     y = df["label"].map({c: i for i, c in enumerate(CLASSES)}).to_numpy()
@@ -161,7 +163,7 @@ def shap_plot(data: Path, model_name: str, fs: str, banner: str) -> pd.DataFrame
     ax.legend(title="class")
     ax.set_title(f"Top 20 features — {model_name}, feature set {fs}\n{banner}", fontsize=10)
     fig.tight_layout()
-    fig.savefig(RESULTS / "shap_summary.png", dpi=130)
+    fig.savefig(RESULTS / f"{LANGS[lang]['prefix']}shap_summary.png", dpi=130)
     plt.close(fig)
     return out
 
@@ -171,8 +173,10 @@ def main():
     ap.add_argument("--tag", default="sim")
     ap.add_argument("--control-tag", default="sim_control")
     ap.add_argument("--data", default="data/sim_labelled.csv")
+    ap.add_argument("--lang", choices=["en", "si"], default="en")
     args = ap.parse_args()
     banner = banner_for(args.data)
+    prefix = LANGS[args.lang]["prefix"]
 
     out = {}
     for tag in [args.tag, args.control_tag]:
@@ -195,11 +199,12 @@ def main():
     t, ab, rep = out[args.tag]
     best = t.sort_values("f1_macro_mean", ascending=False).iloc[0]
     write_json({"model": best.model, "feature_set": best.feature_set, "cv_f1_macro": best.f1_macro_mean,
-                "chosen_on": args.data, "note": banner}, RESULTS / "best_model.json")
-    shap_top = shap_plot(Path(args.data), best.model, best.feature_set, banner)
-    write_csv_with_banner(shap_top, RESULTS / "shap_top_features.csv", banner)
+                "chosen_on": args.data, "note": banner}, RESULTS / LANGS[args.lang]["best"])
+    shap_top = shap_plot(Path(args.data), best.model, best.feature_set, banner, lang=args.lang)
+    write_csv_with_banner(shap_top, RESULTS / f"{prefix}shap_top_features.csv", banner)
 
-    md = [f"# Spelling difficulty classifier — results", "", f"> **{banner}**", "",
+    title = "Sinhala spelling" if args.lang == "si" else "Spelling"
+    md = [f"# {title} difficulty classifier — results", "", f"> **{banner}**", "",
           "Task: from one word's interaction log, predict how hard that skill currently is for the child "
           "(easy / medium / hard = how the child does on their next 3 words of the same skill).", "",
           table1_markdown(t, banner, f"Table 1 — {args.tag} (behaviour carries a signal)"), "",
@@ -211,10 +216,10 @@ def main():
                "On the control set, behaviour features carry no information, so B should match A "
                "(no significant drop: `p (B worse)` well above 0.05).", ""]
     md += [f"### Best model: {best.model}, feature set {best.feature_set} (macro F1 {best.f1_macro_mean:.3f})", "",
-           f"![confusion]({args.tag}_confusion.png)", "", "![shap](shap_summary.png)", "",
+           f"![confusion]({args.tag}_confusion.png)", "", f"![shap]({prefix}shap_summary.png)", "",
            "Top features (mean |SHAP|, all classes): " + ", ".join(shap_top.feature.head(8)), ""]
-    (RESULTS / "RESULTS.md").write_text("\n".join(md), encoding="utf-8")
-    print(f"\nbest: {best.model} / {best.feature_set}; wrote results/RESULTS.md")
+    (RESULTS / f"{prefix}RESULTS.md").write_text("\n".join(md), encoding="utf-8")
+    print(f"\nbest: {best.model} / {best.feature_set}; wrote results/{prefix}RESULTS.md")
 
 
 if __name__ == "__main__":

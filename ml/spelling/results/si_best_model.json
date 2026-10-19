@@ -1,0 +1,12 @@
+{
+  "model": "XGBoost",
+  "feature_set": "B",
+  "cv_f1_macro": 0.5652083879917406,
+  "chosen_on": "data/sim_si_labelled.csv",
+  "note": "SIMULATED DATA — pipeline validation only. Final results will come from pilot data.",
+  "params": {
+    "max_depth": 3,
+    "min_child_weight": 1,
+    "reg_lambda": 1
+  }
+}

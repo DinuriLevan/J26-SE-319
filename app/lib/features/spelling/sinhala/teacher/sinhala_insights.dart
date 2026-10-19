@@ -2,7 +2,7 @@ import '../../teacher/teacher_insights.dart' show SkillStatus;
 import '../data/sinhala_progress.dart';
 import '../data/sinhala_word_bank.dart';
 import '../engine/sinhala_errors.dart';
-import '../game/sinhala_game_controller.dart';
+import '../engine/sinhala_learner.dart';
 
 /// Plain sentences for the teacher about each kind of mistake (English, with
 /// Sinhala examples). Suggested wording — to be reviewed by an expert.
@@ -56,8 +56,8 @@ class SinhalaHabit {
   String get countText => '$inLast of the last $of words';
 }
 
-/// Everything the Sinhala Teacher View shows, worked out from the saved
-/// results. No model numbers.
+/// Everything the Sinhala Teacher View shows, worked out from the learner
+/// model and the saved results. No model numbers.
 class SinhalaInsights {
   SinhalaInsights({required this.progress, required this.bank, DateTime? now}) : now = now ?? DateTime.now();
 
@@ -68,7 +68,6 @@ class SinhalaInsights {
   /// A skill is judged on its last few words.
   static const recentPerSkill = 6;
   static const habitWindow = 10;
-  static const habitMinCount = 3;
 
   List<SinhalaWordResult> get results => progress.results;
 
@@ -101,29 +100,22 @@ class SinhalaInsights {
 
   // ------------------------------------------------------------- skills
 
-  List<SinhalaWordResult> _ofSkill(String skill) => [for (final r in results) if (r.skill == skill) r];
-
+  /// From the learner model: not tried yet / knows well / needs help (weak
+  /// area: below 45% once tried; known from the first game on) / practising.
   SkillStatus status(String skill) {
-    final all = _ofSkill(skill);
-    if (all.isEmpty) return SkillStatus.notStarted;
-    final recent = all.length <= recentPerSkill ? all : all.sublist(all.length - recentPerSkill);
-    final rate = recent.where((r) => r.correctFirstTry).length / recent.length;
-    if (all.length >= 4 && rate >= 0.8) return SkillStatus.mastered;
-    if (all.length >= 3 && rate < 0.5) return SkillStatus.needsHelp;
+    final s = progress.skills[skill];
+    if (s == null || s.seen == 0) return SkillStatus.notStarted;
+    if (SinhalaLearner.isMastered(progress, skill)) return SkillStatus.mastered;
+    if (SinhalaLearner.isWeak(progress, skill)) return SkillStatus.needsHelp;
     return SkillStatus.gettingThere;
   }
 
   List<SinhalaSkill> skillsWith(SkillStatus s) => [for (final k in bank.skills) if (status(k.id) == s) k];
 
-  /// Up to 3 skills that need help (weakest first), with real wrong answers.
+  /// Up to 3 weak areas (weakest first), with real wrong answers.
   List<SinhalaNeedsHelp> get needsHelp {
-    double rate(String skill) {
-      final all = _ofSkill(skill);
-      final recent = all.length <= recentPerSkill ? all : all.sublist(all.length - recentPerSkill);
-      return recent.where((r) => r.correctFirstTry).length / recent.length;
-    }
-
-    final weak = skillsWith(SkillStatus.needsHelp)..sort((a, b) => rate(a.id).compareTo(rate(b.id)));
+    final weak = skillsWith(SkillStatus.needsHelp)
+      ..sort((a, b) => progress.skill(a.id).pL.compareTo(progress.skill(b.id).pL));
     return [
       for (final s in weak.take(3))
         SinhalaNeedsHelp(s.label, [
@@ -133,16 +125,18 @@ class SinhalaInsights {
     ];
   }
 
-  /// Kinds of mistake seen in at least 3 of the last 10 words.
+  /// Mistake habits: the same rule the word chooser uses (the learner
+  /// model's decaying mistake rate is above 30%), so a habit shown here is the
+  /// habit the next words practise. Counted over the last 10 words.
   List<SinhalaHabit> get habits {
     final last = results.length <= habitWindow ? results : results.sublist(results.length - habitWindow);
-    final out = [
-      for (final t in SinhalaError.all)
-        if (last.where((r) => (r.errors[t] ?? 0) > 0).length >= habitMinCount)
-          SinhalaHabit(t, last.where((r) => (r.errors[t] ?? 0) > 0).length, last.length),
+    return [
+      for (final t in SinhalaLearner.habits(progress))
+        SinhalaHabit(t, last.where((r) => (r.errors[t] ?? 0) > 0).length, last.length),
     ];
-    return out..sort((a, b) => b.inLast.compareTo(a.inLast));
   }
+
+  int get roundsPlayed => progress.rounds.length;
 
   // ----------------------------------------------------------- progress
 
@@ -152,18 +146,14 @@ class SinhalaInsights {
           (r.roundNo, r.firstTry),
       ];
 
-  List<SinhalaWord> get nextWords => SinhalaGameController.previewNext(bank, progress);
-
   bool get nextIsWarmUp => !progress.warmUpDone && bank.placement.isNotEmpty;
 
-  /// The stage most of the next round's new words come from.
+  /// The stage the next round focuses on (planned when the last round ended).
   int get currentStage {
-    final counts = <int, int>{};
-    for (final w in nextWords) {
-      if (!progress.retryDue.containsKey(w.id)) counts[w.stage] = (counts[w.stage] ?? 0) + 1;
-    }
-    if (counts.isEmpty) return 1;
-    return counts.entries.reduce((a, b) => b.value > a.value ? b : a).key;
+    final focus = progress.pendingFocus == null ? null : bank.skillOf(progress.pendingFocus!);
+    if (focus != null) return focus.stage;
+    final open = [for (final k in bank.skills) if (progress.unlocked.contains(k.id)) k];
+    return open.isEmpty ? 1 : open.map((k) => k.stage).reduce((a, b) => a > b ? a : b);
   }
 
   String _stageLabel(int stage) {
@@ -177,12 +167,10 @@ class SinhalaInsights {
       ? 'Starting level not found yet (warm-up next)'
       : 'Stage $currentStage of ${bank.stageCount}: ${_stageLabel(currentStage)}';
 
+  /// Why the next words were chosen (the selector's own reason).
   String get nextSentence {
-    if (nextIsWarmUp) return 'Next: a short warm-up of 10 words.';
-    final returning = nextWords.where((w) => progress.retryDue.containsKey(w.id)).length;
-    final parts = ['words with ${_stageLabel(currentStage)}'];
-    if (returning > 0) parts.add('another go at $returning word${returning == 1 ? '' : 's'} they missed');
-    return 'Next practice: ${parts.join(' and ')}.';
+    if (nextIsWarmUp) return 'Next: a short warm-up of 10 words to find the right starting level.';
+    return progress.pendingReason ?? 'Next practice: words from ${_stageLabel(currentStage)}.';
   }
 
   /// One tip for the most common mistake habit.

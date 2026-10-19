@@ -18,6 +18,7 @@ Outputs (results/):
 Usage:  python spell_train.py data/sim_labelled.csv --tag sim
         python spell_train.py data/sim_control_labelled.csv --tag sim_control --repeats 1
         python spell_train.py data/pilot_labelled.csv --tag pilot
+        python spell_train.py data/sim_si_labelled.csv --tag sim_si --lang si     # Sinhala
 """
 from __future__ import annotations
 
@@ -118,6 +119,7 @@ def main():
     ap.add_argument("--repeats", type=int, default=3)
     ap.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 2),
                     help="parallel processes (default: all CPU cores but 2)")
+    ap.add_argument("--lang", choices=["en", "si"], default="en", help="en = English game, si = Sinhala game")
     args = ap.parse_args()
 
     src = Path(args.labelled_csv)
@@ -125,7 +127,7 @@ def main():
     df = read_features_csv(src).reset_index(drop=True)
     y = df["label"].map({c: i for i, c in enumerate(CLASSES)}).to_numpy()
     children = df["childId"].astype(str).to_numpy()
-    X = {fs: build_matrix(df, recipes(fs)) for fs in FEATURE_SETS}
+    X = {fs: build_matrix(df, recipes(fs, lang=args.lang)) for fs in FEATURE_SETS}
     print(f"{src.name}: {len(df)} rows, {len(set(children))} children; A={X['A'].shape[1]} B={X['B'].shape[1]} features")
 
     # One job per repeat × fold × feature set × model, run in parallel on

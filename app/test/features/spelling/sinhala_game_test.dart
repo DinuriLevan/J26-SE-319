@@ -2,12 +2,17 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:akurin/features/spelling/engine/event_logger.dart';
 import 'package:akurin/features/spelling/game/spelling_game_controller.dart' show GamePhase, WordFeedback, WordOutcome;
+import 'package:akurin/features/spelling/model/difficulty_prediction.dart';
 import 'package:akurin/features/spelling/services/sound_effects.dart';
 import 'package:akurin/features/spelling/sinhala/data/akshara.dart';
 import 'package:akurin/features/spelling/sinhala/data/sinhala_progress.dart';
 import 'package:akurin/features/spelling/sinhala/data/sinhala_word_bank.dart';
 import 'package:akurin/features/spelling/sinhala/engine/sinhala_errors.dart';
+import 'package:akurin/features/spelling/sinhala/engine/sinhala_features.dart';
+import 'package:akurin/features/spelling/sinhala/engine/sinhala_learner.dart';
+import 'package:akurin/features/spelling/sinhala/engine/sinhala_selector.dart';
 import 'package:akurin/features/spelling/sinhala/game/sinhala_game_controller.dart';
 import 'package:akurin/features/spelling/sinhala/services/sinhala_voice.dart';
 import 'package:akurin/features/spelling/sinhala/teacher/sinhala_insights.dart';
@@ -64,6 +69,7 @@ Future<SinhalaGameController> _newGame(WidgetTester tester, List<String> ids, {S
     random: math.Random(3),
     loadBank: () async => _bankOf(ids),
     store: store ?? InMemorySinhalaProgressStore(),
+    loadClassifier: false, // asset loading never finishes under the fake test clock
   );
   await game.init();
   game
@@ -247,24 +253,126 @@ void main() {
     expect(saved.retryDue['SI0001'], 3);
     expect(saved.rounds.single.shown, 1);
     expect(saved.warmUpDone, isTrue);
+    // The word's feature row: logged behaviour, mistakes, model before/after, prediction.
+    final f = r.features;
+    expect(f['mode'], 'placement');
+    expect(f['attempts'], 3);
+    expect(f['pilla_length'], 1);
+    expect(f['n_insertions'], greaterThanOrEqualTo(4));
+    expect(f['n_aksharas'], 2);
+    expect(f['p_before'], SinhalaLearner.pStart);
+    expect(f['clf_source'], 'fallback');
+    expect(f.keys, containsAll(sinhalaFeatureColumns));
+    // The first game found a weak area, and the next round is already planned.
+    expect(SinhalaLearner.isWeak(saved, r.skill), isTrue);
+    expect(saved.pendingPlan, isNotEmpty);
     game.dispose();
   });
 
-  test('round words: warm-up first, then due words, then the next practice words', () {
-    final p = SinhalaProgress();
-    final first = SinhalaGameController.nextWords(_bank, p);
-    expect(first.map((w) => w.role).toSet(), {'placement'});
-    final practice = _bank.practiceInOrder;
-    p.retryDue[practice[40].id] = 1; // due now
-    final next = SinhalaGameController.nextWords(_bank, p);
-    expect(next.first.id, practice[40].id);
-    expect(next.length, 10);
-    expect(next[1].id, practice[0].id);
-    expect(p.retryDue, isEmpty);
-    // The Teacher View's preview does not move the child on.
-    final cursor = p.cursor;
-    SinhalaGameController.previewNext(_bank, p);
-    expect(p.cursor, cursor);
+  group('learner model and word choice', () {
+    Map<String, Object?> row(SinhalaWord w, {required bool firstTry, bool solved = true, double hes = 1.0}) => {
+          'phonics_skill': w.skill,
+          'skill_stage': w.stage,
+          'correct_first_try': firstTry,
+          'final_correct': firstTry || solved,
+          'attempts': firstTry ? 1 : 2,
+          'hesitation_ratio': hes,
+          'corrections': 0,
+          'n_aksharas': w.aksharas.length,
+        };
+
+    /// The warm-up with every word right except the stage-[failStage] one.
+    SinhalaProgress afterWarmUp(int failStage) {
+      final p = SinhalaProgress();
+      final rows = [for (final w in _bank.placement) row(w, firstTry: w.stage != failStage, solved: false)];
+      for (final f in rows) {
+        SinhalaLearner.applyWord(p, f, roundNo: 1, warmUp: true);
+      }
+      SinhalaLearner.applyPlacement(p, rows, _bank);
+      p.warmUpDone = true;
+      return p;
+    }
+
+    test('the first game (warm-up) finds the weak area', () {
+      final failStage = _bank.placement[3].stage;
+      final p = afterWarmUp(failStage);
+      final weak = _bank.placement[3].skill;
+      expect(SinhalaLearner.isWeak(p, weak), isTrue);
+      expect(p.skill(weak).pL, 0.15);
+      // Earlier stages are assumed known; later untried ones are not open yet.
+      expect(p.skill(_bank.placement.first.skill).pL, 0.6);
+      final later = _bank.skills.firstWhere((k) => k.stage > failStage && !_bank.placement.any((w) => w.skill == k.id));
+      expect(p.unlocked.contains(later.id), isFalse);
+      expect(p.skill(later.id).pL, SinhalaLearner.pStart);
+    });
+
+    test('the next round focuses on the weak stage, at the level the classifier says', () {
+      final p = afterWarmUp(_bank.placement[3].stage);
+      final weak = _bank.placement[3].skill;
+      final plan = SinhalaSelector.plan(_bank, p);
+      expect(plan.kind, 'adaptive');
+      expect(plan.focusSkill, weak);
+      expect(plan.words, hasLength(10));
+      expect(plan.words.where((w) => w.skill == weak).length, greaterThanOrEqualTo(4));
+      expect(plan.reason, contains('needs more practice'));
+
+      // Classifier said "hard" → the easiest (difficulty 1) words of that stage first.
+      DifficultyPrediction hard() => DifficultyPrediction(
+          label: 'hard', probs: const {'easy': 0.1, 'medium': 0.2, 'hard': 0.7}, source: 'ml', at: DateTime(2026));
+      p.predictions[weak] = [hard(), hard()];
+      final easyFirst = SinhalaSelector.plan(_bank, p).words.firstWhere((w) => w.skill == weak);
+      final lowest = _bank.practiceInOrder.where((w) => w.skill == weak).map((w) => w.difficulty).reduce((a, b) => a < b ? a : b);
+      expect(easyFirst.difficulty, lowest);
+      expect(SinhalaSelector.plan(_bank, p).reason, contains('chosen by the difficulty model'));
+    });
+
+    test('a mistake habit adds words that practise it; missed words come back', () {
+      final p = afterWarmUp(_bank.placement[3].stage)
+        ..errorRates[SinhalaError.pillaLength] = 0.6
+        ..retryDue[_bank.practiceInOrder[5].id] = 1;
+      final plan = SinhalaSelector.plan(_bank, p);
+      expect(plan.words.first.id, _bank.practiceInOrder[5].id);
+      expect(plan.words.where((w) => w.marks.any(SinhalaError.lengthPairs.containsKey)), isNotEmpty);
+      expect(plan.reason, contains('long pillas'));
+      expect(plan.reason, contains('another go at 1 word'));
+    });
+
+    test('BKT: a fluent right answer raises the estimate, a miss lowers it', () {
+      final w = _bank.practiceInOrder.first;
+      final p = SinhalaProgress()..skill(w.skill).pL = 0.5;
+      final (b1, a1) = SinhalaLearner.applyWord(p, row(w, firstTry: true, hes: 0.8), roundNo: 2, warmUp: false);
+      expect(a1, greaterThan(b1));
+      final (b2, a2) = SinhalaLearner.applyWord(p, row(w, firstTry: false, solved: false), roundNo: 2, warmUp: false);
+      expect(a2, lessThan(b2));
+      expect(SinhalaLearner.evidenceWeight(row(w, firstTry: true, hes: 2.0)), SinhalaLearner.wHesitant);
+    });
+
+    test('features: timing, edits and slips from the event log', () {
+      final w = _bank.words.firstWhere((w) => w.id == 'SI0001'); // පූසා
+      final events = [
+        const SpellingEvent(SpellingEventType.audioStart, 0),
+        const SpellingEvent(SpellingEventType.audioEnd, 1000),
+        const SpellingEvent(SpellingEventType.tilePlace, 3000, {'tile': 'ප', 'index': 0}),
+        const SpellingEvent(SpellingEventType.tilePlace, 4000, {'tile': 'ඵ', 'index': 1}), // look-alike
+        const SpellingEvent(SpellingEventType.tileRemove, 4500, {'tile': 'ඵ', 'msSincePlaced': 500}), // slip
+        const SpellingEvent(SpellingEventType.tilePlace, 6000, {'tile': 'ස', 'index': 1}),
+        const SpellingEvent(SpellingEventType.tilePlace, 7000, {'tile': '\u0DD4', 'onAkshara': 0, 'replaced': 0}),
+        const SpellingEvent(SpellingEventType.tilePlace, 8000, {'tile': '\u0DD6', 'onAkshara': 0, 'replaced': 1}),
+        const SpellingEvent(SpellingEventType.tilePlace, 9000, {'tile': '\u0DCF', 'onAkshara': 1, 'replaced': 0}),
+        const SpellingEvent(SpellingEventType.check, 10000, {'answer': 'පූසා', 'correct': true, 'aksharas': 2}),
+      ];
+      final f = featurizeSinhala(
+        events: events, word: w, progress: SinhalaProgress(), sessionId: 's', roundNo: 2, wordIndex: 0,
+        mode: 'adaptive', errors: const {});
+      expect(f['first_input_ms'], 2000);
+      expect(f['total_ms'], 10000);
+      expect(f['motor_slips'], 1);
+      expect(f['n_replacements'], 1);
+      expect(f['corrections'], 1);
+      expect(f['distractor_picks'], 2); // ඵ and the short ු
+      expect(f['correct_first_try'], isTrue);
+      expect(f['hesitation_ratio'], 2000 / SinhalaLearner.defaultMedianMs);
+    });
   });
 
   group('teacher view', () {
@@ -283,11 +391,20 @@ void main() {
           errors: errors,
         );
 
-    /// 4 words of one stage wrong with a long/short pilla mix-up, then 6 right.
+    /// 4 words of one stage wrong with a long/short pilla mix-up, then 6 right;
+    /// the learner model says stage 6 is weak and stage 1 is mastered.
     SinhalaProgress played() {
       final weak = _bank.words.where((w) => w.stage == 6).take(4).toList();
       final good = _bank.words.where((w) => w.stage == 1).take(6).toList();
-      return SinhalaProgress(warmUpDone: true, results: [
+      return SinhalaProgress(warmUpDone: true, skills: {
+        weak.first.skill: SinhalaSkillState(pL: 0.2, seen: 4, rounds: {1}),
+        good.first.skill: SinhalaSkillState(pL: 0.92, seen: 6, correct: 6, rounds: {1, 2}),
+      }, unlocked: {
+        weak.first.skill,
+        good.first.skill,
+      }, errorRates: {
+        SinhalaError.pillaLength: 0.59, // 4 mix-ups in a row
+      }, pendingFocus: weak.first.skill, pendingReason: 'Next practice: more words (needs more practice).', results: [
         for (final w in weak) result(w, firstTry: false, wrote: '${w.word}x', errors: {SinhalaError.pillaLength: 1}),
         for (final w in good) result(w, firstTry: true),
       ], rounds: [
@@ -313,6 +430,7 @@ void main() {
       expect(i.habits.single.type, SinhalaError.pillaLength);
       expect(i.habits.single.countText, '4 of the last 10 words');
       expect(i.tips.single, contains('Clap'));
+      expect(i.roundsPlayed, 1);
       expect(i.lastPlayed, 'today');
       expect(i.stageText, startsWith('Stage '));
       expect(i.nextSentence, startsWith('Next practice:'));
@@ -326,6 +444,7 @@ void main() {
         sounds: _SilentSounds(),
         loadBank: () async => _bank,
         store: store,
+        loadClassifier: false,
       );
       await tester.runAsync(game.init);
       await tester.pumpWidget(MaterialApp(home: SinhalaTeacherScreen(controller: game)));
@@ -373,6 +492,14 @@ void main() {
     await tester.pump();
     expect(tester.takeException(), isNull);
     await _finish(game, tester);
+  });
+
+  test('a pilla shown on its own gets a dotted circle; pillas on letters do not', () {
+    expect(Akshara.showMarks('ඉස්පිල්ල ි'), 'ඉස්පිල්ල ◌ි');
+    expect(Akshara.showMarks('ෝ'), '◌ෝ');
+    expect(Akshara.showMarks('පූසා'), 'පූසා');
+    expect(Akshara.showMarks('ශිෂ්‍යයා'), 'ශිෂ්‍යයා');
+    expect(Akshara.showMarks('pillas (ි / ී)'), 'pillas (◌ි / ◌ී)');
   });
 
   test('every spoken prompt has Sinhala text', () {

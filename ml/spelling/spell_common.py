@@ -139,3 +139,105 @@ def median_or_default(values: list[float]) -> float:
         return DEFAULT_MEDIAN_MS
     m = float(np.median(values))
     return m if m > 0 else DEFAULT_MEDIAN_MS
+
+
+# ------------------------------------------------------------ Sinhala (--lang si)
+# Mirrors app/lib/features/spelling/sinhala/ (word bank, sinhala_features.dart,
+# sinhala_learner.dart). English keeps everything above unchanged.
+SI_WORD_BANK = APP / "assets" / "spelling" / "sinhala" / "sinhala_wordbank.json"
+SI_SKILLS = APP / "assets" / "spelling" / "sinhala" / "sinhala_skills.json"
+SI_ERROR_TYPES = ["pilla_missing", "pilla_wrong", "pilla_length", "hal", "lookalike", "other_letter",
+                  "missing", "extra", "order"]
+SI_FEATURE_COLUMNS = [
+    "childId", "sessionId", "roundNo", "wordIndex", "word_id", "word", "phonics_skill",
+    "skill_stage", "difficulty", "timestamp", "mode",
+    "first_input_ms", "total_ms", "mean_gap_ms", "max_gap_ms", "paused_ms", "replays", "motor_slips",
+    "corrections", "n_insertions", "n_deletions", "n_replacements", "n_reorders", "distractor_picks",
+    "answer_length_diff", "attempts", "correct_first_try", "final_correct", "hesitation_ratio",
+    "pause_ratio", "first_wrong_answer", "edit_distance", *SI_ERROR_TYPES,
+    "n_aksharas", "n_marks", "evidence_weight", "p_before", "p_after",
+]
+ZWJ = "‍"
+HAL = "්"
+# Short <-> long pillas, and letters children confuse (same lists as sinhala_errors.dart).
+SI_LENGTH_PAIRS = {"ි": "ී", "ී": "ි", "ු": "ූ", "ූ": "ු",
+                   "ැ": "ෑ", "ෑ": "ැ", "ෙ": "ේ", "ේ": "ෙ",
+                   "ො": "ෝ", "ෝ": "ො"}
+SI_CONFUSABLE_GROUPS = ["කඛ", "ගඝඟ", "චඡ", "ජඣ", "ටඨ", "ඩඪඬ", "තථ", "දධඳ", "පඵ", "බභඹ", "මඹ",
+                        "නණ", "ලළ", "සශෂ", "අආ", "ඇඈ", "ඉඊ", "උඌ", "එඒ", "ඔඕ"]
+
+LANGS = {
+    "en": {
+        "model_dart": APP_MODEL_DART, "assets": APP_MODEL_ASSETS, "fixture": APP_PARITY_FIXTURE,
+        "score_fn": "difficultyModelScore", "best": "best_model.json", "prefix": "",
+        "parity_test": "test/features/spelling/difficulty_parity_test.dart",
+    },
+    "si": {
+        "model_dart": APP / "lib" / "features" / "spelling" / "sinhala" / "model" / "difficulty_model_si_m2cgen.dart",
+        "assets": APP / "assets" / "spelling" / "model_si",
+        "fixture": APP / "test" / "features" / "spelling" / "fixtures" / "difficulty_parity_si.json",
+        "score_fn": "difficultyModelScoreSi", "best": "si_best_model.json", "prefix": "si_",
+        "parity_test": "test/features/spelling/difficulty_parity_si_test.dart",
+    },
+}
+
+
+def split_akshara(ak: str) -> tuple[str, list[str]]:
+    """Base letter + pilla marks; ්‍ය and ්‍ර are one mark (Akshara.parse in the app)."""
+    ak = ak.strip()
+    marks, i = [], 1
+    while i < len(ak):
+        if ak[i] == HAL and i + 2 < len(ak) and ak[i + 1] == ZWJ:
+            marks.append(ak[i:i + 3])
+            i += 3
+        else:
+            marks.append(ak[i])
+            i += 1
+    return ak[0], marks
+
+
+def mark_order(m: str) -> int:
+    if len(m) == 3:
+        return 0
+    return 2 if m in ("ං", "ඃ") else 1
+
+
+def compose(base: str, marks: list[str]) -> str:
+    return base + "".join(sorted(marks, key=mark_order))
+
+
+def load_si_word_bank() -> pd.DataFrame:
+    rows = json.loads(SI_WORD_BANK.read_text(encoding="utf-8"))
+    df = pd.DataFrame(rows)
+    df["phonics_skill"] = df["primary_skill"]
+    df["skill_stage"] = df["skill_stage"].astype(int)
+    df["difficulty"] = pd.to_numeric(df["difficulty"], errors="coerce").fillna(1).astype(int)
+    df["akshara_list"] = df["aksharas"].map(lambda s: [split_akshara(a) for a in s.split("|") if a.strip()])
+    return df
+
+
+def si_skill_order() -> list[str]:
+    stages = json.loads(SI_SKILLS.read_text(encoding="utf-8"))["stages"]
+    return [s["skill"] for s in sorted(stages, key=lambda s: s["stage"])]
+
+
+def si_p_guess(aksharas: int) -> float:
+    """Guess chance by number of aksharas (SinhalaLearner.pGuess in the app)."""
+    base = 0.35 if aksharas <= 2 else (0.25 if aksharas == 3 else 0.15)
+    return min(0.9, max(0.01, base * P_GUESS_SCALE))
+
+
+def si_bkt_update(p: float, w: float, aksharas: int) -> float:
+    g = si_p_guess(aksharas)
+    post = w * bayes(p, True, g) + (1 - w) * bayes(p, False, g)
+    return post + (1 - post) * P_LEARN
+
+
+def si_evidence_weight(row: dict) -> float:
+    """SinhalaLearner.evidenceWeight: how much a word counts as 'knows it'."""
+    if row["correct_first_try"]:
+        fluent = row["hesitation_ratio"] < FLUENT_HESITATION and row["corrections"] <= 1
+        return W_FLUENT if fluent else W_HESITANT
+    if not row["final_correct"]:
+        return 0.0
+    return W_SECOND if row["attempts"] <= 2 else W_THIRD

@@ -58,6 +58,7 @@ flutter:
     - assets/branding/
     - assets/spelling/
     - assets/spelling/model/
+    - assets/spelling/model_si/
     - assets/spelling/sinhala/
     - assets/spelling/sinhala/images/
     - assets/spelling/sinhala/audio/

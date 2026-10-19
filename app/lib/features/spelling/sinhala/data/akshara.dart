@@ -60,6 +60,22 @@ class Akshara {
   /// write a pilla by itself (◌ා).
   static String markLabel(String mark) => '◌$mark';
 
+  /// Puts a dotted circle under every pilla that has no letter before it, so
+  /// text like "ඉස්පිල්ල ි" shows "ඉස්පිල්ල ◌ි" instead of a pilla hanging
+  /// next to a space. Pillas on letters (පූසා) are unchanged.
+  static String showMarks(String text) {
+    final out = StringBuffer();
+    var prev = 0;
+    for (final rune in text.runes) {
+      final ch = String.fromCharCode(rune);
+      final afterLetter = (prev >= 0x0D85 && prev <= 0x0DC6) || isMark(String.fromCharCode(prev)) || prev == 0x200D;
+      if (isMark(ch) && !afterLetter) out.write('◌');
+      out.write(ch);
+      prev = rune;
+    }
+    return out.toString();
+  }
+
   @override
   String toString() => text;
 }

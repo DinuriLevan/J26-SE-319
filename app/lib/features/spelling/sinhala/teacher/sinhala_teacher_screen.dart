@@ -1,9 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/theme/app_fonts.dart';
 import '../../teacher/teacher_insights.dart' show SkillStatus, SkillStatusText;
 import '../../teacher/teacher_view_screen.dart' show RoundsBarChart;
+import '../data/akshara.dart';
 import '../data/sinhala_progress.dart';
+import '../engine/sinhala_features.dart';
 import '../game/sinhala_game_controller.dart';
 import 'sinhala_insights.dart';
 
@@ -32,9 +37,30 @@ class _P {
   static const grey = Color(0xFFE1E5EE);
 }
 
-/// Sinhala inside the teacher's English sentences: English keeps the app
-/// font, Sinhala letters fall back to Noto Sans Sinhala.
-const _si = TextStyle(fontFamilyFallback: [AppFonts.sinhala]);
+/// Text that mixes English and Sinhala. Each Sinhala run (letters, pillas,
+/// the dotted circle ◌ and the joiner) is drawn in Noto Sans Sinhala as one
+/// piece, so a pilla always sits on its letter or on its dotted circle; the
+/// English parts keep the app font. Pillas without a letter get a ◌.
+Widget sinhalaText(String text, TextStyle style, {TextAlign? textAlign}) {
+  bool sinhala(int c) => (c >= 0x0D80 && c <= 0x0DFF) || c == 0x200D || c == 0x25CC;
+  final spans = <TextSpan>[];
+  final run = StringBuffer();
+  bool? runIsSinhala;
+  void flush() {
+    if (run.isEmpty) return;
+    spans.add(TextSpan(text: run.toString(), style: runIsSinhala! ? const TextStyle(fontFamily: AppFonts.sinhala) : null));
+    run.clear();
+  }
+
+  for (final rune in Akshara.showMarks(text).runes) {
+    final isSi = sinhala(rune);
+    if (runIsSinhala != null && isSi != runIsSinhala) flush();
+    runIsSinhala = isSi;
+    run.writeCharCode(rune);
+  }
+  flush();
+  return Text.rich(TextSpan(style: style, children: spans), textAlign: textAlign);
+}
 
 class _SinhalaTeacherScreenState extends State<SinhalaTeacherScreen> {
   SinhalaGameController get game => widget.controller;
@@ -91,6 +117,26 @@ class _SinhalaTeacherScreenState extends State<SinhalaTeacherScreen> {
     messenger.showSnackBar(const SnackBar(content: Text('All Sinhala spelling data was deleted.')));
   }
 
+  /// Every word's feature row as CSV (the training data format, see
+  /// ml/spelling/README.md), in Android/data/com.akurin.akurin/files/spelling_exports.
+  Future<void> _exportCsv() async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      Directory? base;
+      try {
+        base = await getExternalStorageDirectory();
+      } catch (_) {}
+      base ??= await getApplicationDocumentsDirectory();
+      final dir = await Directory('${base.path}/spelling_exports').create(recursive: true);
+      final stamp = DateTime.now().toIso8601String().replaceAll(':', '-').split('.').first;
+      final file = File('${dir.path}/spelling_si_features_$stamp.csv');
+      await file.writeAsString('${sinhalaFeaturesCsv([for (final r in progress.results) r.features])}\n');
+      messenger.showSnackBar(SnackBar(content: Text('Word data saved: ${file.path}'), duration: const Duration(seconds: 6)));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text('Could not save the word data: $e')));
+    }
+  }
+
   void _credits() => showDialog<void>(
         context: context,
         builder: (context) => AlertDialog(
@@ -113,8 +159,13 @@ class _SinhalaTeacherScreenState extends State<SinhalaTeacherScreen> {
         title: const Text('👩‍🏫 Progress · සිංහල'),
         actions: [
           PopupMenuButton<String>(
-            onSelected: (v) => v == 'reset' ? _resetAll() : _credits(),
+            onSelected: (v) => switch (v) {
+              'reset' => _resetAll(),
+              'csv' => _exportCsv(),
+              _ => _credits(),
+            },
             itemBuilder: (_) => const [
+              PopupMenuItem(value: 'csv', child: Text('Word data (CSV)')),
               PopupMenuItem(value: 'credits', child: Text('Picture credits')),
               PopupMenuDivider(),
               PopupMenuItem(
@@ -173,7 +224,8 @@ class _SinhalaTeacherScreenState extends State<SinhalaTeacherScreen> {
                     ],
                   ),
                   Text(
-                    '${i.sessionsPlayed} session${i.sessionsPlayed == 1 ? '' : 's'} played · last played ${i.lastPlayed}',
+                    '${i.sessionsPlayed} session${i.sessionsPlayed == 1 ? '' : 's'} · '
+                    '${i.roundsPlayed} round${i.roundsPlayed == 1 ? '' : 's'} played · last played ${i.lastPlayed}',
                     style: const TextStyle(fontSize: 16, color: _P.soft),
                   ),
                 ],
@@ -227,7 +279,7 @@ class _SinhalaTeacherScreenState extends State<SinhalaTeacherScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text('💡 ', style: TextStyle(fontSize: 18)),
-                  Expanded(child: Text(tip, style: const TextStyle(fontSize: 16, color: _P.ink).merge(_si))),
+                  Expanded(child: sinhalaText(tip, const TextStyle(fontSize: 16, color: _P.ink))),
                 ],
               ),
             ],
@@ -313,7 +365,7 @@ class _SinhalaTeacherScreenState extends State<SinhalaTeacherScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(i.stageText, style: const TextStyle(fontSize: 17, color: _P.ink, height: 1.35).merge(_si)),
+        sinhalaText(i.stageText, const TextStyle(fontSize: 17, color: _P.ink, height: 1.35)),
         if (!i.nextIsWarmUp && stages > 0) ...[
           const SizedBox(height: 10),
           ClipRRect(
@@ -339,7 +391,7 @@ class _SinhalaTeacherScreenState extends State<SinhalaTeacherScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(20)),
-                    child: Text(s.label, style: const TextStyle(fontSize: 16, color: _P.ink).merge(_si)),
+                    child: sinhalaText(s.label, const TextStyle(fontSize: 16, color: _P.ink)),
                   ),
               ],
             ),
@@ -374,7 +426,7 @@ class _SinhalaTeacherScreenState extends State<SinhalaTeacherScreen> {
       );
 
   Widget _line(String text) =>
-      Text(text, style: const TextStyle(fontSize: 17, color: _P.ink, height: 1.35).merge(_si));
+      sinhalaText(text, const TextStyle(fontSize: 17, color: _P.ink, height: 1.35));
 
   Widget _bullet(String text, {Color color = _P.ink}) => Padding(
         padding: const EdgeInsets.only(bottom: 8),

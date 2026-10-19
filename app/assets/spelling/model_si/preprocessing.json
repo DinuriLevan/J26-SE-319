@@ -1,0 +1,300 @@
+{
+  "note": "SIMULATED DATA — pipeline validation only. Final results will come from pilot data.",
+  "model": "XGBoost",
+  "feature_set": "B",
+  "trained_on": "sim_si_labelled.csv",
+  "rows": 18288,
+  "created": "2026-10-19T13:43:04+00:00",
+  "params": {
+    "max_depth": 3,
+    "min_child_weight": 1,
+    "reg_lambda": 1
+  },
+  "classes": [
+    "easy",
+    "medium",
+    "hard"
+  ],
+  "output": "probabilities",
+  "scale": null,
+  "recipes": [
+    {
+      "name": "final_correct",
+      "kind": "bool",
+      "source": "final_correct"
+    },
+    {
+      "name": "correct_first_try",
+      "kind": "bool",
+      "source": "correct_first_try"
+    },
+    {
+      "name": "attempts",
+      "kind": "num",
+      "source": "attempts"
+    },
+    {
+      "name": "pilla_missing",
+      "kind": "num",
+      "source": "pilla_missing"
+    },
+    {
+      "name": "pilla_wrong",
+      "kind": "num",
+      "source": "pilla_wrong"
+    },
+    {
+      "name": "pilla_length",
+      "kind": "num",
+      "source": "pilla_length"
+    },
+    {
+      "name": "hal",
+      "kind": "num",
+      "source": "hal"
+    },
+    {
+      "name": "lookalike",
+      "kind": "num",
+      "source": "lookalike"
+    },
+    {
+      "name": "other_letter",
+      "kind": "num",
+      "source": "other_letter"
+    },
+    {
+      "name": "missing",
+      "kind": "num",
+      "source": "missing"
+    },
+    {
+      "name": "extra",
+      "kind": "num",
+      "source": "extra"
+    },
+    {
+      "name": "order",
+      "kind": "num",
+      "source": "order"
+    },
+    {
+      "name": "edit_distance",
+      "kind": "num",
+      "source": "edit_distance"
+    },
+    {
+      "name": "skill=s01_no_pilla",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "s01_no_pilla"
+    },
+    {
+      "name": "skill=s02_aelapilla",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "s02_aelapilla"
+    },
+    {
+      "name": "skill=s03_ispilla",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "s03_ispilla"
+    },
+    {
+      "name": "skill=s04_ispilla_dirgha",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "s04_ispilla_dirgha"
+    },
+    {
+      "name": "skill=s05_papilla",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "s05_papilla"
+    },
+    {
+      "name": "skill=s06_papilla_dirgha",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "s06_papilla_dirgha"
+    },
+    {
+      "name": "skill=s07_aedaya",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "s07_aedaya"
+    },
+    {
+      "name": "skill=s08_aedaya_dirgha",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "s08_aedaya_dirgha"
+    },
+    {
+      "name": "skill=s09_kombuwa",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "s09_kombuwa"
+    },
+    {
+      "name": "skill=s10_kombuwa_dirgha",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "s10_kombuwa_dirgha"
+    },
+    {
+      "name": "skill=s11_kombu_aela",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "s11_kombu_aela"
+    },
+    {
+      "name": "skill=s12_kombu_aela_dirgha",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "s12_kombu_aela_dirgha"
+    },
+    {
+      "name": "skill=s13_hal",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "s13_hal"
+    },
+    {
+      "name": "skill=s14_bindu",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "s14_bindu"
+    },
+    {
+      "name": "skill=s15_sanyaka",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "s15_sanyaka"
+    },
+    {
+      "name": "skill=s16_mahaprana",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "s16_mahaprana"
+    },
+    {
+      "name": "skill=s17_murdhaja",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "s17_murdhaja"
+    },
+    {
+      "name": "skill=s18_rare_pilla",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "s18_rare_pilla"
+    },
+    {
+      "name": "skill=s19_conjunct",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "s19_conjunct"
+    },
+    {
+      "name": "skill_stage",
+      "kind": "num",
+      "source": "skill_stage"
+    },
+    {
+      "name": "difficulty",
+      "kind": "num",
+      "source": "difficulty"
+    },
+    {
+      "name": "n_aksharas",
+      "kind": "num",
+      "source": "n_aksharas"
+    },
+    {
+      "name": "n_marks",
+      "kind": "num",
+      "source": "n_marks"
+    },
+    {
+      "name": "bkt_mastery_before",
+      "kind": "num",
+      "source": "p_before",
+      "default": 0.1
+    },
+    {
+      "name": "hesitation_ratio",
+      "kind": "num",
+      "source": "hesitation_ratio",
+      "clip": [
+        0,
+        10
+      ]
+    },
+    {
+      "name": "pause_ratio",
+      "kind": "num",
+      "source": "pause_ratio",
+      "clip": [
+        0,
+        10
+      ]
+    },
+    {
+      "name": "log_first_input_ms",
+      "kind": "log1p",
+      "source": "first_input_ms"
+    },
+    {
+      "name": "log_total_ms",
+      "kind": "log1p",
+      "source": "total_ms"
+    },
+    {
+      "name": "corrections",
+      "kind": "num",
+      "source": "corrections"
+    },
+    {
+      "name": "motor_slips",
+      "kind": "num",
+      "source": "motor_slips"
+    },
+    {
+      "name": "replays",
+      "kind": "num",
+      "source": "replays"
+    },
+    {
+      "name": "n_insertions",
+      "kind": "num",
+      "source": "n_insertions"
+    },
+    {
+      "name": "n_deletions",
+      "kind": "num",
+      "source": "n_deletions"
+    },
+    {
+      "name": "n_replacements",
+      "kind": "num",
+      "source": "n_replacements"
+    },
+    {
+      "name": "n_reorders",
+      "kind": "num",
+      "source": "n_reorders"
+    },
+    {
+      "name": "distractor_picks",
+      "kind": "num",
+      "source": "distractor_picks"
+    },
+    {
+      "name": "answer_length_diff",
+      "kind": "num",
+      "source": "answer_length_diff"
+    }
+  ]
+}

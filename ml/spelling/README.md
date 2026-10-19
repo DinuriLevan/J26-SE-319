@@ -84,6 +84,28 @@ cross-validated numbers with their spread and treat them as preliminary.
   m2cgen cannot export newer XGBoost multiclass models, and reproduces "hist" trees wrongly.
   `spell_export.py` refuses to export if the generated code differs from the model by more than 1e-6.
 
+## Sinhala game: the same pipeline with `--lang si`
+
+The Sinhala game has its own learner model, classifier and data (separate from English).
+Chosen model: XGBoost with behaviour features (results/si_best_model.json).
+
+```powershell
+python spell_si_simulate.py                                     # 1. simulated Sinhala children
+python spell_label.py data/sim_si_features.csv                  # 2. labels
+python spell_label.py data/sim_si_control_features.csv
+python spell_train.py data/sim_si_labelled.csv --tag sim_si --lang si                    # 3. 6 models, grouped CV
+python spell_train.py data/sim_si_control_labelled.csv --tag sim_si_control --lang si
+python spell_evaluate.py --lang si --tag sim_si --control-tag sim_si_control --data data/sim_si_labelled.csv
+python spell_export.py --lang si --data data/sim_si_labelled.csv                         # 5. into the app + parity test
+```
+Sinhala files are prefixed `si_` (`results/si_best_model.json`, `results/si_RESULTS.md`, …). The app
+side is `app/lib/features/spelling/sinhala/engine/` (features, learner, selector) and
+`sinhala/model/difficulty_model_si_m2cgen.dart` + `assets/spelling/model_si/`.
+
+**Real pilot data:** Sinhala Teacher View → ⋮ → *Word data (CSV)*, merge the files into
+`data/pilot_si_features.csv`, then `python spell_label.py data/pilot_si_features.csv` and
+`python spell_export.py --lang si --data data/pilot_si_labelled.csv`.
+
 ## Sinhala audio (recorded)
 
 The Sinhala game plays recordings made by a person; there is no text-to-speech. They live in

@@ -145,13 +145,17 @@ class MlDifficultyClassifier implements DifficultyClassifier {
   final List<double> Function(List<double>) _score;
 
   /// Loads the model's JSON files; returns the fallback if they are missing
-  /// or don't match.
-  static Future<DifficultyClassifier> load({AssetBundle? bundle}) async {
+  /// or don't match. The Sinhala game passes its own [dir] and [score].
+  static Future<DifficultyClassifier> load({
+    AssetBundle? bundle,
+    String dir = assetDir,
+    List<double> Function(List<double>)? score,
+  }) async {
     final b = bundle ?? rootBundle;
     try {
-      final pre = jsonDecode(await b.loadString('$assetDir/preprocessing.json')) as Map<String, Object?>;
-      final order = (jsonDecode(await b.loadString('$assetDir/feature_order.json')) as List).cast<String>();
-      return MlDifficultyClassifier(ModelSpec.fromJson(pre, order));
+      final pre = jsonDecode(await b.loadString('$dir/preprocessing.json')) as Map<String, Object?>;
+      final order = (jsonDecode(await b.loadString('$dir/feature_order.json')) as List).cast<String>();
+      return MlDifficultyClassifier(ModelSpec.fromJson(pre, order), score: score);
     } catch (_) {
       return const FallbackDifficultyClassifier();
     }

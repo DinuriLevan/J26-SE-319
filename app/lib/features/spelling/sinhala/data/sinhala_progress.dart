@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 
+import '../../model/difficulty_prediction.dart';
+
 /// How one word went.
 class SinhalaWordResult {
   SinhalaWordResult({
@@ -17,7 +19,9 @@ class SinhalaWordResult {
     required this.at,
     this.firstWrongAnswer,
     Map<String, int>? errors,
-  }) : errors = errors ?? {};
+    Map<String, Object?>? features,
+  })  : errors = errors ?? {},
+        features = features ?? {};
 
   factory SinhalaWordResult.fromJson(Map<String, Object?> j) => SinhalaWordResult(
         wordId: j['wordId']! as String,
@@ -31,6 +35,7 @@ class SinhalaWordResult {
         at: DateTime.parse(j['at']! as String),
         firstWrongAnswer: j['firstWrongAnswer'] as String?,
         errors: (j['errors'] as Map?)?.map((k, v) => MapEntry(k as String, (v as num).toInt())),
+        features: (j['features'] as Map?)?.cast<String, Object?>(),
       );
 
   final String wordId;
@@ -49,6 +54,11 @@ class SinhalaWordResult {
   /// Mistakes in the first wrong try (see SinhalaError).
   final Map<String, int> errors;
 
+  /// The word's feature row (sinhala_features.dart): timing, edits, mistakes,
+  /// the learner model before/after and the classifier's prediction. This is
+  /// the dataset exported for training.
+  final Map<String, Object?> features;
+
   Map<String, Object?> toJson() => {
         'wordId': wordId,
         'word': word,
@@ -61,6 +71,42 @@ class SinhalaWordResult {
         'at': at.toIso8601String(),
         'firstWrongAnswer': firstWrongAnswer,
         'errors': errors,
+        'features': features,
+      };
+}
+
+/// The learner model's view of one skill (stage) for this child.
+class SinhalaSkillState {
+  SinhalaSkillState({this.pL = 0.1, this.seen = 0, this.correct = 0, Set<int>? rounds, this.masteryHeld = false})
+      : rounds = rounds ?? {};
+
+  factory SinhalaSkillState.fromJson(Map<String, Object?> j) => SinhalaSkillState(
+        pL: (j['pL'] as num?)?.toDouble() ?? 0.1,
+        seen: (j['seen'] as num?)?.toInt() ?? 0,
+        correct: (j['correct'] as num?)?.toInt() ?? 0,
+        rounds: {for (final r in j['rounds'] as List? ?? const []) (r as num).toInt()},
+        masteryHeld: j['masteryHeld'] as bool? ?? false,
+      );
+
+  /// Chance the child knows the skill (BKT).
+  double pL;
+
+  /// Words of this skill spelled (the warm-up counts), and right first time.
+  int seen;
+  int correct;
+
+  /// Rounds in which the skill was practised.
+  final Set<int> rounds;
+
+  /// BKT says mastered but the classifier said "hard" twice: not yet.
+  bool masteryHeld;
+
+  Map<String, Object?> toJson() => {
+        'pL': pL,
+        'seen': seen,
+        'correct': correct,
+        'rounds': rounds.toList()..sort(),
+        'masteryHeld': masteryHeld,
       };
 }
 
@@ -120,10 +166,25 @@ class SinhalaProgress {
     List<SinhalaRound>? rounds,
     List<SinhalaWordResult>? results,
     DateTime? createdAt,
+    Map<String, SinhalaSkillState>? skills,
+    Set<String>? unlocked,
+    Map<String, double>? errorRates,
+    List<double>? firstInputs,
+    List<double>? maxGaps,
+    Map<String, List<DifficultyPrediction>>? predictions,
+    this.pendingPlan,
+    this.pendingReason,
+    this.pendingFocus,
   })  : retryDue = retryDue ?? {},
         rounds = rounds ?? [],
         results = results ?? [],
-        createdAt = createdAt ?? DateTime.now();
+        createdAt = createdAt ?? DateTime.now(),
+        skills = skills ?? {},
+        unlocked = unlocked ?? {},
+        errorRates = errorRates ?? {},
+        firstInputs = firstInputs ?? [],
+        maxGaps = maxGaps ?? [],
+        predictions = predictions ?? {};
 
   factory SinhalaProgress.fromJson(Map<String, Object?> j) => SinhalaProgress(
         name: j['name'] as String?,
@@ -134,6 +195,18 @@ class SinhalaProgress {
         rounds: [for (final r in j['rounds'] as List? ?? const []) SinhalaRound.fromJson((r as Map).cast())],
         results: [for (final r in j['results'] as List? ?? const []) SinhalaWordResult.fromJson((r as Map).cast())],
         createdAt: DateTime.tryParse(j['createdAt'] as String? ?? ''),
+        skills: (j['skills'] as Map?)
+            ?.map((k, v) => MapEntry(k as String, SinhalaSkillState.fromJson((v as Map).cast()))),
+        unlocked: {...(j['unlocked'] as List? ?? const []).cast<String>()},
+        errorRates: (j['errorRates'] as Map?)?.map((k, v) => MapEntry(k as String, (v as num).toDouble())),
+        firstInputs: [for (final v in j['firstInputs'] as List? ?? const []) (v as num).toDouble()],
+        maxGaps: [for (final v in j['maxGaps'] as List? ?? const []) (v as num).toDouble()],
+        predictions: (j['predictions'] as Map?)?.map((k, v) => MapEntry(k as String, [
+              for (final p in v as List) DifficultyPrediction.fromJson((p as Map).cast()),
+            ])),
+        pendingPlan: (j['pendingPlan'] as List?)?.cast<String>(),
+        pendingReason: j['pendingReason'] as String?,
+        pendingFocus: j['pendingFocus'] as String?,
       );
 
   String? name;
@@ -148,6 +221,27 @@ class SinhalaProgress {
   final List<SinhalaRound> rounds;
   final List<SinhalaWordResult> results;
   final DateTime createdAt;
+
+  /// Learner model (sinhala_learner.dart): one state per skill, the skills
+  /// the child may practise, and how often each kind of mistake happens.
+  final Map<String, SinhalaSkillState> skills;
+  final Set<String> unlocked;
+  final Map<String, double> errorRates;
+
+  /// The child's recent first-input times and longest pauses (ms), to
+  /// compare each word with the child's own usual speed.
+  final List<double> firstInputs;
+  final List<double> maxGaps;
+
+  /// The classifier's last 3 predictions per skill.
+  final Map<String, List<DifficultyPrediction>> predictions;
+
+  /// The next round, planned when the last one ended (word ids), and why.
+  List<String>? pendingPlan;
+  String? pendingReason;
+  String? pendingFocus;
+
+  SinhalaSkillState skill(String id) => skills.putIfAbsent(id, SinhalaSkillState.new);
 
   int get nextRoundNo => rounds.length + 1;
 
@@ -164,6 +258,15 @@ class SinhalaProgress {
         'rounds': [for (final r in rounds) r.toJson()],
         'results': [for (final r in results) r.toJson()],
         'createdAt': createdAt.toIso8601String(),
+        'skills': skills.map((k, v) => MapEntry(k, v.toJson())),
+        'unlocked': unlocked.toList(),
+        'errorRates': errorRates,
+        'firstInputs': firstInputs,
+        'maxGaps': maxGaps,
+        'predictions': predictions.map((k, v) => MapEntry(k, [for (final p in v) p.toJson()])),
+        'pendingPlan': pendingPlan,
+        'pendingReason': pendingReason,
+        'pendingFocus': pendingFocus,
       };
 }
 
