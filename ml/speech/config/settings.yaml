@@ -42,6 +42,13 @@ errors:                    # src/errors.py, TO VALIDATE WITH SPEECH-LANGUAGE EXP
   short_ratio: 0.6         # PLACEHOLDER: long vowel / geminate said < 60% of expected
   substitution_cost: 0.5   # PLACEHOLDER: unit cost >= this -> substitution, else distortion
 
+listen:
+  # Adult voice used for Listen / "Hear it" when that speaker recorded the word; otherwise the most
+  # typical adult. Children's recordings are never played back.
+  preferred_speaker:
+    si: fr_a1              # field recordings imported 2026-10-20 (scripts/import_recordings.py)
+    en: fr_a1              # same adult; replaces adult_01 (cat, sky, she, play) for Listen only
+
 retry:
   max_tries_per_step: 3
 

@@ -161,4 +161,23 @@ A running log of structural/technical decisions for the AkuRin shared foundation
 | Abstract words get best-effort pictures (මම🙋, අපි🧑‍🤝‍🧑, මට🤲, වැඩ🧹, ලස්සන🌈, ran/runs🏃, fast🐆, she👩, play🤸, tasty😋), TO REVIEW WITH A TEACHER. Twemoji's family emoji (silhouette icons) were replaced by character pictures (අම්මා👩‍🍼) | Seen on the emulator: Twemoji draws family sequences as abstract blue pictograms, which don't suit children |
 | `flutter_svg` added (add-only, pure Dart) | Sharp at any size; the 72 px PNGs would blur at the practice-screen size |
 
+## 2026-10-18 — Speech: hear before saying (Fernando B.P.L)
+
+| Decision | Rationale |
+|---|---|
+| A **"Hear it"** button under the syllable tiles on every practice step except Listen (which already plays the model); it plays the whole word, or the target span on Say/Blend steps. Disabled while recording or checking | Children can hear the model before they try |
+| **Tap only**: nothing plays automatically | Owner choice: the first attempt stays a genuine reading attempt |
+| Model voice = the **adult reference recording** (`GET /speech/listen`, adults only) when one exists; otherwise the device's **text-to-speech** in the word's (practice) language. A network error counts as "no recording". Uses the parrot's audio channel, so a mic tap stops it | Owner choice; works before adult recordings exist |
+| **Tap a syllable tile** to hear that sound (speaker badge on tappable tiles). **English tiles use adult recordings only** and are tappable only where one exists; Sinhala aksharas may fall back to TTS | TTS reads a lone English letter by its name ("c" → "see"), which would teach the wrong sound. Sinhala aksharas are spoken syllables |
+
+## 2026-10-20 — Speech: Sinhala field recordings and the Listen voice (Fernando B.P.L)
+
+| Decision | Rationale |
+|---|---|
+| One adult and two new children recorded all 30 Sinhala words. They were imported as references by `ml/speech/scripts/import_recordings.py` (`source: field_recording`, speakers `fr_a1`, `fr_c1`, `fr_c2`); the audio stays in git-ignored `ml/speech/data/` | Ethics approval confirmed; isolated words match how children say words in the app, unlike words cut from sentences |
+| Both children are **dev** speakers in the bank; the test speakers g3_s5 and g4_s3 are untouched, and the import refuses test speaker ids | Owner choice; more speakers widen the learned ranges and make 26/30 Sinhala words ready |
+| File-name spellings පුසා, පාසල and මල්ලී map to the app words පූසා, පාසල් and මල්ලි | Owner-confirmed file-name typos |
+| The same three people recorded all 30 **English** words (90 clips). They use the same language-neutral ids in both languages (the first Sinhala import used `si_*` and was re-imported). File-name typos hart→hat and boy9→boy were owner-confirmed | Owner: same people. One id per person keeps leave-one-speaker-out ranges honest across takes |
+| The **adult `fr_a1` is the Listen voice** for both languages (`listen.preferred_speaker` in `settings.yaml`), so the Listen step, "Hear it" and syllable/letter taps all use it; for English it replaces adult_01 for Listen only. Any other adult is the fallback; children's clips are never played | Owner request; a real voice instead of text-to-speech |
+
 <!-- Add new entries below this line, newest at the bottom or top — pick one convention and stay consistent. -->

@@ -1,5 +1,6 @@
 """Remediation endpoints: GET /words, POST /assess_unit, GET /listen (adult model audio only)."""
 
+import copy
 import io
 import json
 import sys
@@ -22,7 +23,7 @@ DURS = [0.3, 0.35, 0.3]
 
 
 @pytest.fixture(scope="module")
-def client(tmp_path_factory):
+def built(tmp_path_factory):
     from tests.conftest import tone_word
 
     root = tmp_path_factory.mktemp("units")
@@ -65,6 +66,12 @@ def client(tmp_path_factory):
             (d / f"{ref_id}.json").write_text(json.dumps(meta), encoding="utf-8")
     embedder = SpectralEmbedder()
     build(settings, embedder)
+    return settings, embedder
+
+
+@pytest.fixture(scope="module")
+def client(built):
+    settings, embedder = built
     with TestClient(create_app(settings, embedder, ReferenceBank.from_settings(settings))) as c:
         yield c
 
@@ -123,3 +130,19 @@ def test_listen_404_when_only_children_recorded(client):
     assert client.get("/listen/w_002").status_code == 404
     assert client.get("/listen/w_002", params={"start_unit": 0, "end_unit": 0}).status_code == 404
     assert client.get("/listen/w_001", params={"start_unit": 0}).status_code == 422
+
+
+def test_listen_prefers_the_configured_adult_voice(built):
+    settings, embedder = built
+    settings = copy.deepcopy(settings)
+    for preferred in ("adult_01", "adult_02"):
+        settings["listen"] = {"preferred_speaker": {"en": preferred, "si": "si_a1"}}
+        app = create_app(settings, embedder, ReferenceBank.from_settings(settings))
+        with TestClient(app) as c:
+            assert c.get("/listen/w_001").headers["x-ref-id"] == f"{preferred}_p01"
+            unit = c.get("/listen/w_001", params={"start_unit": 0, "end_unit": 0})
+            assert unit.headers["x-ref-id"] == f"{preferred}_p01"
+    # A preferred speaker who did not record the word falls back to another adult, never a child.
+    settings["listen"] = {"preferred_speaker": {"en": "g3_s1"}}
+    with TestClient(create_app(settings, embedder, ReferenceBank.from_settings(settings))) as c:
+        assert c.get("/listen/w_001").headers["x-ref-id"].startswith("adult_")

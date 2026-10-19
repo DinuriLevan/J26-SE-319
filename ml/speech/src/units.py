@@ -13,7 +13,8 @@ changes. After the first start-up, warm-up loads these files instead of re-runni
 
 Model audio for the LISTEN step comes from ADULT references only (owner decision 2026-10-16:
 children's research recordings are never played to other children). The most typical adult
-recording (lowest mean DTW cost to all references of that span) is used.
+recording (lowest mean DTW cost to all references of that span) is used, taken from the language's
+preferred adult speaker (settings listen.preferred_speaker) when that speaker recorded the word.
 """
 
 from __future__ import annotations
@@ -118,6 +119,11 @@ class SpanBank:
     def has_word_audio(self, word_id: str) -> bool:
         return any(r["age_group"] == "adult" for r in self.bank.reference_set(word_id))
 
+    def preferred_listen_speaker(self, word_id: str) -> str | None:
+        """The adult voice chosen for Listen in this word's language (settings listen.preferred_speaker)."""
+        language = self.bank.words.get(word_id, {}).get("language")
+        return (self.settings.get("listen") or {}).get("preferred_speaker", {}).get(language)
+
     def listen_clip(
         self, word_id: str, a: int | None = None, b: int | None = None
     ) -> tuple[str, np.ndarray] | None:
@@ -129,6 +135,9 @@ class SpanBank:
         adults = [r for r in refs if r["age_group"] == "adult"]
         if not adults:
             return None
+        preferred = self.preferred_listen_speaker(word_id)
+        if any(r["speaker"] == preferred for r in adults):
+            adults = [r for r in adults if r["speaker"] == preferred]
         best = min(
             adults,
             key=lambda r: np.mean(

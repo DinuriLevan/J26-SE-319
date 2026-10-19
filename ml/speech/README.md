@@ -150,23 +150,70 @@ near-misses. It does not clearly beat it, and it is behind on random wrong words
 60 words (`config/words.csv`), easiest first; levels from `src/word_levels.py` (TO VALIDATE WITH A
 TEACHER). Criteria: concrete, everyday, picturable; no function words or inflected forms; English words
 decodable and regularly spelled. *Italic* = curated, which becomes **ready** (shown to children) once it
-has ≥ 4 references (counts as of 2026-10-18 in brackets). Debug builds list unready words greyed, with
+has ≥ 4 references (counts as of 2026-10-20 in brackets). Debug builds list unready words greyed, with
 "needs recordings n/4".
 
 | Level | Sinhala | English |
 |---|---|---|
-| 1 | මම, අපි, මට, කිරි, වැඩ, ඇය, *ගස (2)*, *අත (0)*, *ඇස (0)*, *ඉර (2)*, *කට (0)* | cat, hat, rat, ran, fast, runs, *dog (0)*, *sun (3)*, *bus (0)* |
-| 2 | බත්, මල්, පාට, ගෙදර, පොත්, *වතුර (0)*, *හාවා (0)*, *පූසා (2)* | she, sky, play, book, boy, toy, ball, fly, rice, birds, *fish (2)*, *ship (0)*, *frog (2)* |
-| 3 | අම්මා, අක්කා, තාත්තා, පාසල්, මල්ලි, ලස්සන, සෙල්ලම්, පාඩම්, කියවයි, *බල්ලා (2)*, *කෙසෙල් (2)* | school, apple, garden, tasty, *rabbit (0)*, *window (0)*, *sister (0)*, *pencil (2)* |
+| 1 | මම, අපි, මට, කිරි, වැඩ, ඇය, *ගස (5)*, *අත (3)*, *ඇස (3)*, *ඉර (5)*, *කට (3)* | cat, hat, rat, ran, fast, runs, *dog (3)*, *sun (6)*, *bus (3)* |
+| 2 | බත්, මල්, පාට, ගෙදර, පොත්, *වතුර (4)*, *හාවා (3)*, *පූසා (5)* | she, sky, play, book, boy, toy, ball, fly, rice, birds, *fish (5)*, *ship (3)*, *frog (5)* |
+| 3 | අම්මා, අක්කා, තාත්තා, පාසල්, මල්ලි, ලස්සන, සෙල්ලම්, පාඩම්, කියවයි, *බල්ලා (5)*, *කෙසෙල් (5)* | school, apple, garden, tasty, *rabbit (3)*, *window (3)*, *sister (3)*, *pencil (5)* |
 
 - **Pictures:** each word has a Twemoji picture (CC-BY 4.0) from the `picture` column, fetched with
   `python scripts/fetch_word_pictures.py` (only missing files; `--force` refreshes all) into
   `app/assets/speech/pictures/`. Abstract words have best-effort pictures, TO REVIEW WITH A TEACHER.
-- Ready now: 20 per language. To make a curated word ready, record it with the reference mode from 4
+- **Hear before saying** (app): a "Hear it" button and tappable syllable tiles play the adult
+  recording from `/speech/listen`, or the device's text-to-speech when there is none. English letter
+  tiles never use TTS (letter names), so they are tappable only with adult recordings. Tap only.
+- Ready now: 26 Sinhala (අත, ඇස, කට, හාවා need one more recording each) and 24 English (dog, bus,
+  ship, rabbit, window, sister need one more each). To make a curated word ready, record it with the reference mode from 4
   minus its count different adults (one take each).
 - **Risk:** banks from only 2 children have narrow ranges and may reject correct new speakers: hat,
   toy (std 0.002, threshold 0.148), ඇය, සෙල්ලම්, කියවයි, and others. Adult recordings widen them.
 - Span-embedding cache: first start-up about 126 s (227 spans), later start-ups about 6 s.
+
+### Field recordings (2026-10-20)
+One adult (`fr_a1`) and two new children (`fr_c1`, `fr_c2`), the same three people in both
+languages, recorded every practice word as a single word: 91 Sinhala clips (child 1 said වතුර
+twice) and 90 English clips, 181 references in total. All three are **dev** speakers; the test speakers are untouched.
+The files are git-ignored under `data/new voice/`. They are imported with:
+
+```
+python scripts/import_recordings.py --src "data/new voice/adult sinhala"     --speaker fr_a1 --age-group adult --language si
+python scripts/import_recordings.py --src "data/new voice/child  1 sinhala" --speaker fr_c1 --age-group child --language si
+python scripts/import_recordings.py --src "data/new voice/child 2 sinhala"  --speaker fr_c2 --age-group child --language si
+python scripts/import_recordings.py --src "data/new voice/adult english"     --speaker fr_a1 --age-group adult --language en
+python scripts/import_recordings.py --src "data/new voice/child 1 english"  --speaker fr_c1 --age-group child --language en
+python scripts/import_recordings.py --src "data/new voice/child 2 english"  --speaker fr_c2 --age-group child --language en
+python scripts/build_embeddings.py && python scripts/align_units.py --spotcheck 20
+```
+
+- **File-name typos** (owner-confirmed):
+  - පුසා, පාසල and මල්ලී are පූසා, පාසල් and මල්ලි;
+  - hart is hat;
+  - a stray digit after a word (boy9, play9, apple9) is dropped.
+- **Re-imports** replace only that speaker's field recordings in the language being imported.
+  `--replace-speaker` removes a renamed id; the first Sinhala import used `si_*` ids.
+- **Listen voice:** `listen.preferred_speaker: {si: fr_a1, en: fr_a1}`, so the Listen step, "Hear it" and
+  syllable or letter taps play this adult for all 60 words. For Listen this replaces adult_01 on
+  cat, sky, she and play; adult_01 stays in the bank for scoring. Children's clips are never played.
+  - Every English word now has adult letter audio, so all English tiles are tappable.
+  - Verified with curl: the word and unit 1 of cat, hat, window, sky and මම all return `fr_a1_r01`.
+  - Verified on the emulator (Sinhala only, before the English import): මම "Hear it" and a tile tap
+    each made a `/listen` request that returned 200.
+- **Ranges:** 26/30 Sinhala and 24/30 English words have learned ranges. The rest have 3 refs and use
+  the fallback.
+- **Dev-only sanity check** (reported, not used to tune anything): each new child was scored
+  against the bank without them.
+  - Sinhala: fr_c1 24/31, fr_c2 25/30.
+  - English: fr_c1 23/30, fr_c2 20/30.
+- **Short letter cuts:** 19 of the adult's 174 unit cuts are under 60 ms, mostly word-initial
+  consonants (p, b, f, r) that are naturally short. Suspicious ones are "n" in garden (31 ms) and
+  "t" in fast (21 ms); these may sound clipped.
+- **UNTESTED:**
+  - how the adult clips and the cut units sound (spot-check clips are in
+    `data/corpus/unit_spotcheck/`);
+  - English letter taps on the emulator.
 
 ### Stage 5 (2026-10-16)
 - Tested: `tests/test_retry.py` and the Dart `retry_loop_test.dart` both pass the 7 shared scenarios
@@ -236,6 +283,10 @@ One unit of a dev child's reference is replaced by a unit from a different word;
   not accuracy evidence.
 - Latency on a low-end Android path is unmeasured; `scripts/bench_latency.py` comes in Stage 6.
 - `config/confusions.yaml`: TO VALIDATE WITH SPEECH-LANGUAGE EXPERT.
+- **Hear before saying, on the emulator (2026-10-18):** cat fetched adult audio for the word and the
+  "a" tile (`/speech/listen` 200); මම made no listen request (TTS path); hat's tiles have no badges and
+  ignore taps. Not checked: how it sounds (I could not hear the emulator), and that Hear it is
+  disabled while recording (covered only by the screen's idle check).
 - `app/lib/l10n/app_si.arb`: Sinhala UI strings TO REVIEW BY A NATIVE SPEAKER.
 
 ## Open questions
