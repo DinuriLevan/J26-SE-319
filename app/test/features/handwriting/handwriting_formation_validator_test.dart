@@ -18,6 +18,7 @@ void main() {
     'I',
     'M',
     'O',
+    'S',
     'T',
     'U',
     'V',
@@ -78,6 +79,38 @@ void main() {
       }
     });
   }
+
+  test('accepts a natural one-stroke uppercase S with uneven lobes', () {
+    final result = validator.validate(
+      target: 'S',
+      language: HandwritingLanguage.english,
+      strokes: const [
+        [
+          Offset(220, 80),
+          Offset(190, 60),
+          Offset(140, 55),
+          Offset(110, 75),
+          Offset(100, 110),
+          Offset(110, 145),
+          Offset(140, 165),
+          Offset(180, 165),
+          Offset(210, 180),
+          Offset(225, 215),
+          Offset(220, 250),
+          Offset(195, 275),
+          Offset(155, 290),
+          Offset(120, 275),
+          Offset(100, 245),
+        ],
+      ],
+      sourceSize: sourceSize,
+    );
+
+    expect(result.orientationEvaluated, isFalse);
+    expect(result.orientationState, 'AMBIGUOUS');
+    expect(result.formationCorrect, isTrue);
+    expect(result.finalCorrect(recognitionCorrect: true), isTrue);
+  });
 
   test('evaluates correct and mirrored formations across English A-Z/a-z', () {
     const requiredMirrorSensitive = {
@@ -153,7 +186,7 @@ void main() {
     expect(activelyValidated, containsAll(requiredMirrorSensitive));
     expect(
       activelyValidated.join(),
-      'BCDEFGJKLNPQRSZbcdefghjkmnpqrstyz',
+      'BCDEFGJKLNPQRZbcdefghjkmnpqrstyz',
     );
     expect(notDistinguishable, [
       'A',
@@ -161,6 +194,7 @@ void main() {
       'I',
       'M',
       'O',
+      'S',
       'T',
       'U',
       'V',
