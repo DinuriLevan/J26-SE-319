@@ -9,6 +9,7 @@ import '../../../core/db/app_database.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/sync/sync_service.dart';
 import '../logic/speech_rewards.dart';
+import '../parent/speech_parent_stats.dart';
 
 /// Speech's use of the shared on-device queue and card album. Reads the shared
 /// pending_activity_results table (rows stay after syncing) but never changes its schema.
@@ -47,6 +48,22 @@ class SpeechProgressStore {
     return words.length;
   }
 
+  /// Every finished practice word on this device, oldest first (for the parent dashboard).
+  Future<List<SpeechWordResult>> wordResults(String childId) async {
+    final rows = await (_db.select(_db.pendingActivityResults)
+          ..where((t) =>
+              t.childId.equals(childId) & t.componentName.equals('speech'))
+          ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
+        .get();
+    return [
+      for (final r in rows)
+        if (SpeechWordResult.fromPayload(r.createdAt,
+                jsonDecode(r.resultPayload) as Map<String, dynamic>)
+            case final result?)
+          result
+    ];
+  }
+
   /// After a word is mastered: unlock the milestone card if this word reached one. Best effort:
   /// returns the card id if the unlock call succeeded, else null (offline handling is Stage 6).
   Future<String?> unlockMilestoneIfReached(String childId) async {
@@ -68,3 +85,8 @@ final speechProgressStoreProvider = Provider<SpeechProgressStore>((ref) {
     ref.watch(syncServiceProvider),
   );
 });
+
+/// The active child's finished speech words on this device (parent dashboard).
+final speechWordResultsProvider = FutureProvider.autoDispose
+    .family<List<SpeechWordResult>, String>((ref, childId) =>
+        ref.watch(speechProgressStoreProvider).wordResults(childId));

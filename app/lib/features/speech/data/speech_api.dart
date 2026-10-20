@@ -216,9 +216,17 @@ class SpeechApi {
       );
       return resp.data!;
     } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        // The service hides POST /references unless it was started with the switch on.
+        throw const AssessException(AssessFailure.other, referenceUploadOff);
+      }
       throw _failure(e);
     }
   }
+
+  static const referenceUploadOff =
+      'Reference saving is switched off. Restart the speech '
+      'service with SPEECH_ALLOW_REFERENCE_UPLOAD=1 (see ml/speech/README.md).';
 
   Future<List<WordInfo>> words() async {
     try {

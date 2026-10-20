@@ -215,6 +215,19 @@ python scripts/build_embeddings.py && python scripts/align_units.py --spotcheck 
     `data/corpus/unit_spotcheck/`);
   - English letter taps on the emulator.
 
+### Parent dashboard (2026-10-20)
+Main menu → Parent dashboard → grown-up check (a times-table question) → **Speech & Pronunciation**
+tab. The other three components have placeholder tabs for their teams. The Speech tab shows:
+- words mastered and still practising;
+- sounds to practise, with "Hear";
+- 14-day activity and weekly first-try success;
+- tips for grown-ups.
+
+It reads only this device's finished-word results (`SpeechProgressStore.wordResults`).
+
+- **Tests:** `speech_parent_stats_test.dart` (8 tests) and `parent_dashboard_test.dart` (6 tests).
+- **UNTESTED:** not yet seen on the phone.
+
 ### Repeated "try again" on a real phone (2026-10-20)
 The backend's speech results showed the cause: single-sound steps passed **1 in 41 tries**
 (t 0/13, c 0/9, ම 0/9, scores about 0.4). Unit references are cut from words, so a sound said alone

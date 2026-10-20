@@ -198,4 +198,14 @@ A running log of structural/technical decisions for the AkuRin shared foundation
 | The retry loop (Python `src/retry.py` and Dart `retry_loop.dart`) gains `on_practised` / `onPractised`, with 2 new shared scenarios in `retry_cases.json` | The two ports stay identical |
 | To score sounds again, record **sounds said alone** by adults (e.g. "tuh", "kuh", "ම") as unit references and tune unit pass marks on them | Long-term fix |
 
+## 2026-10-20 — Parent dashboard (shared shell) with the Speech section (Fernando B.P.L)
+
+| Decision | Rationale |
+|---|---|
+| A **Parent dashboard** item in the main menu (`shared/widgets/app_drawer.dart`, one added `ListTile`) opens `features/parent_dashboard/`: one tab per component (Math & Memory, Spelling & Phonics, Handwriting, Speech & Pronunciation) | Owner request. Add-only in shared code. Each team owns its tab: replace its `ParentSectionPlaceholder` in `parent_sections.dart` with a widget from its own feature folder |
+| A **grown-up check** before it opens: a times-table question (6-9 x 6-9) | Owner choice; keeps Grade 2-3 children out. A speed bump, not security |
+| The Speech tab (`features/speech/parent/`) shows words mastered and still practising, sounds to practise (with the adult voice), recent activity (14 days), improvement over time (weekly first-try success and average tries) and tips for grown-ups | Owner choice of content. Built from the finished-word results already stored **on this device** (shared `pending_activity_results`, no schema change), so it works offline; it only covers practice on this device |
+| No raw scores and no diagnosis wording; a footnote says "A practice aid, not a clinical assessment" | Project guard rail (practice aid, not a clinical tool) |
+| Tips and the Sinhala text are TO REVIEW BY A TEACHER / NATIVE SPEAKER | Not yet reviewed |
+
 <!-- Add new entries below this line, newest at the bottom or top — pick one convention and stay consistent. -->

@@ -125,4 +125,146 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get speechHearSound => 'අහන්න';
+
+  @override
+  String get parentDashboardTitle => 'දෙමාපිය පුවරුව';
+
+  @override
+  String get parentDashboardMenu => 'දෙමාපිය පුවරුව';
+
+  @override
+  String get parentGateTitle => 'වැඩිහිටියන් සඳහා';
+
+  @override
+  String parentGateQuestion(int a, int b) {
+    return '$a × $b කීයද?';
+  }
+
+  @override
+  String get parentGateWrong => 'නිවැරදි නැහැ. මෙන්න තවත් එකක්.';
+
+  @override
+  String get parentGateOpen => 'විවෘත කරන්න';
+
+  @override
+  String get parentGateAnswer => 'පිළිතුර';
+
+  @override
+  String get parentComingSoon => 'මෙම කොටස ළඟදීම එකතු වේ.';
+
+  @override
+  String get parentTabMath => 'ගණිතය සහ මතකය';
+
+  @override
+  String get parentTabSpelling => 'අක්ෂර වින්‍යාසය සහ ශබ්ද';
+
+  @override
+  String get parentTabHandwriting => 'අත් අකුරු';
+
+  @override
+  String get parentTabSpeech => 'කථනය සහ උච්චාරණය';
+
+  @override
+  String get speechParentBoth => 'දෙකම';
+
+  @override
+  String get speechParentMastered => 'ප්‍රගුණ කළ වචන';
+
+  @override
+  String get speechParentPractising => 'තවමත් පුහුණු වන වචන';
+
+  @override
+  String get speechParentNoneYet => 'තවම නැත';
+
+  @override
+  String get speechParentSounds => 'පුහුණු විය යුතු ශබ්ද';
+
+  @override
+  String get speechParentNoSounds => 'දැනට පුහුණු විය යුතු දෙයක් නැත. නියමයි!';
+
+  @override
+  String speechParentInWord(String word) {
+    return '“$word” වචනයේ';
+  }
+
+  @override
+  String speechParentTimes(int count) {
+    return 'වාර $count';
+  }
+
+  @override
+  String get speechParentRecent => 'මෑත ක්‍රියාකාරකම්';
+
+  @override
+  String get speechParentDailyHint => 'දිනකට පුහුණු වූ වචන (පසුගිය සති 2)';
+
+  @override
+  String speechParentDailySummary(int count) {
+    return 'පසුගිය සති 2 තුළ වචන $count ක් පුහුණු විය';
+  }
+
+  @override
+  String get speechParentImprovement => 'කාලයත් සමඟ දියුණුව';
+
+  @override
+  String get speechParentFirstTry => 'පළමු වතාවේම නිවැරදිව කීවා (සතියෙන් සතිය)';
+
+  @override
+  String get speechParentTriesLegend =>
+      'තිත්: ප්‍රගුණ කළ වචනයකට සාමාන්‍ය උත්සාහ ගණන';
+
+  @override
+  String speechParentTrend(int from, int to, int weeks) {
+    return 'පළමු උත්සාහයේ සාර්ථකත්වය සති $weeks කදී $from% සිට $to% දක්වා වෙනස් විය.';
+  }
+
+  @override
+  String get speechParentNoTrend =>
+      'ප්‍රවණතාවක් බැලීමට වෙනස් සති දෙකක පුහුණු වන්න.';
+
+  @override
+  String speechParentThisWeek(int count) {
+    return 'මෙම සතියේ වචන $count';
+  }
+
+  @override
+  String speechParentStreak(int count) {
+    return 'දින $count ක අඛණ්ඩ පුහුණුව';
+  }
+
+  @override
+  String speechParentMasteredCount(int count) {
+    return 'ප්‍රගුණ කළ $count';
+  }
+
+  @override
+  String get speechParentTips => 'වැඩිහිටියන් සඳහා උපදෙස්';
+
+  @override
+  String get speechParentTip1 =>
+      'ටිකෙන් ටික, නිතර පුහුණු වන්න: දිනකට මිනිත්තු 5ක් දිගු වාරයකට වඩා හොඳයි.';
+
+  @override
+  String get speechParentTip2 =>
+      'නිවැරදි පිළිතුරු පමණක් නොව උත්සාහයද අගය කරන්න.';
+
+  @override
+  String get speechParentTip3 =>
+      'වචනය එකට සෙමින් කියා, ඉන්පසු සාමාන්‍ය වේගයෙන් කියන්න.';
+
+  @override
+  String get speechParentTip4 =>
+      'පින්තූරය පෙන්වා, එදිනෙදා ජීවිතයේ එම වචනය ගැන කතා කරන්න.';
+
+  @override
+  String speechParentSoundTip(String sound, String word) {
+    return '“$word” වචනයේ “$sound” ශබ්දය පුහුණු වන්න: එකට සෙමින් කියා, ඉන්පසු සම්පූර්ණ වචනය කියන්න.';
+  }
+
+  @override
+  String get speechParentEmpty => 'මෙම උපාංගයේ තවම කථන පුහුණුවක් නැත.';
+
+  @override
+  String get speechParentFootnote =>
+      'මෙය පුහුණු ආධාරකයකි, සායනික ඇගයීමක් නොවේ. ප්‍රතිඵල මෙම උපාංගයෙන් පමණි.';
 }

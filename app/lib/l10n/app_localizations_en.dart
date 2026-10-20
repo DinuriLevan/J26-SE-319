@@ -125,4 +125,146 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get speechHearSound => 'Hear';
+
+  @override
+  String get parentDashboardTitle => 'Parent dashboard';
+
+  @override
+  String get parentDashboardMenu => 'Parent dashboard';
+
+  @override
+  String get parentGateTitle => 'For grown-ups';
+
+  @override
+  String parentGateQuestion(int a, int b) {
+    return 'What is $a × $b?';
+  }
+
+  @override
+  String get parentGateWrong => 'Not quite. Here is another one.';
+
+  @override
+  String get parentGateOpen => 'Open';
+
+  @override
+  String get parentGateAnswer => 'Answer';
+
+  @override
+  String get parentComingSoon => 'This section is coming soon.';
+
+  @override
+  String get parentTabMath => 'Math & Memory';
+
+  @override
+  String get parentTabSpelling => 'Spelling & Phonics';
+
+  @override
+  String get parentTabHandwriting => 'Handwriting';
+
+  @override
+  String get parentTabSpeech => 'Speech & Pronunciation';
+
+  @override
+  String get speechParentBoth => 'Both';
+
+  @override
+  String get speechParentMastered => 'Words mastered';
+
+  @override
+  String get speechParentPractising => 'Still practising';
+
+  @override
+  String get speechParentNoneYet => 'None yet';
+
+  @override
+  String get speechParentSounds => 'Sounds to practise';
+
+  @override
+  String get speechParentNoSounds =>
+      'Nothing to practise right now. Great work!';
+
+  @override
+  String speechParentInWord(String word) {
+    return 'in “$word”';
+  }
+
+  @override
+  String speechParentTimes(int count) {
+    return '$count times';
+  }
+
+  @override
+  String get speechParentRecent => 'Recent activity';
+
+  @override
+  String get speechParentDailyHint => 'Words practised each day (last 2 weeks)';
+
+  @override
+  String speechParentDailySummary(int count) {
+    return '$count words practised in the last 2 weeks';
+  }
+
+  @override
+  String get speechParentImprovement => 'Improvement over time';
+
+  @override
+  String get speechParentFirstTry => 'Said right on the first try (each week)';
+
+  @override
+  String get speechParentTriesLegend => 'Dots: average tries per mastered word';
+
+  @override
+  String speechParentTrend(int from, int to, int weeks) {
+    return 'First-try success went from $from% to $to% over $weeks weeks.';
+  }
+
+  @override
+  String get speechParentNoTrend =>
+      'Practise in two different weeks to see a trend.';
+
+  @override
+  String speechParentThisWeek(int count) {
+    return '$count words this week';
+  }
+
+  @override
+  String speechParentStreak(int count) {
+    return '$count-day streak';
+  }
+
+  @override
+  String speechParentMasteredCount(int count) {
+    return '$count mastered';
+  }
+
+  @override
+  String get speechParentTips => 'Tips for grown-ups';
+
+  @override
+  String get speechParentTip1 =>
+      'Practise little and often: 5 minutes a day works better than one long session.';
+
+  @override
+  String get speechParentTip2 =>
+      'Praise the effort, not only the right answers.';
+
+  @override
+  String get speechParentTip3 =>
+      'Say the word together slowly, then at normal speed.';
+
+  @override
+  String get speechParentTip4 =>
+      'Point to the picture and talk about the word in everyday life.';
+
+  @override
+  String speechParentSoundTip(String sound, String word) {
+    return 'Practise the sound “$sound” in “$word”: say it slowly together, then say the whole word.';
+  }
+
+  @override
+  String get speechParentEmpty => 'No speech practice on this device yet.';
+
+  @override
+  String get speechParentFootnote =>
+      'A practice aid, not a clinical assessment. Results are from this device only.';
 }

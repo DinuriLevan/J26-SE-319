@@ -168,6 +168,17 @@ void main() {
     expect(fields.containsKey('child_id'), isFalse);
   });
 
+  test('addReference explains a 404 (saving switched off in the service)',
+      () async {
+    final adapter = _FakeAdapter(404, {'detail': 'Not Found'});
+    await expectLater(
+      apiWith(adapter)
+          .addReference(audioPath: wavPath, word: word, speakerId: 'adult_01'),
+      throwsA(isA<AssessException>()
+          .having((e) => e.detail, 'detail', SpeechApi.referenceUploadOff)),
+    );
+  });
+
   group('remediation API', () {
     test('words parses units and adult audio availability', () async {
       final adapter = _FakeAdapter(200, null);

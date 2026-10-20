@@ -53,5 +53,119 @@
   "speechVoiceOff": "Turn the parrot's voice off",
   "speechVoiceOn": "Turn the parrot's voice on",
   "speechHearWord": "Hear it",
-  "speechHearSound": "Hear"
+  "speechHearSound": "Hear",
+  "parentDashboardTitle": "Parent dashboard",
+  "parentDashboardMenu": "Parent dashboard",
+  "parentGateTitle": "For grown-ups",
+  "parentGateQuestion": "What is {a} × {b}?",
+  "@parentGateQuestion": {
+    "placeholders": {
+      "a": {
+        "type": "int"
+      },
+      "b": {
+        "type": "int"
+      }
+    }
+  },
+  "parentGateWrong": "Not quite. Here is another one.",
+  "parentGateOpen": "Open",
+  "parentGateAnswer": "Answer",
+  "parentComingSoon": "This section is coming soon.",
+  "parentTabMath": "Math & Memory",
+  "parentTabSpelling": "Spelling & Phonics",
+  "parentTabHandwriting": "Handwriting",
+  "parentTabSpeech": "Speech & Pronunciation",
+  "speechParentBoth": "Both",
+  "speechParentMastered": "Words mastered",
+  "speechParentPractising": "Still practising",
+  "speechParentNoneYet": "None yet",
+  "speechParentSounds": "Sounds to practise",
+  "speechParentNoSounds": "Nothing to practise right now. Great work!",
+  "speechParentInWord": "in “{word}”",
+  "@speechParentInWord": {
+    "placeholders": {
+      "word": {
+        "type": "String"
+      }
+    }
+  },
+  "speechParentTimes": "{count} times",
+  "@speechParentTimes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "speechParentRecent": "Recent activity",
+  "speechParentDailyHint": "Words practised each day (last 2 weeks)",
+  "speechParentDailySummary": "{count} words practised in the last 2 weeks",
+  "@speechParentDailySummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "speechParentImprovement": "Improvement over time",
+  "speechParentFirstTry": "Said right on the first try (each week)",
+  "speechParentTriesLegend": "Dots: average tries per mastered word",
+  "speechParentTrend": "First-try success went from {from}% to {to}% over {weeks} weeks.",
+  "@speechParentTrend": {
+    "placeholders": {
+      "from": {
+        "type": "int"
+      },
+      "to": {
+        "type": "int"
+      },
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "speechParentNoTrend": "Practise in two different weeks to see a trend.",
+  "speechParentThisWeek": "{count} words this week",
+  "@speechParentThisWeek": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "speechParentStreak": "{count}-day streak",
+  "@speechParentStreak": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "speechParentMasteredCount": "{count} mastered",
+  "@speechParentMasteredCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "speechParentTips": "Tips for grown-ups",
+  "speechParentTip1": "Practise little and often: 5 minutes a day works better than one long session.",
+  "speechParentTip2": "Praise the effort, not only the right answers.",
+  "speechParentTip3": "Say the word together slowly, then at normal speed.",
+  "speechParentTip4": "Point to the picture and talk about the word in everyday life.",
+  "speechParentSoundTip": "Practise the sound “{sound}” in “{word}”: say it slowly together, then say the whole word.",
+  "@speechParentSoundTip": {
+    "placeholders": {
+      "sound": {
+        "type": "String"
+      },
+      "word": {
+        "type": "String"
+      }
+    }
+  },
+  "speechParentEmpty": "No speech practice on this device yet.",
+  "speechParentFootnote": "A practice aid, not a clinical assessment. Results are from this device only."
 }

@@ -319,6 +319,240 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hear'**
   String get speechHearSound;
+
+  /// No description provided for @parentDashboardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Parent dashboard'**
+  String get parentDashboardTitle;
+
+  /// No description provided for @parentDashboardMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Parent dashboard'**
+  String get parentDashboardMenu;
+
+  /// No description provided for @parentGateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'For grown-ups'**
+  String get parentGateTitle;
+
+  /// No description provided for @parentGateQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'What is {a} × {b}?'**
+  String parentGateQuestion(int a, int b);
+
+  /// No description provided for @parentGateWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Not quite. Here is another one.'**
+  String get parentGateWrong;
+
+  /// No description provided for @parentGateOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get parentGateOpen;
+
+  /// No description provided for @parentGateAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer'**
+  String get parentGateAnswer;
+
+  /// No description provided for @parentComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'This section is coming soon.'**
+  String get parentComingSoon;
+
+  /// No description provided for @parentTabMath.
+  ///
+  /// In en, this message translates to:
+  /// **'Math & Memory'**
+  String get parentTabMath;
+
+  /// No description provided for @parentTabSpelling.
+  ///
+  /// In en, this message translates to:
+  /// **'Spelling & Phonics'**
+  String get parentTabSpelling;
+
+  /// No description provided for @parentTabHandwriting.
+  ///
+  /// In en, this message translates to:
+  /// **'Handwriting'**
+  String get parentTabHandwriting;
+
+  /// No description provided for @parentTabSpeech.
+  ///
+  /// In en, this message translates to:
+  /// **'Speech & Pronunciation'**
+  String get parentTabSpeech;
+
+  /// No description provided for @speechParentBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Both'**
+  String get speechParentBoth;
+
+  /// No description provided for @speechParentMastered.
+  ///
+  /// In en, this message translates to:
+  /// **'Words mastered'**
+  String get speechParentMastered;
+
+  /// No description provided for @speechParentPractising.
+  ///
+  /// In en, this message translates to:
+  /// **'Still practising'**
+  String get speechParentPractising;
+
+  /// No description provided for @speechParentNoneYet.
+  ///
+  /// In en, this message translates to:
+  /// **'None yet'**
+  String get speechParentNoneYet;
+
+  /// No description provided for @speechParentSounds.
+  ///
+  /// In en, this message translates to:
+  /// **'Sounds to practise'**
+  String get speechParentSounds;
+
+  /// No description provided for @speechParentNoSounds.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to practise right now. Great work!'**
+  String get speechParentNoSounds;
+
+  /// No description provided for @speechParentInWord.
+  ///
+  /// In en, this message translates to:
+  /// **'in “{word}”'**
+  String speechParentInWord(String word);
+
+  /// No description provided for @speechParentTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} times'**
+  String speechParentTimes(int count);
+
+  /// No description provided for @speechParentRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent activity'**
+  String get speechParentRecent;
+
+  /// No description provided for @speechParentDailyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Words practised each day (last 2 weeks)'**
+  String get speechParentDailyHint;
+
+  /// No description provided for @speechParentDailySummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} words practised in the last 2 weeks'**
+  String speechParentDailySummary(int count);
+
+  /// No description provided for @speechParentImprovement.
+  ///
+  /// In en, this message translates to:
+  /// **'Improvement over time'**
+  String get speechParentImprovement;
+
+  /// No description provided for @speechParentFirstTry.
+  ///
+  /// In en, this message translates to:
+  /// **'Said right on the first try (each week)'**
+  String get speechParentFirstTry;
+
+  /// No description provided for @speechParentTriesLegend.
+  ///
+  /// In en, this message translates to:
+  /// **'Dots: average tries per mastered word'**
+  String get speechParentTriesLegend;
+
+  /// No description provided for @speechParentTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'First-try success went from {from}% to {to}% over {weeks} weeks.'**
+  String speechParentTrend(int from, int to, int weeks);
+
+  /// No description provided for @speechParentNoTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Practise in two different weeks to see a trend.'**
+  String get speechParentNoTrend;
+
+  /// No description provided for @speechParentThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} words this week'**
+  String speechParentThisWeek(int count);
+
+  /// No description provided for @speechParentStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}-day streak'**
+  String speechParentStreak(int count);
+
+  /// No description provided for @speechParentMasteredCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} mastered'**
+  String speechParentMasteredCount(int count);
+
+  /// No description provided for @speechParentTips.
+  ///
+  /// In en, this message translates to:
+  /// **'Tips for grown-ups'**
+  String get speechParentTips;
+
+  /// No description provided for @speechParentTip1.
+  ///
+  /// In en, this message translates to:
+  /// **'Practise little and often: 5 minutes a day works better than one long session.'**
+  String get speechParentTip1;
+
+  /// No description provided for @speechParentTip2.
+  ///
+  /// In en, this message translates to:
+  /// **'Praise the effort, not only the right answers.'**
+  String get speechParentTip2;
+
+  /// No description provided for @speechParentTip3.
+  ///
+  /// In en, this message translates to:
+  /// **'Say the word together slowly, then at normal speed.'**
+  String get speechParentTip3;
+
+  /// No description provided for @speechParentTip4.
+  ///
+  /// In en, this message translates to:
+  /// **'Point to the picture and talk about the word in everyday life.'**
+  String get speechParentTip4;
+
+  /// No description provided for @speechParentSoundTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Practise the sound “{sound}” in “{word}”: say it slowly together, then say the whole word.'**
+  String speechParentSoundTip(String sound, String word);
+
+  /// No description provided for @speechParentEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No speech practice on this device yet.'**
+  String get speechParentEmpty;
+
+  /// No description provided for @speechParentFootnote.
+  ///
+  /// In en, this message translates to:
+  /// **'A practice aid, not a clinical assessment. Results are from this device only.'**
+  String get speechParentFootnote;
 }
 
 class _AppLocalizationsDelegate
