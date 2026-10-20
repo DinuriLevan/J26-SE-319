@@ -6,8 +6,10 @@ import '../models/character_stroke_definition.dart';
 import '../models/handwriting_prediction.dart';
 import '../services/handwriting_classifier.dart';
 import '../services/handwriting_debug_config.dart';
+import '../services/handwriting_feedback_speech_service.dart';
 import '../services/handwriting_formation_validator.dart';
 import '../services/handwriting_image_preprocessor.dart';
+import 'english_handwriting_result_screen.dart';
 
 class HandwritingPracticeScreen extends StatefulWidget {
   const HandwritingPracticeScreen({
@@ -16,12 +18,14 @@ class HandwritingPracticeScreen extends StatefulWidget {
     required this.modelType,
     this.classifier,
     this.formationValidator,
+    this.feedbackSpeechService,
   });
 
   final String character;
   final HandwritingModelType modelType;
   final HandwritingClassifierClient? classifier;
   final HandwritingFormationValidatorClient? formationValidator;
+  final HandwritingFeedbackSpeechClient? feedbackSpeechService;
 
   @override
   State<HandwritingPracticeScreen> createState() =>
@@ -177,10 +181,35 @@ class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
         );
       }
       if (!mounted) return;
-      setState(() {
-        _prediction = prediction;
-        _formationResult = formation;
-      });
+      if (widget.modelType == HandwritingModelType.sinhala) {
+        setState(() {
+          _prediction = prediction;
+          _formationResult = formation;
+        });
+      } else {
+        // Keep the full recognition result in state for debugging/research,
+        // but never render its technical fields in the English child UI.
+        setState(() {
+          _prediction = prediction;
+          _formationResult = formation;
+        });
+        final action =
+            await Navigator.of(context).push<EnglishHandwritingResultAction>(
+          MaterialPageRoute<EnglishHandwritingResultAction>(
+            builder: (_) => EnglishHandwritingResultScreen(
+              isCorrect: finalCorrect,
+              feedbackSpeechService: widget.feedbackSpeechService,
+            ),
+          ),
+        );
+        if (!mounted) return;
+        if (action == EnglishHandwritingResultAction.nextLetter ||
+            action == EnglishHandwritingResultAction.backToLetters) {
+          Navigator.of(context).pop(action);
+          return;
+        }
+        _resetAfterEnglishResult();
+      }
     } on HandwritingPreprocessingException catch (error, stackTrace) {
       debugPrint('[Handwriting] Canvas preprocessing failed: $error');
       debugPrintStack(stackTrace: stackTrace);
@@ -205,6 +234,16 @@ class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
     if (identical(_debugModelInput, image)) return;
     _debugModelInput?.dispose();
     _debugModelInput = image;
+  }
+
+  void _resetAfterEnglishResult() {
+    setState(() {
+      _penStrokes.clear();
+      _replaceDebugImage(null);
+      _prediction = null;
+      _formationResult = null;
+      _errorMessage = null;
+    });
   }
 
   @override
@@ -288,7 +327,8 @@ class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
               const SizedBox(height: 12),
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 200),
-                child: prediction != null
+                child: widget.modelType == HandwritingModelType.sinhala &&
+                        prediction != null
                     ? _PredictionResultCard(
                         key: const ValueKey('prediction-result'),
                         target: widget.character,

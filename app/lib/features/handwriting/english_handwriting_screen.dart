@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'models/character_stroke_definition.dart';
 import 'screens/character_demonstration_screen.dart';
+import 'screens/english_handwriting_result_screen.dart';
 import 'services/handwriting_classifier.dart';
 import 'widgets/character_selection_view.dart';
 
@@ -122,10 +123,14 @@ class EnglishHandwritingScreen extends StatelessWidget {
     );
   }
 
-  void _openDemonstration(BuildContext context, String character) {
+  Future<void> _openDemonstration(
+    BuildContext context,
+    String character,
+  ) async {
     final letterIndex = _englishLetters.indexOf(character.toUpperCase());
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
+    final action =
+        await Navigator.of(context).push<EnglishHandwritingResultAction>(
+      MaterialPageRoute<EnglishHandwritingResultAction>(
         builder: (_) => CharacterDemonstrationScreen(
           character: character,
           language: HandwritingLanguage.english,
@@ -137,5 +142,24 @@ class EnglishHandwritingScreen extends StatelessWidget {
         ),
       ),
     );
+    if (!context.mounted ||
+        action != EnglishHandwritingResultAction.nextLetter) {
+      return;
+    }
+    final nextCharacter = _nextCharacter(character);
+    if (nextCharacter != null) {
+      await _openDemonstration(context, nextCharacter);
+    }
+  }
+
+  String? _nextCharacter(String character) {
+    final uppercase = character == character.toUpperCase();
+    final letters = uppercase
+        ? _englishLetters
+        : _englishLetters
+            .map((letter) => letter.toLowerCase())
+            .toList(growable: false);
+    final index = letters.indexOf(character);
+    return index >= 0 && index < letters.length - 1 ? letters[index + 1] : null;
   }
 }

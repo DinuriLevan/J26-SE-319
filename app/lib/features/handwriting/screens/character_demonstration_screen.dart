@@ -7,6 +7,7 @@ import '../models/handwriting_animation_config.dart';
 import '../services/handwriting_classifier.dart';
 import '../widgets/demonstration_controls.dart';
 import '../widgets/stroke_demonstration_canvas.dart';
+import 'english_handwriting_result_screen.dart';
 import 'handwriting_practice_screen.dart';
 
 class CharacterDemonstrationScreen extends StatefulWidget {
@@ -129,15 +130,21 @@ class _CharacterDemonstrationScreenState
     return _animationConfig.durationForStroke(definition.strokes[index]);
   }
 
-  void _openPractice() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
+  Future<void> _openPractice() async {
+    final action =
+        await Navigator.of(context).push<EnglishHandwritingResultAction>(
+      MaterialPageRoute<EnglishHandwritingResultAction>(
         builder: (_) => HandwritingPracticeScreen(
           character: widget.character,
           modelType: widget.modelType ?? _modelTypeForSelection(),
         ),
       ),
     );
+    if (!mounted || widget.language != HandwritingLanguage.english) return;
+    if (action == EnglishHandwritingResultAction.nextLetter ||
+        action == EnglishHandwritingResultAction.backToLetters) {
+      Navigator.of(context).pop(action);
+    }
   }
 
   HandwritingModelType _modelTypeForSelection() {
@@ -225,13 +232,13 @@ class _CharacterDemonstrationScreenState
                 onReplay: _replay,
                 onPrevious: _previousStep,
                 onNext: _nextStep,
-                onPractice: _openPractice,
+                onPractice: () => _openPractice(),
                 canGoPrevious: _currentStrokeIndex > 0,
                 canGoNext: _currentStrokeIndex < definition.strokes.length - 1,
               ),
             ] else
               FilledButton.icon(
-                onPressed: _openPractice,
+                onPressed: () => _openPractice(),
                 icon: const Icon(Icons.edit_rounded),
                 label: const Text('My Turn!'),
                 style: FilledButton.styleFrom(
