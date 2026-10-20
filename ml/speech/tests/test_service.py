@@ -33,6 +33,7 @@ def setup(tmp_path_factory):
         "embeddings_dir": root / "embeddings",
     }
     settings["scoring"]["fallback_threshold"] = 0.2  # test fixture value, not a tuned threshold
+    settings["scoring"]["threshold_mode"] = "per_word"  # these tests cover the learned range
     (root / "words.csv").write_text(
         "word_id,text_si,text_en,language,grade,units\n"
         "w_001,කමල,,si,2,ක|ම|ල\n"
@@ -178,3 +179,17 @@ def test_refuses_bank_built_with_other_embedder(setup):
     settings, _, bank = setup
     with pytest.raises(BankError, match="Re-run"):
         create_app(settings, SpectralEmbedder(n_bands=16), bank)
+
+
+def test_shared_mode_uses_one_pass_mark_per_language(setup, make_tone_word, to_wav_bytes):
+    settings, embedder, bank = setup
+    settings = copy.deepcopy(settings)
+    settings["scoring"]["threshold_mode"] = "shared"
+    settings["scoring"]["shared_threshold"] = {"si": 0.31, "en": 0.27}
+    with TestClient(create_app(settings, embedder, bank)) as c:
+        wav = to_wav_bytes(make_tone_word(WORD, [0.3] * 3, seed=60))
+        si = _post(c, wav).json()  # w_001 has only 2 refs: shared still applies (no fallback)
+        en = _post(c, wav, word_id="w_002", language="en").json()
+    assert (si["threshold"], si["threshold_source"]) == (0.31, "shared")
+    assert (en["threshold"], en["threshold_source"]) == (0.27, "shared")
+    assert en["decision"] == ("accepted" if en["score"] <= 0.27 else "needs_remediation")

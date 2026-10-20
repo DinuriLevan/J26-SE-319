@@ -27,6 +27,7 @@
   "speechWholeWordAgain": "Now say the whole word",
   "speechStepWellDone": "Well done!",
   "speechStepOnceMore": "Let's try that once more.",
+  "speechGoodPractice": "Good practice! Let's keep going.",
   "speechFallbackTitle": "Great effort!",
   "speechFallbackBody": "We'll practise {units} again later.",
   "@speechFallbackBody": {

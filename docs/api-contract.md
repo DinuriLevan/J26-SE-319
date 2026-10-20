@@ -55,7 +55,7 @@ The response is `200` with the following body. Field names are fixed; ask the sp
   "decision": "accepted | needs_remediation",
   "score": 0.231,
   "threshold": 0.298,
-  "threshold_source": "bank | fallback",
+  "threshold_source": "shared | bank | fallback",
   "nearest_variant": "spk_adult_02",
   "segments": [{"label": "ම", "start_s": 0.31, "end_s": 0.52, "status": "ok | flagged", "cost": 0.41, "error_type": "substitution|omission|insertion|distortion|null"}],
   "latency_ms": {"load": 0, "embed": 0, "dtw": 0, "total": 0}
@@ -76,7 +76,7 @@ Errors return `{"detail": "..."}` with one of these statuses:
 **Rewards (Stage 5):** after a word is mastered, the app unlocks a milestone card in the shared album via `POST /rewards/{child_id}/unlock` with `card_id = "speech_words_<N>"` for every 5th different word mastered (5, 10, 15, ...). Each finished word (mastered or fallback) writes one `ActivityResult` (`component_name: "speech"`, `activity_id: "speech_word:<word_id>"`) through the shared offline queue. Its payload holds `outcome` (`mastered` or `fallback`), attempt counts, `flagged_units`, `practise_later` and the loop events.
 
 **Current stage (Stage 4):**
-- Scoring uses every reference recording of the word. `threshold_source` is `"bank"` when the word has at least 4 references (the range is learned from them) and `"fallback"` otherwise.
+- Scoring uses every reference recording of the word. `threshold_source` is `"shared"` when the service uses one pass mark per language (the default since 2026-10-20). With the per-word setting it is `"bank"` when the word has at least 4 references (the range is learned from them) and `"fallback"` otherwise. Unit attempts (`/speech/assess-unit`) still use `"bank"` / `"fallback"`.
 - `segments` is `[]` when the attempt is accepted. Otherwise it lists every unit of the word (Sinhala akshara, English letter chunks such as `c|a|t`) on the child's timeline. The worst unit, and the second worst if close, has `status: "flagged"` and an `error_type`. Error types are rule-based and not yet validated.
 - The endpoint is stateless. The app records each scored word through the shared offline queue (`component_name: "speech"`, `activity_id: "speech_word:<word_id>"`).
 

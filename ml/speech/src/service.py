@@ -72,7 +72,7 @@ class AssessResponse(BaseModel):
     decision: Literal["accepted", "needs_remediation"]
     score: float
     threshold: float
-    threshold_source: Literal["bank", "fallback"]
+    threshold_source: Literal["bank", "fallback", "shared"]
     nearest_variant: str
     segments: list[Segment]
     latency_ms: Latency
@@ -86,7 +86,7 @@ class UnitAssessResponse(BaseModel):
     decision: Literal["accepted", "needs_remediation"]
     score: float
     threshold: float
-    threshold_source: Literal["bank", "fallback"]
+    threshold_source: Literal["bank", "fallback", "shared"]
     latency_ms: Latency
 
 
@@ -107,7 +107,7 @@ class ReferenceResponse(BaseModel):
     n_refs: int
     n_speakers: int
     threshold: float
-    threshold_source: Literal["bank", "fallback"]
+    threshold_source: Literal["bank", "fallback", "shared"]
 
 
 def create_app(
@@ -124,6 +124,12 @@ def create_app(
 
     def word_range(word_id: str, refs: list[dict]) -> AcceptanceRange:
         # Computed once per word; POST /references drops the cached range when it adds a reference.
+        if word_id not in ranges and sc.get("threshold_mode") == "shared":
+            # One pass mark per language, chosen on dev children (eval/threshold_study_dev.py).
+            language = bank.words[word_id]["language"]
+            ranges[word_id] = AcceptanceRange(
+                threshold=float(sc["shared_threshold"][language]), source="shared", n_refs=len(refs)
+            )
         if word_id not in ranges:
             ranges[word_id] = acceptance_range(
                 refs,

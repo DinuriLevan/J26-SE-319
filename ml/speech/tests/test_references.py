@@ -30,6 +30,7 @@ def setup(tmp_path):
         "embeddings_dir": tmp_path / "embeddings",
     }
     settings["scoring"]["fallback_threshold"] = 0.2
+    settings["scoring"]["threshold_mode"] = "per_word"  # these tests cover the learned range
     (tmp_path / "words.csv").write_text(
         "word_id,text_si,text_en,language,grade,units\nw_001,,cat,en,2,k|æ|t\n", encoding="utf-8"
     )

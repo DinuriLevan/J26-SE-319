@@ -84,6 +84,9 @@ class AppLocalizationsSi extends AppLocalizations {
   String get speechStepOnceMore => 'අපි ආයෙත් වරක් උත්සාහ කරමු.';
 
   @override
+  String get speechGoodPractice => 'හොඳ පුහුණුවක්! අපි ඉදිරියට යමු.';
+
+  @override
   String get speechFallbackTitle => 'හොඳ උත්සාහයක්!';
 
   @override

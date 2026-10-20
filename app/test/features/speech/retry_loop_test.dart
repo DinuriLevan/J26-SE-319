@@ -26,6 +26,7 @@ void main() {
           'listened' => loop.onListened(),
           'unit' => loop.onUnit(passed: a['passed'] as bool),
           'blend' => loop.onBlend(passed: a['passed'] as bool),
+          'practised' => loop.onPractised(),
           _ => throw ArgumentError(a),
         };
         steps.add(s.toJson());
@@ -45,6 +46,10 @@ void main() {
         names,
         containsAll(
             ['happy_path', 'one_retry', 'exhaustion', 'two_flagged_units']));
+  });
+
+  test('the whole word is always scored, never just practised', () {
+    expect(() => RetryLoop(3).onPractised(), throwsA(isA<RetryStateError>()));
   });
 
   test('rejects input for the wrong step', () {

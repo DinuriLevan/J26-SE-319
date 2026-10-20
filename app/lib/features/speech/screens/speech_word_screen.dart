@@ -25,6 +25,13 @@ import 'speech_result_screen.dart';
 
 enum _Phase { idle, recording, checking }
 
+/// Whether "say the sound" and "say them together" attempts are scored. Off (owner decision
+/// 2026-10-20): unit references are cut out of whole words, so a sound said alone ("tuh") almost
+/// never matches (1 pass in 41 tries on a real phone). Until references of sounds said alone exist,
+/// those steps are practice: the child says the sound, the parrot praises it, and the loop moves on.
+/// Only the whole word is scored.
+const scoreSoundSteps = false;
+
 /// Practises one word with the remediation loop (logic/retry_loop.dart):
 /// say the word -> if not accepted, for the worst 1-2 units: Listen -> Say the sound -> Blend ->
 /// say the whole word again. Feedback is always encouraging; numbers are never shown to the child.
@@ -142,6 +149,7 @@ class _SpeechWordScreenState extends ConsumerState<SpeechWordScreen> {
       final api = ref.read(speechApiProvider);
       final step = loop.step;
       bool passed;
+      var practised = false;
       switch (step.kind) {
         case StepKind.fullWord:
           final r =
@@ -152,6 +160,11 @@ class _SpeechWordScreenState extends ConsumerState<SpeechWordScreen> {
           ];
           loop.onFullWord(accepted: r.accepted, flagged: flagged);
           passed = r.accepted;
+        case StepKind.sayUnit || StepKind.blend when !scoreSoundSteps:
+          // Practise, don't test: the recording is not uploaded or scored (see scoreSoundSteps).
+          loop.onPractised();
+          practised = true;
+          passed = true;
         case StepKind.sayUnit:
         case StepKind.blend:
           final r = await api.assessUnit(
@@ -171,7 +184,11 @@ class _SpeechWordScreenState extends ConsumerState<SpeechWordScreen> {
       if (!mounted) return;
       setState(() {
         _phase = _Phase.idle;
-        _message = passed ? l10n.speechStepWellDone : l10n.speechStepOnceMore;
+        _message = practised
+            ? l10n.speechGoodPractice
+            : passed
+                ? l10n.speechStepWellDone
+                : l10n.speechStepOnceMore;
       });
       if (loop.done) {
         await _finishWord(childId, loop);
@@ -443,7 +460,10 @@ class _SpeechWordScreenState extends ConsumerState<SpeechWordScreen> {
   ParrotMood _mood(AppLocalizations l10n) {
     if (_phase == _Phase.recording) return ParrotMood.listening;
     if (_phase == _Phase.checking) return ParrotMood.thinking;
-    if (_message == l10n.speechStepWellDone) return ParrotMood.happy;
+    if (_message == l10n.speechStepWellDone ||
+        _message == l10n.speechGoodPractice) {
+      return ParrotMood.happy;
+    }
     if (_message != null) return ParrotMood.encourage;
     return ParrotMood.idle;
   }
@@ -456,6 +476,7 @@ class _SpeechWordScreenState extends ConsumerState<SpeechWordScreen> {
     final messageKey = {
       l10n.speechStepWellDone: 'speechStepWellDone',
       l10n.speechStepOnceMore: 'speechStepOnceMore',
+      l10n.speechGoodPractice: 'speechGoodPractice',
       l10n.speechCouldNotHear: 'speechCouldNotHear',
       l10n.speechMicNeeded: 'speechMicNeeded',
       l10n.speechSomethingWrong: 'speechSomethingWrong',

@@ -49,6 +49,7 @@ PROMPT_KEYS = [
     "speechBlend",
     "speechStepWellDone",
     "speechStepOnceMore",
+    "speechGoodPractice",
     "speechCouldNotHear",
     "speechMicNeeded",
     "speechSomethingWrong",

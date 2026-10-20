@@ -216,6 +216,75 @@
       ],
       "scheduled": [1],
       "final": "reward"
+    },
+    {
+      "name": "practise_two_units",
+      "n_units": 3,
+      "listen_units": null,
+      "actions": [
+        {"input": "full_word", "accepted": false, "flagged": [0, 2]},
+        {"input": "listened"},
+        {"input": "practised"},
+        {"input": "practised"},
+        {"input": "listened"},
+        {"input": "practised"},
+        {"input": "practised"},
+        {"input": "full_word", "accepted": true, "flagged": []}
+      ],
+      "steps": [
+        {"kind": "listen", "unit": 0, "span": [0, 0], "try": 1},
+        {"kind": "say_unit", "unit": 0, "span": [0, 0], "try": 1},
+        {"kind": "blend", "unit": 0, "span": [0, 1], "try": 1},
+        {"kind": "listen", "unit": 2, "span": [2, 2], "try": 1},
+        {"kind": "say_unit", "unit": 2, "span": [2, 2], "try": 1},
+        {"kind": "blend", "unit": 2, "span": [1, 2], "try": 1},
+        {"kind": "full_word", "unit": null, "span": null, "try": 2},
+        {"kind": "reward", "unit": null, "span": null, "try": 1}
+      ],
+      "events": [
+        "attempt_scored:full_word:null",
+        "unit_flagged:full_word:0",
+        "unit_flagged:full_word:2",
+        "unit_practised:say_unit:0",
+        "unit_practised:blend:0",
+        "unit_practised:say_unit:2",
+        "unit_practised:blend:2",
+        "attempt_scored:full_word:null",
+        "word_mastered:full_word:null"
+      ],
+      "scheduled": [0, 2],
+      "final": "reward"
+    },
+    {
+      "name": "practise_single_unit_word_then_fallback",
+      "n_units": 1,
+      "listen_units": [],
+      "actions": [
+        {"input": "full_word", "accepted": false, "flagged": [0]},
+        {"input": "practised"},
+        {"input": "full_word", "accepted": false, "flagged": [0]},
+        {"input": "practised"},
+        {"input": "full_word", "accepted": false, "flagged": [0]}
+      ],
+      "steps": [
+        {"kind": "say_unit", "unit": 0, "span": [0, 0], "try": 1},
+        {"kind": "full_word", "unit": null, "span": null, "try": 2},
+        {"kind": "say_unit", "unit": 0, "span": [0, 0], "try": 1},
+        {"kind": "full_word", "unit": null, "span": null, "try": 3},
+        {"kind": "fallback", "unit": null, "span": null, "try": 1}
+      ],
+      "events": [
+        "attempt_scored:full_word:null",
+        "unit_flagged:full_word:0",
+        "unit_practised:say_unit:0",
+        "attempt_scored:full_word:null",
+        "unit_flagged:full_word:0",
+        "unit_practised:say_unit:0",
+        "attempt_scored:full_word:null",
+        "fallback_taken:full_word:null"
+      ],
+      "scheduled": [0],
+      "final": "fallback"
     }
   ]
 }

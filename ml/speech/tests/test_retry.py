@@ -25,6 +25,8 @@ def _apply(loop: RetryLoop, action: dict):
             return loop.on_unit(action["passed"])
         case "blend":
             return loop.on_blend(action["passed"])
+        case "practised":
+            return loop.on_practised()
     raise ValueError(action)
 
 
@@ -73,3 +75,9 @@ def test_fallback_events_carry_the_scheduled_units():
     fb = [e for e in loop.events if e["type"] == "fallback_taken"]
     assert fb == [{"type": "fallback_taken", "step": "full_word", "unit": None, "units": [1, 0]}]
     assert loop.scheduled_units == [1, 0]
+
+
+def test_practised_only_on_sound_steps():
+    loop = RetryLoop(3)
+    with pytest.raises(RetryStateError):
+        loop.on_practised()  # the whole word is always scored

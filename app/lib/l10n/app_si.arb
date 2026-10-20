@@ -25,6 +25,7 @@
   "speechWholeWordAgain": "දැන් මුළු වචනයම කියමු",
   "speechStepWellDone": "හරිම හොඳයි!",
   "speechStepOnceMore": "අපි ආයෙත් වරක් උත්සාහ කරමු.",
+  "speechGoodPractice": "හොඳ පුහුණුවක්! අපි ඉදිරියට යමු.",
   "speechFallbackTitle": "හොඳ උත්සාහයක්!",
   "speechFallbackBody": "අපි {units} ආයෙත් පස්සේ පුහුණු වෙමු.",
   "speechCardUnlocked": "ඔයාට අලුත් කාඩ්පතක් ලැබුණා!",

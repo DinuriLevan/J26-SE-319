@@ -215,6 +215,50 @@ python scripts/build_embeddings.py && python scripts/align_units.py --spotcheck 
     `data/corpus/unit_spotcheck/`);
   - English letter taps on the emulator.
 
+### Repeated "try again" on a real phone (2026-10-20)
+The backend's speech results showed the cause: single-sound steps passed **1 in 41 tries**
+(t 0/13, c 0/9, ම 0/9, scores about 0.4). Unit references are cut from words, so a sound said alone
+never matches. Each missed word then ran up to 3 tries per flagged sound.
+
+- **Fix:** sound and blend steps are now practice only (`scoreSoundSteps = false` in the app). Only
+  whole words are scored.
+- **Also found:** an older service on localhost:8001 was answering instead of the updated one, so
+  attempts used the old per-word pass marks. It is now stopped.
+- **UNTESTED:** today's "cat" attempts scored about 0.39 on the phone, compared with 0.19–0.23 on
+  10-16. The audio isn't kept, so the cause (distance, noise or mic) is unknown. Whole-word accuracy
+  on the phone still needs a check with the fix in place.
+
+### Accuracy: shared pass mark (2026-10-20, dev only)
+`python eval/threshold_study_dev.py` holds out one dev child at a time and scores that child's clips
+against the right word and every other word in the same language. Results are in
+`eval/results/threshold_study_dev.md`.
+
+For the single-word children (what the app hears), with the pass mark for each child chosen on the other child:
+
+| | Correct words rejected | Wrong words accepted |
+|---|---|---|
+| si, per-word range (before) | 19.7% | 10.9% |
+| si, shared pass mark | 13.1% | 7.5% |
+| en, per-word range (before) | 28.3% | 10.8% |
+| en, shared pass mark | 10.0% | 16.3% (about 8% when chosen on both children) |
+
+- The service now uses `scoring.threshold_mode: shared` (si 0.2713, en 0.2700): the score below which
+  90% of correct single-word attempts fall. `per_word` restores the old learned ranges.
+- **Caveats:**
+  - only 2 single-word children, so the estimates are wide;
+  - "wrong words" are other practice words, much easier to reject than real mispronunciations;
+  - unit/blend pass marks are unchanged.
+- **Next: mispronunciation test set.** Record the mispronunciation listed for each word in
+  `eval/mispronunciations.csv` (60 clips), named `<word>__<what was said>.WAV` (e.g. `cat__cut.WAV`),
+  in `data/new voice/mispronounced/<speaker>/`. Then run
+  `python eval/mispronunciation_study_dev.py --src "data/new voice/mispronounced/adult" --speaker fr_a1`.
+  The recorder's own references are left out of the bank. A smoke test with stand-in clips (the
+  adult's "hat" scored as "cat") was accepted, so rhymes that differ by one sound are the case to watch.
+- **To improve further:**
+  - more single-word children (the biggest factor in both errors);
+  - one more recording for each unready word;
+  - re-checking the model layer on single words.
+
 ### Stage 5 (2026-10-16)
 - Tested: `tests/test_retry.py` and the Dart `retry_loop_test.dart` both pass the 7 shared scenarios
   (happy path, one retry, exhaustion, two flagged units, no listen audio, single-unit word, blend

@@ -28,6 +28,11 @@ scoring:
   n_std: 2.0               # accept if aggregate <= mean + n_std * std (leave-one-out over the bank)
   min_refs_for_bank_threshold: 4
   loo_unit: speaker        # leave out the whole speaker (approved 2026-10-15; spec value was token)
+  # Whole-word pass mark. shared = one per language, chosen on DEV single-word children so that at
+  # most 10% of correct attempts get "try again" (eval/results/threshold_study_dev.md, owner choice
+  # 2026-10-20). per_word = the learned range above (mean + n_std * std, fallback < min_refs).
+  threshold_mode: shared
+  shared_threshold: {si: 0.2713, en: 0.2700}
   fallback_threshold: 0.245 # dev-best single-reference threshold (eval/results/bank_study_dev.md); used when < 4 refs
 
 localisation:

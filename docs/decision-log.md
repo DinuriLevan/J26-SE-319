@@ -180,4 +180,22 @@ A running log of structural/technical decisions for the AkuRin shared foundation
 | The same three people recorded all 30 **English** words (90 clips). They use the same language-neutral ids in both languages (the first Sinhala import used `si_*` and was re-imported). File-name typos hart→hat and boy9→boy were owner-confirmed | Owner: same people. One id per person keeps leave-one-speaker-out ranges honest across takes |
 | The **adult `fr_a1` is the Listen voice** for both languages (`listen.preferred_speaker` in `settings.yaml`), so the Listen step, "Hear it" and syllable/letter taps all use it; for English it replaces adult_01 for Listen only. Any other adult is the fallback; children's clips are never played | Owner request; a real voice instead of text-to-speech |
 
+## 2026-10-20 — Speech: accuracy, one shared pass mark per language (Fernando B.P.L)
+
+| Decision | Rationale |
+|---|---|
+| Whole-word decisions use **one pass mark per language** (`scoring.threshold_mode: shared`, `shared_threshold: {si: 0.2713, en: 0.2700}`) instead of a range learned per word (mean + 2 sd). The per-word method stays available (`threshold_mode: per_word`) | Owner choice. Dev study (`ml/speech/eval/results/threshold_study_dev.md`): per-word ranges learned from 3–17 recordings were noisy. For single-word children, correct words rejected went 19.7% → 13.1% (si) and 28.3% → 10.0% (en); wrong words accepted went 10.9% → 7.5% (si) and 10.8% → 16.3% (en, nested estimate from one child; about 8% when chosen on both) |
+| The pass mark is the score below which **90% of correct attempts** fall (at most 10% false "try again"), chosen on **dev children recorded saying single words** (fr_c1, fr_c2) | Owner priority: fewer false "try again" (encouraging, non-punitive). The app hears single words; words cut from sentences score closer together and would set too strict a mark. Test children were not used |
+| Unit/blend pass marks in the remediation loop are unchanged (still learned per span) | Not studied yet |
+| A **mispronunciation test set** is prepared: `ml/speech/eval/mispronunciations.csv` lists one deliberate mispronunciation per word (categories TO VALIDATE WITH A SPEECH-LANGUAGE EXPERT, Sinhala forms TO REVIEW BY A NATIVE SPEAKER); `eval/mispronunciation_study_dev.py` scores the recordings with the recorder left out of the bank | Owner choice. "Wrong words" are far easier to reject than real mispronunciations, so accuracy on these is still unmeasured |
+
+## 2026-10-20 — Speech: sound steps are practice, not tests (Fernando B.P.L)
+
+| Decision | Rationale |
+|---|---|
+| "Say the sound" and "say them together" steps are **not scored**: the child says the sound, the parrot says "Good practice! Let's keep going." and the loop moves on. The recording is deleted, never uploaded. Only the whole word is scored. Switch: `scoreSoundSteps` in `speech_word_screen.dart` | Owner choice. On a real phone, single sounds passed 1 time in 41 tries (scores about 0.39–0.42 vs pass marks about 0.25), so a missed word became 6–9 rounds of "try again". Unit references are cut out of whole words (a "t" in "cat" is a 40 ms stop), while a child says a sound alone as "tuh" |
+| Flagged sounds are still put on the "practise later" list | Practising a sound once does not show it is mastered |
+| The retry loop (Python `src/retry.py` and Dart `retry_loop.dart`) gains `on_practised` / `onPractised`, with 2 new shared scenarios in `retry_cases.json` | The two ports stay identical |
+| To score sounds again, record **sounds said alone** by adults (e.g. "tuh", "kuh", "ම") as unit references and tune unit pass marks on them | Long-term fix |
+
 <!-- Add new entries below this line, newest at the bottom or top — pick one convention and stay consistent. -->

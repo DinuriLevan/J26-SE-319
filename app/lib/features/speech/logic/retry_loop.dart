@@ -15,6 +15,9 @@
 /// Up to [maxTries] attempts per step. A unit step that runs out of tries takes a gentle fallback
 /// (the unit is scheduled for later practice and the loop moves on). A full word that runs out of
 /// tries ends in FALLBACK. Nothing is punitive.
+///
+/// Practice mode ([onPractised]): a SAY_UNIT or BLEND step can be marked as practised without a
+/// score; the loop moves on as if it passed and schedules the flagged unit for later practice.
 library;
 
 enum StepKind { fullWord, listen, sayUnit, blend, reward, fallback }
@@ -157,6 +160,24 @@ class RetryLoop {
         spanStart: step.spanStart,
         spanEnd: step.spanEnd,
         tryNo: _stepTries + 1));
+  }
+
+  /// The child said the sound (SAY_UNIT) or blend (BLEND): practised, not scored.
+  RetryStep onPractised() {
+    final kind = step.kind;
+    if (kind != StepKind.sayUnit && kind != StepKind.blend) {
+      throw RetryStateError(
+          "Expected input for '${stepKindName(kind)}', got 'practised'.");
+    }
+    final u = step.unit!;
+    _emit('unit_practised', kind, u);
+    _schedule(u);
+    if (kind == StepKind.sayUnit && nUnits > 1) {
+      _stepTries = 0;
+      final (a, b) = _blendSpan(u);
+      return _go(RetryStep(StepKind.blend, unit: u, spanStart: a, spanEnd: b));
+    }
+    return _nextUnit();
   }
 
   (int, int) _blendSpan(int u) => u + 1 < nUnits ? (u, u + 1) : (u - 1, u);

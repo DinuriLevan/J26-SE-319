@@ -242,6 +242,12 @@ abstract class AppLocalizations {
   /// **'Let\'s try that once more.'**
   String get speechStepOnceMore;
 
+  /// No description provided for @speechGoodPractice.
+  ///
+  /// In en, this message translates to:
+  /// **'Good practice! Let\'s keep going.'**
+  String get speechGoodPractice;
+
   /// No description provided for @speechFallbackTitle.
   ///
   /// In en, this message translates to:

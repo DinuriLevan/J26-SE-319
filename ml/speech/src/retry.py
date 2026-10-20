@@ -12,7 +12,12 @@ Each step allows up to max_tries attempts. When a unit step runs out of tries, t
 fallback: the unit is scheduled for later practice and the loop moves on. When the full word runs out
 of tries, the word ends in FALLBACK (move on to the next word, units scheduled). Nothing is punitive.
 
-Events (dicts, in order): attempt_scored, unit_flagged, step_passed, word_mastered, fallback_taken.
+Practice mode (on_practised): a SAY_UNIT or BLEND step can instead be marked as practised without a
+score; the loop moves on as if it passed, and the flagged unit is scheduled for later practice. The
+app uses this while sounds said alone cannot be scored reliably (unit references are cut from words).
+
+Events (dicts, in order): attempt_scored, unit_flagged, step_passed, unit_practised, word_mastered,
+fallback_taken.
 
 The Flutter app has a Dart port (app/lib/features/speech/logic/retry_loop.dart). Both run the shared
 scenarios in ml/speech/tests/retry_cases.json, so they cannot drift apart.
@@ -133,6 +138,18 @@ class RetryLoop:
         if self._step_tries >= self.max_tries:
             return self._unit_fallback(u, BLEND)
         return self._go(Step(BLEND, u, self.step.span, self._step_tries + 1))
+
+    def on_practised(self) -> Step:
+        """The child said the sound (SAY_UNIT) or blend (BLEND); it is practised, not scored."""
+        if self.step.kind not in (SAY_UNIT, BLEND):
+            raise RetryStateError(f"Expected input for {self.step.kind!r}, got 'practised'.")
+        kind, u = self.step.kind, self.step.unit
+        self._emit("unit_practised", kind, u)
+        self._schedule(u)
+        if kind == SAY_UNIT and self.n_units > 1:
+            self._step_tries = 0
+            return self._go(Step(BLEND, u, self._blend_span(u), 1))
+        return self._next_unit()
 
     # ---- internals -----------------------------------------------------------------------------
 
