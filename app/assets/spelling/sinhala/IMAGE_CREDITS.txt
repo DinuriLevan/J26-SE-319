@@ -1,0 +1,4 @@
+Picture images: Twemoji (https://github.com/jdecked/twemoji), version 15.0.0
+Graphics licensed under CC-BY 4.0 (https://creativecommons.org/licenses/by/4.0/).
+Copyright Twitter, Inc. and other contributors.
+Show this credit in the app's About / Credits screen.

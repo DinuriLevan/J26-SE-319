@@ -1,0 +1,86 @@
+{
+  "note": "SIMULATED DATA — pipeline validation only. Final results will come from pilot data.",
+  "evaluation": "Grouped 5-fold cross-validation by child, repeated 3 times (15 test folds). Values are mean and std over the test folds.",
+  "random_guess_f1_macro": 0.333,
+  "sinhala": {
+    "chosen_on": "data/sim_si_labelled.csv",
+    "chosen_model": "XGBoost",
+    "models": [
+      {
+        "model": "LogisticRegression",
+        "feature_set": "B",
+        "accuracy": { "mean": 0.599, "std": 0.010 },
+        "precision_macro": { "mean": 0.551, "std": 0.007 },
+        "recall_macro": { "mean": 0.569, "std": 0.008 },
+        "f1_macro": { "mean": 0.558, "std": 0.007 },
+        "f1_macro_feature_set_A": 0.496
+      },
+      {
+        "model": "RandomForest",
+        "feature_set": "B",
+        "accuracy": { "mean": 0.636, "std": 0.013 },
+        "precision_macro": { "mean": 0.557, "std": 0.010 },
+        "recall_macro": { "mean": 0.580, "std": 0.008 },
+        "f1_macro": { "mean": 0.559, "std": 0.008 },
+        "f1_macro_feature_set_A": 0.516
+      },
+      {
+        "model": "XGBoost",
+        "feature_set": "B",
+        "accuracy": { "mean": 0.624, "std": 0.011 },
+        "precision_macro": { "mean": 0.559, "std": 0.009 },
+        "recall_macro": { "mean": 0.580, "std": 0.010 },
+        "f1_macro": { "mean": 0.565, "std": 0.008 },
+        "f1_macro_feature_set_A": 0.526,
+        "params": { "max_depth": 3, "min_child_weight": 1, "reg_lambda": 1, "n_estimators": 150, "learning_rate": 0.1 },
+        "per_class_first_repeat": {
+          "easy": { "precision": 0.739, "recall": 0.768, "f1": 0.753, "rows": 9406 },
+          "medium": { "precision": 0.333, "recall": 0.248, "f1": 0.284, "rows": 4672 },
+          "hard": { "precision": 0.608, "recall": 0.727, "f1": 0.662, "rows": 4210 }
+        },
+        "confusion_matrix_first_repeat": {
+          "labels": ["easy", "medium", "hard"],
+          "rows_true_cols_predicted": [
+            [7221, 1654, 531],
+            [2071, 1158, 1443],
+            [484, 665, 3061]
+          ]
+        }
+      }
+    ]
+  },
+  "english": {
+    "chosen_on": "data/sim_labelled.csv",
+    "chosen_model": "XGBoost",
+    "models": [
+      {
+        "model": "LogisticRegression",
+        "feature_set": "B",
+        "accuracy": { "mean": 0.544, "std": 0.015 },
+        "precision_macro": { "mean": 0.499, "std": 0.011 },
+        "recall_macro": { "mean": 0.518, "std": 0.016 },
+        "f1_macro": { "mean": 0.506, "std": 0.012 },
+        "f1_macro_feature_set_A": 0.468
+      },
+      {
+        "model": "RandomForest",
+        "feature_set": "B",
+        "accuracy": { "mean": 0.575, "std": 0.023 },
+        "precision_macro": { "mean": 0.518, "std": 0.018 },
+        "recall_macro": { "mean": 0.522, "std": 0.019 },
+        "f1_macro": { "mean": 0.516, "std": 0.019 },
+        "f1_macro_feature_set_A": 0.480
+      },
+      {
+        "model": "XGBoost",
+        "feature_set": "B",
+        "accuracy": { "mean": 0.549, "std": 0.018 },
+        "precision_macro": { "mean": 0.515, "std": 0.014 },
+        "recall_macro": { "mean": 0.525, "std": 0.016 },
+        "f1_macro": { "mean": 0.519, "std": 0.014 },
+        "f1_macro_feature_set_A": 0.500,
+        "params": { "max_depth": 2, "min_child_weight": 10, "reg_lambda": 10 }
+      }
+    ]
+  }
+}

@@ -1,0 +1,176 @@
+"""Retrains the best model on all data and exports it to the app (Dart).
+
+1. Reads results/best_model.json (the chosen model: XGBoost, feature set B,
+   and its settings).
+2. Trains that ONE model on ALL labelled rows — a single fit, seconds.
+   (--retune re-runs its small grid search first.)
+3. Writes, into the Flutter app:
+     lib/features/spelling/model/difficulty_model_m2cgen.dart  the model as plain Dart (m2cgen)
+     assets/spelling/model/feature_order.json                  feature names in input order
+     assets/spelling/model/preprocessing.json                  recipes, scaling, classes, output type
+     test/features/spelling/fixtures/difficulty_parity.json    50 sample rows + Python probabilities
+4. Checks the generated code against the model in Python, then runs the
+   Dart parity test (flutter test …/difficulty_parity_test.dart) if Flutter
+   is installed: Python and Dart must give the same class and probabilities.
+
+Usage:  python spell_export.py --data data/sim_labelled.csv
+        python spell_export.py --lang si --data data/sim_si_labelled.csv     # Sinhala game:
+          results/si_best_model.json -> sinhala/model/difficulty_model_si_m2cgen.dart,
+          assets/spelling/model_si/*.json, fixtures/difficulty_parity_si.json
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import shutil
+import subprocess
+from datetime import datetime, timezone
+from pathlib import Path
+
+import m2cgen as m2c
+import numpy as np
+import pandas as pd
+
+from spell_common import APP, CLASSES, LANGS, RESULTS, banner_for, read_features_csv, write_json
+from spell_features import build_matrix, recipes
+from sklearn.utils.class_weight import compute_sample_weight
+
+from spell_train import fit_tuned, make_model
+
+PARITY_ROWS = 50
+
+
+def softmax(v: np.ndarray) -> np.ndarray:
+    e = np.exp(v - v.max())
+    return e / e.sum()
+
+
+def json_value(v):
+    if isinstance(v, (bool, np.bool_)):
+        return bool(v)
+    if isinstance(v, (np.integer,)):
+        return int(v)
+    if isinstance(v, (float, np.floating)):
+        return None if np.isnan(v) else float(v)
+    return v
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--data", default="data/sim_labelled.csv")
+    ap.add_argument("--retune", action="store_true", help="re-run the small grid search instead of using the saved settings")
+    ap.add_argument("--lang", choices=["en", "si"], default="en")
+    args = ap.parse_args()
+    data = Path(args.data)
+    banner = banner_for(data)
+    lang = LANGS[args.lang]
+    APP_MODEL_DART, APP_MODEL_ASSETS, APP_PARITY_FIXTURE = lang["model_dart"], lang["assets"], lang["fixture"]
+    best_path = RESULTS / lang["best"]
+    best = json.loads(best_path.read_text(encoding="utf-8"))
+    name, fs = best["model"], best["feature_set"]
+
+    df = read_features_csv(data).reset_index(drop=True)
+    rs = recipes(fs, lang=args.lang)
+    X = build_matrix(df, rs)
+    y = df["label"].map({c: i for i, c in enumerate(CLASSES)}).to_numpy()
+    if args.retune or not best.get("params"):
+        model, params = fit_tuned(name, X, y, df["childId"].astype(str).to_numpy())
+    else:
+        # Fast path: one fit with the settings already chosen by cross-validation.
+        params = best["params"]
+        model, _ = make_model(name)
+        model.set_params(**params)
+        fit_params = {"sample_weight": compute_sample_weight("balanced", y)} if name == "XGBoost" else {}
+        model.fit(X, y, **fit_params)
+    best["params"] = params
+    write_json(best, best_path)
+    print(f"trained {name} / feature set {fs} on {len(df)} rows; params {params}")
+
+    # Logistic regression is a scaler + model pipeline: the scaling goes in
+    # preprocessing.json and m2cgen exports the bare model (which outputs
+    # logits, so the app applies softmax).
+    scale, output, core = None, "probabilities", model
+    if name == "LogisticRegression":
+        scaler = model.named_steps["scale"]
+        core = model.named_steps["lr"]
+        scale = {"mean": scaler.mean_.tolist(), "std": scaler.scale_.tolist()}
+        output = "logits"
+
+    def python_proba(x: np.ndarray) -> np.ndarray:
+        return model.predict_proba(x.reshape(1, -1))[0]
+
+    # The generated code must match the model before it goes to the app.
+    ns: dict = {}
+    exec(m2c.export_to_python(core), ns)  # noqa: S102 - our own generated code
+
+    def generated_proba(x: np.ndarray) -> np.ndarray:
+        v = x if scale is None else (x - np.array(scale["mean"])) / np.array(scale["std"])
+        out = np.array(ns["score"](list(v)))
+        return softmax(out) if output == "logits" else out
+
+    sample_idx = np.random.default_rng(0).choice(len(df), size=min(PARITY_ROWS, len(df)), replace=False)
+    worst = max(np.abs(generated_proba(X[i]) - python_proba(X[i])).max() for i in sample_idx)
+    print(f"generated code vs model: max probability difference {worst:.2e}")
+    assert worst < 1e-6, "m2cgen output does not match the trained model"
+
+    stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    dart = m2c.export_to_dart(core).replace("List<double> score(", f"List<double> {lang['score_fn']}(", 1)
+    header = (
+        "// GENERATED by ml/spelling/spell_export.py with m2cgen — do not edit by hand.\n"
+        f"// Model: {name}, feature set {fs}, trained {stamp} on {data.name} ({len(df)} rows).\n"
+        f"// {banner}\n"
+        f"// Input order: {APP_MODEL_ASSETS.relative_to(APP).as_posix()}/feature_order.json; preprocessing: preprocessing.json.\n"
+        "// ignore_for_file: type=lint\n\n"
+    )
+    APP_MODEL_DART.parent.mkdir(parents=True, exist_ok=True)
+    APP_MODEL_DART.write_text(header + dart, encoding="utf-8")
+
+    names = [r["name"] for r in rs]
+    write_json(names, APP_MODEL_ASSETS / "feature_order.json")
+    write_json({
+        "note": banner,
+        "model": name,
+        "feature_set": fs,
+        "trained_on": data.name,
+        "rows": int(len(df)),
+        "created": stamp,
+        "params": params,
+        "classes": CLASSES,
+        "output": output,
+        "scale": scale,
+        "recipes": rs,
+    }, APP_MODEL_ASSETS / "preprocessing.json")
+
+    sources = sorted({r["source"] for r in rs})
+    fixture = {
+        "note": "Python predictions for the Dart parity test (spell_export.py). " + banner,
+        "classes": CLASSES,
+        "rows": [
+            {
+                "values": {s: json_value(df.loc[i, s]) for s in sources},
+                "probs": python_proba(X[i]).tolist(),
+                "label": CLASSES[int(python_proba(X[i]).argmax())],
+            }
+            for i in sample_idx
+        ],
+    }
+    write_json(fixture, APP_PARITY_FIXTURE)
+    print(f"wrote {APP_MODEL_DART.relative_to(APP)}, {APP_MODEL_ASSETS.relative_to(APP)}/*.json, "
+          f"{APP_PARITY_FIXTURE.relative_to(APP)}")
+
+    flutter = shutil.which("flutter")
+    if flutter is None:
+        print(f"Flutter not found: run `flutter test {lang['parity_test']}` in app/.")
+        return
+    result = subprocess.run(
+        [flutter, "test", lang["parity_test"]],
+        cwd=APP, capture_output=True, text=True, shell=False,
+    )
+    tail = (result.stdout or "").strip().splitlines()[-3:]
+    print("Dart parity test:", "PASSED" if result.returncode == 0 else "FAILED", *tail, sep="\n  ")
+    if result.returncode != 0:
+        raise SystemExit(1)
+
+
+if __name__ == "__main__":
+    main()

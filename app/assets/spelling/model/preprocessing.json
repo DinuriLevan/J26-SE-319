@@ -1,0 +1,399 @@
+{
+  "note": "SIMULATED DATA — pipeline validation only. Final results will come from pilot data.",
+  "model": "XGBoost",
+  "feature_set": "B",
+  "trained_on": "sim_labelled.csv",
+  "rows": 17726,
+  "created": "2026-10-16T15:47:05+00:00",
+  "params": {
+    "max_depth": 2,
+    "min_child_weight": 10,
+    "reg_lambda": 10
+  },
+  "classes": [
+    "easy",
+    "medium",
+    "hard"
+  ],
+  "output": "probabilities",
+  "scale": null,
+  "recipes": [
+    {
+      "name": "final_correct",
+      "kind": "bool",
+      "source": "final_correct"
+    },
+    {
+      "name": "correct_first_try",
+      "kind": "bool",
+      "source": "correct_first_try"
+    },
+    {
+      "name": "attempts",
+      "kind": "num",
+      "source": "attempts"
+    },
+    {
+      "name": "reversal",
+      "kind": "num",
+      "source": "reversal"
+    },
+    {
+      "name": "vowel_sub",
+      "kind": "num",
+      "source": "vowel_sub"
+    },
+    {
+      "name": "other_sub",
+      "kind": "num",
+      "source": "other_sub"
+    },
+    {
+      "name": "omission",
+      "kind": "num",
+      "source": "omission"
+    },
+    {
+      "name": "insertion",
+      "kind": "num",
+      "source": "insertion"
+    },
+    {
+      "name": "transposition",
+      "kind": "num",
+      "source": "transposition"
+    },
+    {
+      "name": "edit_distance",
+      "kind": "num",
+      "source": "edit_distance"
+    },
+    {
+      "name": "skill=sight_words",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "sight_words"
+    },
+    {
+      "name": "skill=short_a",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "short_a"
+    },
+    {
+      "name": "skill=short_e",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "short_e"
+    },
+    {
+      "name": "skill=short_i",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "short_i"
+    },
+    {
+      "name": "skill=short_o",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "short_o"
+    },
+    {
+      "name": "skill=short_u",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "short_u"
+    },
+    {
+      "name": "skill=digraph_sh",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "digraph_sh"
+    },
+    {
+      "name": "skill=digraph_ch",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "digraph_ch"
+    },
+    {
+      "name": "skill=digraph_th",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "digraph_th"
+    },
+    {
+      "name": "skill=ending_ck",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "ending_ck"
+    },
+    {
+      "name": "skill=ending_ng_nk",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "ending_ng_nk"
+    },
+    {
+      "name": "skill=double_ff_ll_ss_zz",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "double_ff_ll_ss_zz"
+    },
+    {
+      "name": "skill=blend_initial",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "blend_initial"
+    },
+    {
+      "name": "skill=blend_final",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "blend_final"
+    },
+    {
+      "name": "skill=magic_e_a",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "magic_e_a"
+    },
+    {
+      "name": "skill=magic_e_i",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "magic_e_i"
+    },
+    {
+      "name": "skill=magic_e_o",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "magic_e_o"
+    },
+    {
+      "name": "skill=magic_e_u",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "magic_e_u"
+    },
+    {
+      "name": "skill=y_long_i",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "y_long_i"
+    },
+    {
+      "name": "skill=vowel_ee",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "vowel_ee"
+    },
+    {
+      "name": "skill=vowel_ea",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "vowel_ea"
+    },
+    {
+      "name": "skill=vowel_ai_ay",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "vowel_ai_ay"
+    },
+    {
+      "name": "skill=vowel_oa_ow",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "vowel_oa_ow"
+    },
+    {
+      "name": "skill=vowel_oo_long",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "vowel_oo_long"
+    },
+    {
+      "name": "skill=vowel_oo_short",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "vowel_oo_short"
+    },
+    {
+      "name": "skill=vowel_igh",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "vowel_igh"
+    },
+    {
+      "name": "skill=vowel_ue_ew",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "vowel_ue_ew"
+    },
+    {
+      "name": "skill=y_long_e",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "y_long_e"
+    },
+    {
+      "name": "skill=r_ar",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "r_ar"
+    },
+    {
+      "name": "skill=r_or",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "r_or"
+    },
+    {
+      "name": "skill=r_er_ir_ur",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "r_er_ir_ur"
+    },
+    {
+      "name": "skill=r_air_ear",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "r_air_ear"
+    },
+    {
+      "name": "skill=diphthong_ou_ow",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "diphthong_ou_ow"
+    },
+    {
+      "name": "skill=diphthong_oi_oy",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "diphthong_oi_oy"
+    },
+    {
+      "name": "skill=suffix_s_es",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "suffix_s_es"
+    },
+    {
+      "name": "skill=suffix_ing",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "suffix_ing"
+    },
+    {
+      "name": "skill=two_syllable",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "two_syllable"
+    },
+    {
+      "name": "skill=longer_words",
+      "kind": "onehot",
+      "source": "phonics_skill",
+      "value": "longer_words"
+    },
+    {
+      "name": "skill_stage",
+      "kind": "num",
+      "source": "skill_stage"
+    },
+    {
+      "name": "difficulty",
+      "kind": "num",
+      "source": "difficulty"
+    },
+    {
+      "name": "word_length",
+      "kind": "length",
+      "source": "word"
+    },
+    {
+      "name": "has_bdpq",
+      "kind": "has_bdpq",
+      "source": "word"
+    },
+    {
+      "name": "bkt_mastery_before",
+      "kind": "num",
+      "source": "p_before",
+      "default": 0.1
+    },
+    {
+      "name": "hesitation_ratio",
+      "kind": "num",
+      "source": "hesitation_ratio",
+      "clip": [
+        0,
+        10
+      ]
+    },
+    {
+      "name": "pause_ratio",
+      "kind": "num",
+      "source": "pause_ratio",
+      "clip": [
+        0,
+        10
+      ]
+    },
+    {
+      "name": "log_first_input_ms",
+      "kind": "log1p",
+      "source": "first_input_ms"
+    },
+    {
+      "name": "log_total_ms",
+      "kind": "log1p",
+      "source": "total_ms"
+    },
+    {
+      "name": "corrections",
+      "kind": "num",
+      "source": "corrections"
+    },
+    {
+      "name": "motor_slips",
+      "kind": "num",
+      "source": "motor_slips"
+    },
+    {
+      "name": "replays",
+      "kind": "num",
+      "source": "replays"
+    },
+    {
+      "name": "n_insertions",
+      "kind": "num",
+      "source": "n_insertions"
+    },
+    {
+      "name": "n_deletions",
+      "kind": "num",
+      "source": "n_deletions"
+    },
+    {
+      "name": "n_replacements",
+      "kind": "num",
+      "source": "n_replacements"
+    },
+    {
+      "name": "n_reorders",
+      "kind": "num",
+      "source": "n_reorders"
+    },
+    {
+      "name": "distractor_picks",
+      "kind": "num",
+      "source": "distractor_picks"
+    },
+    {
+      "name": "answer_length_diff",
+      "kind": "num",
+      "source": "answer_length_diff"
+    }
+  ]
+}
