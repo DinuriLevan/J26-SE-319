@@ -1,0 +1,119 @@
+{
+ "stages": [
+  {
+   "skill": "s01_no_pilla",
+   "stage": 1,
+   "label": "Letters only (no pilla)"
+  },
+  {
+   "skill": "s02_aelapilla",
+   "stage": 2,
+   "label": "ඇලපිල්ල ා"
+  },
+  {
+   "skill": "s03_ispilla",
+   "stage": 3,
+   "label": "ඉස්පිල්ල ි"
+  },
+  {
+   "skill": "s04_ispilla_dirgha",
+   "stage": 4,
+   "label": "දීර්ඝ ඉස්පිල්ල ී"
+  },
+  {
+   "skill": "s05_papilla",
+   "stage": 5,
+   "label": "පාපිල්ල ු"
+  },
+  {
+   "skill": "s06_papilla_dirgha",
+   "stage": 6,
+   "label": "දීර්ඝ පාපිල්ල ූ"
+  },
+  {
+   "skill": "s07_aedaya",
+   "stage": 7,
+   "label": "ඇදය ැ"
+  },
+  {
+   "skill": "s08_aedaya_dirgha",
+   "stage": 8,
+   "label": "දීර්ඝ ඇදය ෑ"
+  },
+  {
+   "skill": "s09_kombuwa",
+   "stage": 9,
+   "label": "කොම්බුව ෙ"
+  },
+  {
+   "skill": "s10_kombuwa_dirgha",
+   "stage": 10,
+   "label": "කොම්බුව + හල් ේ"
+  },
+  {
+   "skill": "s11_kombu_aela",
+   "stage": 11,
+   "label": "කොම්බුව + ඇලපිල්ල ො"
+  },
+  {
+   "skill": "s12_kombu_aela_dirgha",
+   "stage": 12,
+   "label": "ෝ"
+  },
+  {
+   "skill": "s13_hal",
+   "stage": 13,
+   "label": "හල්කිරීම ්"
+  },
+  {
+   "skill": "s14_bindu",
+   "stage": 14,
+   "label": "බින්දුව ං"
+  },
+  {
+   "skill": "s15_sanyaka",
+   "stage": 15,
+   "label": "සඤ්ඤක අකුරු ඟ ඳ ඬ ඹ"
+  },
+  {
+   "skill": "s16_mahaprana",
+   "stage": 16,
+   "label": "මහාප්‍රාණ අකුරු"
+  },
+  {
+   "skill": "s17_murdhaja",
+   "stage": 17,
+   "label": "මූර්ධජ ණ ළ ශ ෂ"
+  },
+  {
+   "skill": "s18_rare_pilla",
+   "stage": 18,
+   "label": "ෛ ෞ ෘ"
+  },
+  {
+   "skill": "s19_conjunct",
+   "stage": 19,
+   "label": "යංශය / රකාරාංශය"
+  }
+ ],
+ "pilla_names": {
+  "ා": "ඇලපිල්ල",
+  "ැ": "ඇදය",
+  "ෑ": "දීර්ඝ ඇදය",
+  "ි": "ඉස්පිල්ල",
+  "ී": "දීර්ඝ ඉස්පිල්ල",
+  "ු": "පාපිල්ල",
+  "ූ": "දීර්ඝ පාපිල්ල",
+  "ෘ": "ගයනුකිත්ත",
+  "ෙ": "කොම්බුව",
+  "ේ": "කොම්බුව + හල්කිරීම",
+  "ෛ": "කොම්බු දෙක",
+  "ො": "කොම්බුව + ඇලපිල්ල",
+  "ෝ": "කොම්බුව + ඇලපිල්ල + හල්කිරීම",
+  "ෞ": "කොම්බුව + ගයනුකිත්ත",
+  "්": "හල්කිරීම",
+  "ං": "බින්දුව",
+  "්‍ය": "යංශය",
+  "්‍ර": "රකාරාංශය"
+ }
+}
