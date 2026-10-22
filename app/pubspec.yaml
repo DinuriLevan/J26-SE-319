@@ -50,6 +50,7 @@ flutter:
   assets:
     - assets/avatars/
     - assets/branding/
+    - assets/models/math_memory/
 
   fonts:
     - family: Lexend

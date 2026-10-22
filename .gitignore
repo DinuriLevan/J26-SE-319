@@ -11,6 +11,7 @@ backend/*.egg-info/
 backend/.venv/
 backend/venv/
 backend/.pytest_cache/
+ml/**/__pycache__/
 
 # --- Flutter / app ---
 app/.dart_tool/

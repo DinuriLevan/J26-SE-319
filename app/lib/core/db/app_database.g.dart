@@ -3,20 +3,24 @@
 part of 'app_database.dart';
 
 // ignore_for_file: type=lint
-class $ChildProfilesTable extends ChildProfiles with TableInfo<$ChildProfilesTable, ChildProfile> {
+class $ChildProfilesTable extends ChildProfiles
+    with TableInfo<$ChildProfilesTable, ChildProfile> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $ChildProfilesTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<String> id = GeneratedColumn<String>('id', aliasedName, false,
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
-  late final GeneratedColumn<String> name = GeneratedColumn<String>('name', aliasedName, false,
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _avatarIdMeta = const VerificationMeta('avatarId');
+  static const VerificationMeta _avatarIdMeta =
+      const VerificationMeta('avatarId');
   @override
   late final GeneratedColumn<String> avatarId = GeneratedColumn<String>(
       'avatar_id', aliasedName, false,
@@ -24,20 +28,25 @@ class $ChildProfilesTable extends ChildProfiles with TableInfo<$ChildProfilesTab
   static const VerificationMeta _preferredLanguageMeta =
       const VerificationMeta('preferredLanguage');
   @override
-  late final GeneratedColumn<String> preferredLanguage = GeneratedColumn<String>(
-      'preferred_language', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+  late final GeneratedColumn<String> preferredLanguage =
+      GeneratedColumn<String>('preferred_language', aliasedName, false,
+          type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _gradeMeta = const VerificationMeta('grade');
   @override
-  late final GeneratedColumn<int> grade = GeneratedColumn<int>('grade', aliasedName, true,
+  late final GeneratedColumn<int> grade = GeneratedColumn<int>(
+      'grade', aliasedName, true,
       type: DriftSqlType.int, requiredDuringInsert: false);
-  static const VerificationMeta _createdAtMeta = const VerificationMeta('createdAt');
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
       'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime, requiredDuringInsert: false, defaultValue: currentDateAndTime);
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
   @override
-  List<GeneratedColumn> get $columns => [id, name, avatarId, preferredLanguage, grade, createdAt];
+  List<GeneratedColumn> get $columns =>
+      [id, name, avatarId, preferredLanguage, grade, createdAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -54,13 +63,14 @@ class $ChildProfilesTable extends ChildProfiles with TableInfo<$ChildProfilesTab
       context.missing(_idMeta);
     }
     if (data.containsKey('name')) {
-      context.handle(_nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
     } else if (isInserting) {
       context.missing(_nameMeta);
     }
     if (data.containsKey('avatar_id')) {
-      context.handle(
-          _avatarIdMeta, avatarId.isAcceptableOrUnknown(data['avatar_id']!, _avatarIdMeta));
+      context.handle(_avatarIdMeta,
+          avatarId.isAcceptableOrUnknown(data['avatar_id']!, _avatarIdMeta));
     } else if (isInserting) {
       context.missing(_avatarIdMeta);
     }
@@ -73,11 +83,12 @@ class $ChildProfilesTable extends ChildProfiles with TableInfo<$ChildProfilesTab
       context.missing(_preferredLanguageMeta);
     }
     if (data.containsKey('grade')) {
-      context.handle(_gradeMeta, grade.isAcceptableOrUnknown(data['grade']!, _gradeMeta));
+      context.handle(
+          _gradeMeta, grade.isAcceptableOrUnknown(data['grade']!, _gradeMeta));
     }
     if (data.containsKey('created_at')) {
-      context.handle(
-          _createdAtMeta, createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
     }
     return context;
   }
@@ -88,13 +99,16 @@ class $ChildProfilesTable extends ChildProfiles with TableInfo<$ChildProfilesTab
   ChildProfile map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ChildProfile(
-      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
-      name: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
       avatarId: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}avatar_id'])!,
-      preferredLanguage: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}preferred_language'])!,
-      grade: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}grade']),
+      preferredLanguage: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}preferred_language'])!,
+      grade: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}grade']),
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
     );
@@ -140,12 +154,14 @@ class ChildProfile extends DataClass implements Insertable<ChildProfile> {
       name: Value(name),
       avatarId: Value(avatarId),
       preferredLanguage: Value(preferredLanguage),
-      grade: grade == null && nullToAbsent ? const Value.absent() : Value(grade),
+      grade:
+          grade == null && nullToAbsent ? const Value.absent() : Value(grade),
       createdAt: Value(createdAt),
     );
   }
 
-  factory ChildProfile.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+  factory ChildProfile.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ChildProfile(
       id: serializer.fromJson<String>(json['id']),
@@ -189,8 +205,9 @@ class ChildProfile extends DataClass implements Insertable<ChildProfile> {
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       avatarId: data.avatarId.present ? data.avatarId.value : this.avatarId,
-      preferredLanguage:
-          data.preferredLanguage.present ? data.preferredLanguage.value : this.preferredLanguage,
+      preferredLanguage: data.preferredLanguage.present
+          ? data.preferredLanguage.value
+          : this.preferredLanguage,
       grade: data.grade.present ? data.grade.value : this.grade,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
@@ -210,7 +227,8 @@ class ChildProfile extends DataClass implements Insertable<ChildProfile> {
   }
 
   @override
-  int get hashCode => Object.hash(id, name, avatarId, preferredLanguage, grade, createdAt);
+  int get hashCode =>
+      Object.hash(id, name, avatarId, preferredLanguage, grade, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -341,42 +359,53 @@ class $PendingActivityResultsTable extends PendingActivityResults
   $PendingActivityResultsTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>('id', aliasedName, false,
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
       hasAutoIncrement: true,
       type: DriftSqlType.int,
       requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
-  static const VerificationMeta _childIdMeta = const VerificationMeta('childId');
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _childIdMeta =
+      const VerificationMeta('childId');
   @override
   late final GeneratedColumn<String> childId = GeneratedColumn<String>(
       'child_id', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _componentNameMeta = const VerificationMeta('componentName');
+  static const VerificationMeta _componentNameMeta =
+      const VerificationMeta('componentName');
   @override
   late final GeneratedColumn<String> componentName = GeneratedColumn<String>(
       'component_name', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _activityIdMeta = const VerificationMeta('activityId');
+  static const VerificationMeta _activityIdMeta =
+      const VerificationMeta('activityId');
   @override
   late final GeneratedColumn<String> activityId = GeneratedColumn<String>(
       'activity_id', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _resultPayloadMeta = const VerificationMeta('resultPayload');
+  static const VerificationMeta _resultPayloadMeta =
+      const VerificationMeta('resultPayload');
   @override
   late final GeneratedColumn<String> resultPayload = GeneratedColumn<String>(
       'result_payload', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _createdAtMeta = const VerificationMeta('createdAt');
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
       'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime, requiredDuringInsert: false, defaultValue: currentDateAndTime);
-  static const VerificationMeta _syncedAtMeta = const VerificationMeta('syncedAt');
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _syncedAtMeta =
+      const VerificationMeta('syncedAt');
   @override
   late final GeneratedColumn<DateTime> syncedAt = GeneratedColumn<DateTime>(
       'synced_at', aliasedName, true,
       type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  static const VerificationMeta _syncStatusMeta = const VerificationMeta('syncStatus');
+  static const VerificationMeta _syncStatusMeta =
+      const VerificationMeta('syncStatus');
   @override
   late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
       'sync_status', aliasedName, false,
@@ -384,15 +413,24 @@ class $PendingActivityResultsTable extends PendingActivityResults
       requiredDuringInsert: false,
       defaultValue: const Constant('pending'));
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, childId, componentName, activityId, resultPayload, createdAt, syncedAt, syncStatus];
+  List<GeneratedColumn> get $columns => [
+        id,
+        childId,
+        componentName,
+        activityId,
+        resultPayload,
+        createdAt,
+        syncedAt,
+        syncStatus
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'pending_activity_results';
   @override
-  VerificationContext validateIntegrity(Insertable<PendingActivityResult> instance,
+  VerificationContext validateIntegrity(
+      Insertable<PendingActivityResult> instance,
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
@@ -400,39 +438,48 @@ class $PendingActivityResultsTable extends PendingActivityResults
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('child_id')) {
-      context.handle(_childIdMeta, childId.isAcceptableOrUnknown(data['child_id']!, _childIdMeta));
+      context.handle(_childIdMeta,
+          childId.isAcceptableOrUnknown(data['child_id']!, _childIdMeta));
     } else if (isInserting) {
       context.missing(_childIdMeta);
     }
     if (data.containsKey('component_name')) {
-      context.handle(_componentNameMeta,
-          componentName.isAcceptableOrUnknown(data['component_name']!, _componentNameMeta));
+      context.handle(
+          _componentNameMeta,
+          componentName.isAcceptableOrUnknown(
+              data['component_name']!, _componentNameMeta));
     } else if (isInserting) {
       context.missing(_componentNameMeta);
     }
     if (data.containsKey('activity_id')) {
       context.handle(
-          _activityIdMeta, activityId.isAcceptableOrUnknown(data['activity_id']!, _activityIdMeta));
+          _activityIdMeta,
+          activityId.isAcceptableOrUnknown(
+              data['activity_id']!, _activityIdMeta));
     } else if (isInserting) {
       context.missing(_activityIdMeta);
     }
     if (data.containsKey('result_payload')) {
-      context.handle(_resultPayloadMeta,
-          resultPayload.isAcceptableOrUnknown(data['result_payload']!, _resultPayloadMeta));
+      context.handle(
+          _resultPayloadMeta,
+          resultPayload.isAcceptableOrUnknown(
+              data['result_payload']!, _resultPayloadMeta));
     } else if (isInserting) {
       context.missing(_resultPayloadMeta);
     }
     if (data.containsKey('created_at')) {
-      context.handle(
-          _createdAtMeta, createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
     }
     if (data.containsKey('synced_at')) {
-      context.handle(
-          _syncedAtMeta, syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta));
+      context.handle(_syncedAtMeta,
+          syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta));
     }
     if (data.containsKey('sync_status')) {
       context.handle(
-          _syncStatusMeta, syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta));
+          _syncStatusMeta,
+          syncStatus.isAcceptableOrUnknown(
+              data['sync_status']!, _syncStatusMeta));
     }
     return context;
   }
@@ -443,7 +490,8 @@ class $PendingActivityResultsTable extends PendingActivityResults
   PendingActivityResult map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return PendingActivityResult(
-      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       childId: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}child_id'])!,
       componentName: attachedDatabase.typeMapping
@@ -467,7 +515,8 @@ class $PendingActivityResultsTable extends PendingActivityResults
   }
 }
 
-class PendingActivityResult extends DataClass implements Insertable<PendingActivityResult> {
+class PendingActivityResult extends DataClass
+    implements Insertable<PendingActivityResult> {
   final int id;
   final String childId;
   final String componentName;
@@ -509,12 +558,15 @@ class PendingActivityResult extends DataClass implements Insertable<PendingActiv
       activityId: Value(activityId),
       resultPayload: Value(resultPayload),
       createdAt: Value(createdAt),
-      syncedAt: syncedAt == null && nullToAbsent ? const Value.absent() : Value(syncedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
       syncStatus: Value(syncStatus),
     );
   }
 
-  factory PendingActivityResult.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+  factory PendingActivityResult.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return PendingActivityResult(
       id: serializer.fromJson<int>(json['id']),
@@ -561,16 +613,23 @@ class PendingActivityResult extends DataClass implements Insertable<PendingActiv
         syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
         syncStatus: syncStatus ?? this.syncStatus,
       );
-  PendingActivityResult copyWithCompanion(PendingActivityResultsCompanion data) {
+  PendingActivityResult copyWithCompanion(
+      PendingActivityResultsCompanion data) {
     return PendingActivityResult(
       id: data.id.present ? data.id.value : this.id,
       childId: data.childId.present ? data.childId.value : this.childId,
-      componentName: data.componentName.present ? data.componentName.value : this.componentName,
-      activityId: data.activityId.present ? data.activityId.value : this.activityId,
-      resultPayload: data.resultPayload.present ? data.resultPayload.value : this.resultPayload,
+      componentName: data.componentName.present
+          ? data.componentName.value
+          : this.componentName,
+      activityId:
+          data.activityId.present ? data.activityId.value : this.activityId,
+      resultPayload: data.resultPayload.present
+          ? data.resultPayload.value
+          : this.resultPayload,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
-      syncStatus: data.syncStatus.present ? data.syncStatus.value : this.syncStatus,
+      syncStatus:
+          data.syncStatus.present ? data.syncStatus.value : this.syncStatus,
     );
   }
 
@@ -590,8 +649,8 @@ class PendingActivityResult extends DataClass implements Insertable<PendingActiv
   }
 
   @override
-  int get hashCode => Object.hash(
-      id, childId, componentName, activityId, resultPayload, createdAt, syncedAt, syncStatus);
+  int get hashCode => Object.hash(id, childId, componentName, activityId,
+      resultPayload, createdAt, syncedAt, syncStatus);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -606,7 +665,8 @@ class PendingActivityResult extends DataClass implements Insertable<PendingActiv
           other.syncStatus == this.syncStatus);
 }
 
-class PendingActivityResultsCompanion extends UpdateCompanion<PendingActivityResult> {
+class PendingActivityResultsCompanion
+    extends UpdateCompanion<PendingActivityResult> {
   final Value<int> id;
   final Value<String> childId;
   final Value<String> componentName;
@@ -727,23 +787,316 @@ class PendingActivityResultsCompanion extends UpdateCompanion<PendingActivityRes
   }
 }
 
+class $LocalLearnerProgressTable extends LocalLearnerProgress
+    with TableInfo<$LocalLearnerProgressTable, LocalLearnerProgressEntry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LocalLearnerProgressTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _childIdMeta =
+      const VerificationMeta('childId');
+  @override
+  late final GeneratedColumn<String> childId = GeneratedColumn<String>(
+      'child_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _progressKeyMeta =
+      const VerificationMeta('progressKey');
+  @override
+  late final GeneratedColumn<String> progressKey = GeneratedColumn<String>(
+      'progress_key', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _progressDataMeta =
+      const VerificationMeta('progressData');
+  @override
+  late final GeneratedColumn<String> progressData = GeneratedColumn<String>(
+      'progress_data', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [childId, progressKey, progressData, updatedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'local_learner_progress';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<LocalLearnerProgressEntry> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('child_id')) {
+      context.handle(_childIdMeta,
+          childId.isAcceptableOrUnknown(data['child_id']!, _childIdMeta));
+    } else if (isInserting) {
+      context.missing(_childIdMeta);
+    }
+    if (data.containsKey('progress_key')) {
+      context.handle(
+          _progressKeyMeta,
+          progressKey.isAcceptableOrUnknown(
+              data['progress_key']!, _progressKeyMeta));
+    } else if (isInserting) {
+      context.missing(_progressKeyMeta);
+    }
+    if (data.containsKey('progress_data')) {
+      context.handle(
+          _progressDataMeta,
+          progressData.isAcceptableOrUnknown(
+              data['progress_data']!, _progressDataMeta));
+    } else if (isInserting) {
+      context.missing(_progressDataMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {childId, progressKey};
+  @override
+  LocalLearnerProgressEntry map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LocalLearnerProgressEntry(
+      childId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}child_id'])!,
+      progressKey: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}progress_key'])!,
+      progressData: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}progress_data'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+    );
+  }
+
+  @override
+  $LocalLearnerProgressTable createAlias(String alias) {
+    return $LocalLearnerProgressTable(attachedDatabase, alias);
+  }
+}
+
+class LocalLearnerProgressEntry extends DataClass
+    implements Insertable<LocalLearnerProgressEntry> {
+  final String childId;
+  final String progressKey;
+  final String progressData;
+  final DateTime updatedAt;
+  const LocalLearnerProgressEntry(
+      {required this.childId,
+      required this.progressKey,
+      required this.progressData,
+      required this.updatedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['child_id'] = Variable<String>(childId);
+    map['progress_key'] = Variable<String>(progressKey);
+    map['progress_data'] = Variable<String>(progressData);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  LocalLearnerProgressCompanion toCompanion(bool nullToAbsent) {
+    return LocalLearnerProgressCompanion(
+      childId: Value(childId),
+      progressKey: Value(progressKey),
+      progressData: Value(progressData),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory LocalLearnerProgressEntry.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LocalLearnerProgressEntry(
+      childId: serializer.fromJson<String>(json['childId']),
+      progressKey: serializer.fromJson<String>(json['progressKey']),
+      progressData: serializer.fromJson<String>(json['progressData']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'childId': serializer.toJson<String>(childId),
+      'progressKey': serializer.toJson<String>(progressKey),
+      'progressData': serializer.toJson<String>(progressData),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  LocalLearnerProgressEntry copyWith(
+          {String? childId,
+          String? progressKey,
+          String? progressData,
+          DateTime? updatedAt}) =>
+      LocalLearnerProgressEntry(
+        childId: childId ?? this.childId,
+        progressKey: progressKey ?? this.progressKey,
+        progressData: progressData ?? this.progressData,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  LocalLearnerProgressEntry copyWithCompanion(
+      LocalLearnerProgressCompanion data) {
+    return LocalLearnerProgressEntry(
+      childId: data.childId.present ? data.childId.value : this.childId,
+      progressKey:
+          data.progressKey.present ? data.progressKey.value : this.progressKey,
+      progressData: data.progressData.present
+          ? data.progressData.value
+          : this.progressData,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LocalLearnerProgressEntry(')
+          ..write('childId: $childId, ')
+          ..write('progressKey: $progressKey, ')
+          ..write('progressData: $progressData, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(childId, progressKey, progressData, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LocalLearnerProgressEntry &&
+          other.childId == this.childId &&
+          other.progressKey == this.progressKey &&
+          other.progressData == this.progressData &&
+          other.updatedAt == this.updatedAt);
+}
+
+class LocalLearnerProgressCompanion
+    extends UpdateCompanion<LocalLearnerProgressEntry> {
+  final Value<String> childId;
+  final Value<String> progressKey;
+  final Value<String> progressData;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const LocalLearnerProgressCompanion({
+    this.childId = const Value.absent(),
+    this.progressKey = const Value.absent(),
+    this.progressData = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  LocalLearnerProgressCompanion.insert({
+    required String childId,
+    required String progressKey,
+    required String progressData,
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : childId = Value(childId),
+        progressKey = Value(progressKey),
+        progressData = Value(progressData);
+  static Insertable<LocalLearnerProgressEntry> custom({
+    Expression<String>? childId,
+    Expression<String>? progressKey,
+    Expression<String>? progressData,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (childId != null) 'child_id': childId,
+      if (progressKey != null) 'progress_key': progressKey,
+      if (progressData != null) 'progress_data': progressData,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  LocalLearnerProgressCompanion copyWith(
+      {Value<String>? childId,
+      Value<String>? progressKey,
+      Value<String>? progressData,
+      Value<DateTime>? updatedAt,
+      Value<int>? rowid}) {
+    return LocalLearnerProgressCompanion(
+      childId: childId ?? this.childId,
+      progressKey: progressKey ?? this.progressKey,
+      progressData: progressData ?? this.progressData,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (childId.present) {
+      map['child_id'] = Variable<String>(childId.value);
+    }
+    if (progressKey.present) {
+      map['progress_key'] = Variable<String>(progressKey.value);
+    }
+    if (progressData.present) {
+      map['progress_data'] = Variable<String>(progressData.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LocalLearnerProgressCompanion(')
+          ..write('childId: $childId, ')
+          ..write('progressKey: $progressKey, ')
+          ..write('progressData: $progressData, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $ChildProfilesTable childProfiles = $ChildProfilesTable(this);
   late final $PendingActivityResultsTable pendingActivityResults =
       $PendingActivityResultsTable(this);
-  late final ChildProfileDao childProfileDao = ChildProfileDao(this as AppDatabase);
+  late final $LocalLearnerProgressTable localLearnerProgress =
+      $LocalLearnerProgressTable(this);
+  late final ChildProfileDao childProfileDao =
+      ChildProfileDao(this as AppDatabase);
   late final PendingActivityResultDao pendingActivityResultDao =
       PendingActivityResultDao(this as AppDatabase);
+  late final LocalLearnerProgressDao localLearnerProgressDao =
+      LocalLearnerProgressDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [childProfiles, pendingActivityResults];
+  List<DatabaseSchemaEntity> get allSchemaEntities =>
+      [childProfiles, pendingActivityResults, localLearnerProgress];
 }
 
-typedef $$ChildProfilesTableCreateCompanionBuilder = ChildProfilesCompanion Function({
+typedef $$ChildProfilesTableCreateCompanionBuilder = ChildProfilesCompanion
+    Function({
   required String id,
   required String name,
   required String avatarId,
@@ -752,7 +1105,8 @@ typedef $$ChildProfilesTableCreateCompanionBuilder = ChildProfilesCompanion Func
   Value<DateTime> createdAt,
   Value<int> rowid,
 });
-typedef $$ChildProfilesTableUpdateCompanionBuilder = ChildProfilesCompanion Function({
+typedef $$ChildProfilesTableUpdateCompanionBuilder = ChildProfilesCompanion
+    Function({
   Value<String> id,
   Value<String> name,
   Value<String> avatarId,
@@ -762,7 +1116,8 @@ typedef $$ChildProfilesTableUpdateCompanionBuilder = ChildProfilesCompanion Func
   Value<int> rowid,
 });
 
-class $$ChildProfilesTableFilterComposer extends Composer<_$AppDatabase, $ChildProfilesTable> {
+class $$ChildProfilesTableFilterComposer
+    extends Composer<_$AppDatabase, $ChildProfilesTable> {
   $$ChildProfilesTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -770,26 +1125,28 @@ class $$ChildProfilesTableFilterComposer extends Composer<_$AppDatabase, $ChildP
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get name =>
-      $composableBuilder(column: $table.name, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get avatarId =>
-      $composableBuilder(column: $table.avatarId, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get avatarId => $composableBuilder(
+      column: $table.avatarId, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get preferredLanguage => $composableBuilder(
-      column: $table.preferredLanguage, builder: (column) => ColumnFilters(column));
+      column: $table.preferredLanguage,
+      builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get grade =>
-      $composableBuilder(column: $table.grade, builder: (column) => ColumnFilters(column));
+  ColumnFilters<int> get grade => $composableBuilder(
+      column: $table.grade, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnFilters(column));
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
 }
 
-class $$ChildProfilesTableOrderingComposer extends Composer<_$AppDatabase, $ChildProfilesTable> {
+class $$ChildProfilesTableOrderingComposer
+    extends Composer<_$AppDatabase, $ChildProfilesTable> {
   $$ChildProfilesTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -797,26 +1154,28 @@ class $$ChildProfilesTableOrderingComposer extends Composer<_$AppDatabase, $Chil
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get name =>
-      $composableBuilder(column: $table.name, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get avatarId =>
-      $composableBuilder(column: $table.avatarId, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get avatarId => $composableBuilder(
+      column: $table.avatarId, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get preferredLanguage => $composableBuilder(
-      column: $table.preferredLanguage, builder: (column) => ColumnOrderings(column));
+      column: $table.preferredLanguage,
+      builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get grade =>
-      $composableBuilder(column: $table.grade, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<int> get grade => $composableBuilder(
+      column: $table.grade, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 }
 
-class $$ChildProfilesTableAnnotationComposer extends Composer<_$AppDatabase, $ChildProfilesTable> {
+class $$ChildProfilesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ChildProfilesTable> {
   $$ChildProfilesTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -833,8 +1192,8 @@ class $$ChildProfilesTableAnnotationComposer extends Composer<_$AppDatabase, $Ch
   GeneratedColumn<String> get avatarId =>
       $composableBuilder(column: $table.avatarId, builder: (column) => column);
 
-  GeneratedColumn<String> get preferredLanguage =>
-      $composableBuilder(column: $table.preferredLanguage, builder: (column) => column);
+  GeneratedColumn<String> get preferredLanguage => $composableBuilder(
+      column: $table.preferredLanguage, builder: (column) => column);
 
   GeneratedColumn<int> get grade =>
       $composableBuilder(column: $table.grade, builder: (column) => column);
@@ -852,14 +1211,18 @@ class $$ChildProfilesTableTableManager extends RootTableManager<
     $$ChildProfilesTableAnnotationComposer,
     $$ChildProfilesTableCreateCompanionBuilder,
     $$ChildProfilesTableUpdateCompanionBuilder,
-    (ChildProfile, BaseReferences<_$AppDatabase, $ChildProfilesTable, ChildProfile>),
+    (
+      ChildProfile,
+      BaseReferences<_$AppDatabase, $ChildProfilesTable, ChildProfile>
+    ),
     ChildProfile,
     PrefetchHooks Function()> {
   $$ChildProfilesTableTableManager(_$AppDatabase db, $ChildProfilesTable table)
       : super(TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () => $$ChildProfilesTableFilterComposer($db: db, $table: table),
+          createFilteringComposer: () =>
+              $$ChildProfilesTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
               $$ChildProfilesTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
@@ -903,7 +1266,8 @@ class $$ChildProfilesTableTableManager extends RootTableManager<
           withReferenceMapper: (p0) => p0
               .map((e) => (
                     e.readTable<$ChildProfilesTable, ChildProfile>(table),
-                    BaseReferences<_$AppDatabase, $ChildProfilesTable, ChildProfile>(db, table, e)
+                    BaseReferences<_$AppDatabase, $ChildProfilesTable,
+                        ChildProfile>(db, table, e)
                   ))
               .toList(),
           prefetchHooksCallback: null,
@@ -919,11 +1283,14 @@ typedef $$ChildProfilesTableProcessedTableManager = ProcessedTableManager<
     $$ChildProfilesTableAnnotationComposer,
     $$ChildProfilesTableCreateCompanionBuilder,
     $$ChildProfilesTableUpdateCompanionBuilder,
-    (ChildProfile, BaseReferences<_$AppDatabase, $ChildProfilesTable, ChildProfile>),
+    (
+      ChildProfile,
+      BaseReferences<_$AppDatabase, $ChildProfilesTable, ChildProfile>
+    ),
     ChildProfile,
     PrefetchHooks Function()>;
-typedef $$PendingActivityResultsTableCreateCompanionBuilder = PendingActivityResultsCompanion
-    Function({
+typedef $$PendingActivityResultsTableCreateCompanionBuilder
+    = PendingActivityResultsCompanion Function({
   Value<int> id,
   required String childId,
   required String componentName,
@@ -933,8 +1300,8 @@ typedef $$PendingActivityResultsTableCreateCompanionBuilder = PendingActivityRes
   Value<DateTime?> syncedAt,
   Value<String> syncStatus,
 });
-typedef $$PendingActivityResultsTableUpdateCompanionBuilder = PendingActivityResultsCompanion
-    Function({
+typedef $$PendingActivityResultsTableUpdateCompanionBuilder
+    = PendingActivityResultsCompanion Function({
   Value<int> id,
   Value<String> childId,
   Value<String> componentName,
@@ -954,29 +1321,29 @@ class $$PendingActivityResultsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get childId =>
-      $composableBuilder(column: $table.childId, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get childId => $composableBuilder(
+      column: $table.childId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get componentName =>
-      $composableBuilder(column: $table.componentName, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get componentName => $composableBuilder(
+      column: $table.componentName, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get activityId =>
-      $composableBuilder(column: $table.activityId, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get activityId => $composableBuilder(
+      column: $table.activityId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get resultPayload =>
-      $composableBuilder(column: $table.resultPayload, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get resultPayload => $composableBuilder(
+      column: $table.resultPayload, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnFilters(column));
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get syncedAt =>
-      $composableBuilder(column: $table.syncedAt, builder: (column) => ColumnFilters(column));
+  ColumnFilters<DateTime> get syncedAt => $composableBuilder(
+      column: $table.syncedAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get syncStatus =>
-      $composableBuilder(column: $table.syncStatus, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+      column: $table.syncStatus, builder: (column) => ColumnFilters(column));
 }
 
 class $$PendingActivityResultsTableOrderingComposer
@@ -988,29 +1355,31 @@ class $$PendingActivityResultsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get childId =>
-      $composableBuilder(column: $table.childId, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get childId => $composableBuilder(
+      column: $table.childId, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get componentName => $composableBuilder(
-      column: $table.componentName, builder: (column) => ColumnOrderings(column));
+      column: $table.componentName,
+      builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get activityId =>
-      $composableBuilder(column: $table.activityId, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get activityId => $composableBuilder(
+      column: $table.activityId, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get resultPayload => $composableBuilder(
-      column: $table.resultPayload, builder: (column) => ColumnOrderings(column));
+      column: $table.resultPayload,
+      builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get syncedAt =>
-      $composableBuilder(column: $table.syncedAt, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<DateTime> get syncedAt => $composableBuilder(
+      column: $table.syncedAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get syncStatus =>
-      $composableBuilder(column: $table.syncStatus, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+      column: $table.syncStatus, builder: (column) => ColumnOrderings(column));
 }
 
 class $$PendingActivityResultsTableAnnotationComposer
@@ -1022,19 +1391,20 @@ class $$PendingActivityResultsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<String> get childId =>
       $composableBuilder(column: $table.childId, builder: (column) => column);
 
-  GeneratedColumn<String> get componentName =>
-      $composableBuilder(column: $table.componentName, builder: (column) => column);
+  GeneratedColumn<String> get componentName => $composableBuilder(
+      column: $table.componentName, builder: (column) => column);
 
-  GeneratedColumn<String> get activityId =>
-      $composableBuilder(column: $table.activityId, builder: (column) => column);
+  GeneratedColumn<String> get activityId => $composableBuilder(
+      column: $table.activityId, builder: (column) => column);
 
-  GeneratedColumn<String> get resultPayload =>
-      $composableBuilder(column: $table.resultPayload, builder: (column) => column);
+  GeneratedColumn<String> get resultPayload => $composableBuilder(
+      column: $table.resultPayload, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -1042,8 +1412,8 @@ class $$PendingActivityResultsTableAnnotationComposer
   GeneratedColumn<DateTime> get syncedAt =>
       $composableBuilder(column: $table.syncedAt, builder: (column) => column);
 
-  GeneratedColumn<String> get syncStatus =>
-      $composableBuilder(column: $table.syncStatus, builder: (column) => column);
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+      column: $table.syncStatus, builder: (column) => column);
 }
 
 class $$PendingActivityResultsTableTableManager extends RootTableManager<
@@ -1057,20 +1427,25 @@ class $$PendingActivityResultsTableTableManager extends RootTableManager<
     $$PendingActivityResultsTableUpdateCompanionBuilder,
     (
       PendingActivityResult,
-      BaseReferences<_$AppDatabase, $PendingActivityResultsTable, PendingActivityResult>
+      BaseReferences<_$AppDatabase, $PendingActivityResultsTable,
+          PendingActivityResult>
     ),
     PendingActivityResult,
     PrefetchHooks Function()> {
-  $$PendingActivityResultsTableTableManager(_$AppDatabase db, $PendingActivityResultsTable table)
+  $$PendingActivityResultsTableTableManager(
+      _$AppDatabase db, $PendingActivityResultsTable table)
       : super(TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$PendingActivityResultsTableFilterComposer($db: db, $table: table),
+              $$PendingActivityResultsTableFilterComposer(
+                  $db: db, $table: table),
           createOrderingComposer: () =>
-              $$PendingActivityResultsTableOrderingComposer($db: db, $table: table),
+              $$PendingActivityResultsTableOrderingComposer(
+                  $db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$PendingActivityResultsTableAnnotationComposer($db: db, $table: table),
+              $$PendingActivityResultsTableAnnotationComposer(
+                  $db: db, $table: table),
           updateCompanionCallback: ({
             Value<int> id = const Value.absent(),
             Value<String> childId = const Value.absent(),
@@ -1113,7 +1488,8 @@ class $$PendingActivityResultsTableTableManager extends RootTableManager<
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable<$PendingActivityResultsTable, PendingActivityResult>(table),
+                    e.readTable<$PendingActivityResultsTable,
+                        PendingActivityResult>(table),
                     BaseReferences<_$AppDatabase, $PendingActivityResultsTable,
                         PendingActivityResult>(db, table, e)
                   ))
@@ -1122,21 +1498,193 @@ class $$PendingActivityResultsTableTableManager extends RootTableManager<
         ));
 }
 
-typedef $$PendingActivityResultsTableProcessedTableManager = ProcessedTableManager<
+typedef $$PendingActivityResultsTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $PendingActivityResultsTable,
+        PendingActivityResult,
+        $$PendingActivityResultsTableFilterComposer,
+        $$PendingActivityResultsTableOrderingComposer,
+        $$PendingActivityResultsTableAnnotationComposer,
+        $$PendingActivityResultsTableCreateCompanionBuilder,
+        $$PendingActivityResultsTableUpdateCompanionBuilder,
+        (
+          PendingActivityResult,
+          BaseReferences<_$AppDatabase, $PendingActivityResultsTable,
+              PendingActivityResult>
+        ),
+        PendingActivityResult,
+        PrefetchHooks Function()>;
+typedef $$LocalLearnerProgressTableCreateCompanionBuilder
+    = LocalLearnerProgressCompanion Function({
+  required String childId,
+  required String progressKey,
+  required String progressData,
+  Value<DateTime> updatedAt,
+  Value<int> rowid,
+});
+typedef $$LocalLearnerProgressTableUpdateCompanionBuilder
+    = LocalLearnerProgressCompanion Function({
+  Value<String> childId,
+  Value<String> progressKey,
+  Value<String> progressData,
+  Value<DateTime> updatedAt,
+  Value<int> rowid,
+});
+
+class $$LocalLearnerProgressTableFilterComposer
+    extends Composer<_$AppDatabase, $LocalLearnerProgressTable> {
+  $$LocalLearnerProgressTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get childId => $composableBuilder(
+      column: $table.childId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get progressKey => $composableBuilder(
+      column: $table.progressKey, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get progressData => $composableBuilder(
+      column: $table.progressData, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$LocalLearnerProgressTableOrderingComposer
+    extends Composer<_$AppDatabase, $LocalLearnerProgressTable> {
+  $$LocalLearnerProgressTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get childId => $composableBuilder(
+      column: $table.childId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get progressKey => $composableBuilder(
+      column: $table.progressKey, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get progressData => $composableBuilder(
+      column: $table.progressData,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$LocalLearnerProgressTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LocalLearnerProgressTable> {
+  $$LocalLearnerProgressTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get childId =>
+      $composableBuilder(column: $table.childId, builder: (column) => column);
+
+  GeneratedColumn<String> get progressKey => $composableBuilder(
+      column: $table.progressKey, builder: (column) => column);
+
+  GeneratedColumn<String> get progressData => $composableBuilder(
+      column: $table.progressData, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$LocalLearnerProgressTableTableManager extends RootTableManager<
     _$AppDatabase,
-    $PendingActivityResultsTable,
-    PendingActivityResult,
-    $$PendingActivityResultsTableFilterComposer,
-    $$PendingActivityResultsTableOrderingComposer,
-    $$PendingActivityResultsTableAnnotationComposer,
-    $$PendingActivityResultsTableCreateCompanionBuilder,
-    $$PendingActivityResultsTableUpdateCompanionBuilder,
+    $LocalLearnerProgressTable,
+    LocalLearnerProgressEntry,
+    $$LocalLearnerProgressTableFilterComposer,
+    $$LocalLearnerProgressTableOrderingComposer,
+    $$LocalLearnerProgressTableAnnotationComposer,
+    $$LocalLearnerProgressTableCreateCompanionBuilder,
+    $$LocalLearnerProgressTableUpdateCompanionBuilder,
     (
-      PendingActivityResult,
-      BaseReferences<_$AppDatabase, $PendingActivityResultsTable, PendingActivityResult>
+      LocalLearnerProgressEntry,
+      BaseReferences<_$AppDatabase, $LocalLearnerProgressTable,
+          LocalLearnerProgressEntry>
     ),
-    PendingActivityResult,
-    PrefetchHooks Function()>;
+    LocalLearnerProgressEntry,
+    PrefetchHooks Function()> {
+  $$LocalLearnerProgressTableTableManager(
+      _$AppDatabase db, $LocalLearnerProgressTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LocalLearnerProgressTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LocalLearnerProgressTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$LocalLearnerProgressTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> childId = const Value.absent(),
+            Value<String> progressKey = const Value.absent(),
+            Value<String> progressData = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              LocalLearnerProgressCompanion(
+            childId: childId,
+            progressKey: progressKey,
+            progressData: progressData,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String childId,
+            required String progressKey,
+            required String progressData,
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              LocalLearnerProgressCompanion.insert(
+            childId: childId,
+            progressKey: progressKey,
+            progressData: progressData,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable<$LocalLearnerProgressTable,
+                        LocalLearnerProgressEntry>(table),
+                    BaseReferences<_$AppDatabase, $LocalLearnerProgressTable,
+                        LocalLearnerProgressEntry>(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$LocalLearnerProgressTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $LocalLearnerProgressTable,
+        LocalLearnerProgressEntry,
+        $$LocalLearnerProgressTableFilterComposer,
+        $$LocalLearnerProgressTableOrderingComposer,
+        $$LocalLearnerProgressTableAnnotationComposer,
+        $$LocalLearnerProgressTableCreateCompanionBuilder,
+        $$LocalLearnerProgressTableUpdateCompanionBuilder,
+        (
+          LocalLearnerProgressEntry,
+          BaseReferences<_$AppDatabase, $LocalLearnerProgressTable,
+              LocalLearnerProgressEntry>
+        ),
+        LocalLearnerProgressEntry,
+        PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -1144,5 +1692,8 @@ class $AppDatabaseManager {
   $$ChildProfilesTableTableManager get childProfiles =>
       $$ChildProfilesTableTableManager(_db, _db.childProfiles);
   $$PendingActivityResultsTableTableManager get pendingActivityResults =>
-      $$PendingActivityResultsTableTableManager(_db, _db.pendingActivityResults);
+      $$PendingActivityResultsTableTableManager(
+          _db, _db.pendingActivityResults);
+  $$LocalLearnerProgressTableTableManager get localLearnerProgress =>
+      $$LocalLearnerProgressTableTableManager(_db, _db.localLearnerProgress);
 }

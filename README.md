@@ -64,3 +64,15 @@ The app opens to a profile selection screen (name + avatar + PIN, stored locally
 - How to add your component: [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)
 - Stack/structural decisions and why: [docs/decision-log.md](docs/decision-log.md)
 - Recommended VS Code extensions: `.vscode/extensions.json` (VS Code will prompt you to install them)
+
+
+
+Running it again: start the backend first, then run the app.
+
+
+# terminal 1, repo root
+docker compose up
+
+# terminal 2
+cd app
+flutter run -d R5CW41CSYKJ --dart-define=API_BASE_URL=http://192.168.1.7:8000
