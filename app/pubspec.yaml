@@ -22,6 +22,11 @@ dependencies:
   sqlite3_flutter_libs: ^0.5.26
   path_provider: ^2.1.5
   path: ^1.9.0
+  tflite_flutter: ^0.12.1
+  # Local 4.2.5 patch: migrate the Android plugin away from self-applying KGP.
+  # Remove this path override after upstream publishes its Built-in Kotlin fix.
+  flutter_tts:
+    path: third_party/flutter_tts
 
   # Connectivity (for the offline sync queue)
   connectivity_plus: ^6.1.0
@@ -29,8 +34,15 @@ dependencies:
   # Local profile id
   uuid: ^4.5.1
 
+  # Spelling & Phonics: sound effects and recorded Sinhala audio, and the
+  # Sinhala word pictures (SVG). flutter_tts (English voice) is listed above.
+  audioplayers: ^6.8.1
+  flutter_svg: ^2.3.0
+
 dev_dependencies:
   flutter_test:
+    sdk: flutter
+  integration_test:
     sdk: flutter
   flutter_lints: ^5.0.0
   build_runner: ^2.4.13
@@ -51,6 +63,15 @@ flutter:
     - assets/avatars/
     - assets/branding/
     - assets/models/math_memory/
+    - assets/models/
+    - assets/spelling/
+    - assets/spelling/model/
+    - assets/spelling/model_si/
+    - assets/spelling/sinhala/
+    - assets/spelling/sinhala/images/
+    - assets/spelling/sinhala/audio/
+    - assets/spelling/sinhala/audio/prompts/
+    - assets/spelling/sinhala/audio/tiles/
 
   fonts:
     - family: Lexend
