@@ -62,6 +62,7 @@ flutter:
   assets:
     - assets/avatars/
     - assets/branding/
+    - assets/models/math_memory/
     - assets/models/
     - assets/spelling/
     - assets/spelling/model/

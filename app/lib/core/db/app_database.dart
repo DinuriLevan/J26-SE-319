@@ -7,8 +7,10 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import 'daos/child_profile_dao.dart';
+import 'daos/local_learner_progress_dao.dart';
 import 'daos/pending_activity_result_dao.dart';
 import 'tables/child_profiles_table.dart';
+import 'tables/local_learner_progress_table.dart';
 import 'tables/pending_activity_results_table.dart';
 
 part 'app_database.g.dart';
@@ -22,14 +24,15 @@ final appDatabaseProvider = Provider<AppDatabase>((ref) {
 });
 
 @DriftDatabase(
-  tables: [ChildProfiles, PendingActivityResults],
-  daos: [ChildProfileDao, PendingActivityResultDao],
+  tables: [ChildProfiles, PendingActivityResults, LocalLearnerProgress],
+  daos: [ChildProfileDao, PendingActivityResultDao, LocalLearnerProgressDao],
 )
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection());
+  /// Pass [executor] only in tests (e.g. `NativeDatabase.memory()`).
+  AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -43,6 +46,11 @@ class AppDatabase extends _$AppDatabase {
             // fresh profile on next splash if this one is gone.
             await m.deleteTable('child_profiles');
             await m.createTable(childProfiles);
+          }
+          if (from < 3) {
+            // Additive: on-device progress for features that adapt offline
+            // (first used by Math & Memory).
+            await m.createTable(localLearnerProgress);
           }
         },
       );
