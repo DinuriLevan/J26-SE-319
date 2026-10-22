@@ -23,7 +23,10 @@ dependencies:
   path_provider: ^2.1.5
   path: ^1.9.0
   tflite_flutter: ^0.12.1
-  flutter_tts: ^4.2.5
+  # Local 4.2.5 patch: migrate the Android plugin away from self-applying KGP.
+  # Remove this path override after upstream publishes its Built-in Kotlin fix.
+  flutter_tts:
+    path: third_party/flutter_tts
 
   # Connectivity (for the offline sync queue)
   connectivity_plus: ^6.1.0
