@@ -28,20 +28,19 @@ void main() {
     );
   });
 
-  testWidgets('opens the English handwriting placeholder', (tester) async {
+  testWidgets('opens the English character selection screen', (tester) async {
     await tester.pumpWidget(buildSubject());
 
     await tester.tap(find.text('English'));
     await tester.pumpAndSettle();
 
     expect(find.text('English Handwriting'), findsOneWidget);
-    expect(
-      find.text('English character selection will be added here.'),
-      findsOneWidget,
-    );
+    expect(find.text('Pick a Letter!'), findsOneWidget);
+    expect(find.text('Uppercase'), findsOneWidget);
+    expect(find.text('A'), findsOneWidget);
   });
 
-  testWidgets('opens the Sinhala handwriting placeholder', (tester) async {
+  testWidgets('opens the Sinhala character selection screen', (tester) async {
     await tester.pumpWidget(buildSubject());
 
     await tester.ensureVisible(find.text('සිංහල'));
@@ -49,9 +48,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('සිංහල Handwriting'), findsOneWidget);
-    expect(
-      find.text('Sinhala character selection will be added here.'),
-      findsOneWidget,
-    );
+    expect(find.text('Pick a Letter!'), findsOneWidget);
+    expect(find.text('ස්වර (Vowels)'), findsOneWidget);
+    expect(find.text('අ'), findsOneWidget);
   });
 }

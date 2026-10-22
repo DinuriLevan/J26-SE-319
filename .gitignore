@@ -11,6 +11,8 @@ backend/*.egg-info/
 backend/.venv/
 backend/venv/
 backend/.pytest_cache/
+ml/handwriting/.venv/
+
 
 # --- Flutter / app ---
 app/.dart_tool/
@@ -34,3 +36,13 @@ app/*.freezed.dart
 
 # --- Docker ---
 pgdata/
+
+
+ml/handwriting/datasets/processed/
+ml/handwriting/datasets/raw/
+ml/handwriting/datasets/split/
+ml/handwriting/datasets/generated_lowercase_v2/
+ml/handwriting/.venv/
+ml/handwriting/scripts/__pycache__/
+ml/handwriting/models/*.keras
+ml/handwriting/models/*.tflite
