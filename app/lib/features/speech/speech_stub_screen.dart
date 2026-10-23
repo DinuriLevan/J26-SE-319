@@ -97,28 +97,34 @@ class _LanguageChoice extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(SpeechTheme.radius),
                   onTap: () =>
                       ref.read(speechLanguageProvider.notifier).state = code,
-                  child: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 104,
-                          height: 104,
-                          decoration: const BoxDecoration(
-                            color: SpeechColors.paper,
-                            shape: BoxShape.circle,
-                            boxShadow: speechShadow,
+                  // Short phones give each card less height than the circle + name need.
+                  child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 104,
+                            height: 104,
+                            decoration: const BoxDecoration(
+                              color: SpeechColors.paper,
+                              shape: BoxShape.circle,
+                              boxShadow: speechShadow,
+                            ),
+                            child: Center(
+                              child: Text(letter,
+                                  style: theme.textTheme.displayMedium!
+                                      .copyWith(
+                                          color: SpeechColors.coralDeep,
+                                          height: 1.2)),
+                            ),
                           ),
-                          child: Center(
-                            child: Text(letter,
-                                style: theme.textTheme.displayMedium!.copyWith(
-                                    color: SpeechColors.coralDeep,
-                                    height: 1.2)),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(name, style: theme.textTheme.headlineMedium),
-                      ],
+                          const SizedBox(height: 12),
+                          Text(name, style: theme.textTheme.headlineMedium),
+                        ],
+                      ),
                     ),
                   ),
                 ),
