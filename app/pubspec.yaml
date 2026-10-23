@@ -34,10 +34,21 @@ dependencies:
   # Local profile id
   uuid: ^4.5.1
 
+  # Localisation (shared gen-l10n, en + si — see docs/decision-log.md)
+  flutter_localizations:
+    sdk: flutter
+  intl: any
+
+  # Speech component: microphone recording + permission
+  record: ^7.1.2
+  permission_handler: ^12.0.1 # 13.x needs compileSdk 37; app compiles against 36
+  just_audio: ^0.10.6
+  # spoken instructions: fallback when a prompt is not recorded yet
+  flutter_svg: ^2.3.0 # word pictures (Twemoji SVGs, assets/speech/pictures)
+
   # Spelling & Phonics: sound effects and recorded Sinhala audio, and the
   # Sinhala word pictures (SVG). flutter_tts (English voice) is listed above.
   audioplayers: ^6.8.1
-  flutter_svg: ^2.3.0
 
 dev_dependencies:
   flutter_test:
@@ -58,10 +69,16 @@ flutter_launcher_icons:
 
 flutter:
   uses-material-design: true
+  generate: true
 
   assets:
     - assets/avatars/
     - assets/branding/
+    # Speech component: recorded spoken instructions (adult voice), one WAV per l10n key
+    - assets/speech/prompts/en/
+    - assets/speech/prompts/si/
+    # Speech component: one picture per practice word (Twemoji, CC-BY 4.0, see ATTRIBUTION.md)
+    - assets/speech/pictures/
     - assets/models/math_memory/
     - assets/models/
     - assets/spelling/

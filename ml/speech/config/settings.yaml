@@ -1,0 +1,64 @@
+# Speech assessment settings. Values marked PLACEHOLDER are chosen on DEV data in a later stage.
+
+audio:
+  sample_rate: 16000
+  max_duration_s: 6.0
+  trim_top_db: 30          # librosa.effects.trim threshold; PLACEHOLDER
+
+embedding:
+  model_name: facebook/wav2vec2-xls-r-300m
+  layer: 9                 # chosen by the Stage 2 layer sweep on DEV speakers (eval/results/layer_sweep_dev.md)
+  truncate_encoder: true   # verified bit-identical (eval/results/truncation_check.json)
+
+baseline:
+  # Stage 1 single-reference baseline. null = first adult reference (by speaker_id).
+  reference_speaker: null
+
+service:
+  max_upload_bytes: 2000000   # ~6 s of 16-bit 48 kHz stereo WAV is ~1.2 MB
+
+corpus:
+  # Children's sentence recordings (ethics approval confirmed 2026-10-15). Split is by speaker:
+  # test speakers are never used to choose layer, k, n or thresholds (src/splits.py enforces it).
+  test_speakers: [g3_s5, g4_s3]
+
+scoring:
+  mode: bank               # bank = multi-reference + learned range (Stage 3); single = Stage 1 baseline
+  k_nearest: 3             # aggregate = mean of the k nearest reference DTW costs
+  n_std: 2.0               # accept if aggregate <= mean + n_std * std (leave-one-out over the bank)
+  min_refs_for_bank_threshold: 4
+  loo_unit: speaker        # leave out the whole speaker (approved 2026-10-15; spec value was token)
+  # Whole-word pass mark. shared = one per language, chosen on DEV single-word children so that at
+  # most 10% of correct attempts get "try again" (eval/results/threshold_study_dev.md, owner choice
+  # 2026-10-20). per_word = the learned range above (mean + n_std * std, fallback < min_refs).
+  threshold_mode: shared
+  shared_threshold: {si: 0.2713, en: 0.2700}
+  fallback_threshold: 0.245 # dev-best single-reference threshold (eval/results/bank_study_dev.md); used when < 4 refs
+
+localisation:
+  max_flagged_units: 2
+  second_flag_ratio: 0.8   # PLACEHOLDER: also flag the 2nd-worst unit if its cost >= 0.8 x worst
+  min_unit_frames: 2       # each reference unit spans >= 2 frames (40 ms) when projecting
+
+errors:                    # src/errors.py, TO VALIDATE WITH SPEECH-LANGUAGE EXPERT; ratios are vs the
+                           # unit's expected duration after correcting for the child's speaking rate
+  omission_ratio: 0.35     # PLACEHOLDER: unit mapped to < 35% of expected -> omission
+  insertion_ratio: 2.5     # PLACEHOLDER: unit mapped to > 250% of expected -> insertion
+  short_ratio: 0.6         # PLACEHOLDER: long vowel / geminate said < 60% of expected
+  substitution_cost: 0.5   # PLACEHOLDER: unit cost >= this -> substitution, else distortion
+
+listen:
+  # Adult voice used for Listen / "Hear it" when that speaker recorded the word; otherwise the most
+  # typical adult. Children's recordings are never played back.
+  preferred_speaker:
+    si: fr_a1              # field recordings imported 2026-10-20 (scripts/import_recordings.py)
+    en: fr_a1              # same adult; replaces adult_01 (cat, sky, she, play) for Listen only
+
+retry:
+  max_tries_per_step: 3
+
+paths:
+  data_dir: data
+  words_csv: config/words.csv   
+  reference_dir: data/reference
+  embeddings_dir: data/embeddings

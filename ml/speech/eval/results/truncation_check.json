@@ -1,0 +1,54 @@
+{
+  "model": "facebook/wav2vec2-xls-r-300m",
+  "n_clips": 5,
+  "results": [
+    {
+      "layer": 1,
+      "kept_layers": 2,
+      "allclose": true,
+      "max_abs_diff": 0.0,
+      "naive_cut_max_abs_diff": 26.52890968322754,
+      "speedup": 4.97
+    },
+    {
+      "layer": 6,
+      "kept_layers": 7,
+      "allclose": true,
+      "max_abs_diff": 0.0,
+      "naive_cut_max_abs_diff": 51.84489059448242,
+      "speedup": 2.47
+    },
+    {
+      "layer": 9,
+      "kept_layers": 10,
+      "allclose": true,
+      "max_abs_diff": 0.0,
+      "naive_cut_max_abs_diff": 289.97760009765625,
+      "speedup": 2.04
+    },
+    {
+      "layer": 12,
+      "kept_layers": 13,
+      "allclose": true,
+      "max_abs_diff": 0.0,
+      "naive_cut_max_abs_diff": 347.60205078125,
+      "speedup": 1.53
+    },
+    {
+      "layer": 18,
+      "kept_layers": 19,
+      "allclose": true,
+      "max_abs_diff": 0.0,
+      "naive_cut_max_abs_diff": 158.9222412109375,
+      "speedup": 1.2
+    },
+    {
+      "layer": 23,
+      "kept_layers": 24,
+      "allclose": true,
+      "max_abs_diff": 0.0,
+      "naive_cut_max_abs_diff": 498.06085205078125,
+      "speedup": 1.05
+    }
+  ]
+}

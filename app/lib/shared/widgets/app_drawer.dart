@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/home_shell/providers/nav_providers.dart';
+import '../../features/parent_dashboard/parent_dashboard_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/profile/providers/profile_providers.dart';
 import '../../features/settings/settings_screen.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Hamburger button that opens the home shell's drawer from any nested screen.
 class DrawerMenuButton extends ConsumerWidget {
@@ -15,7 +17,8 @@ class DrawerMenuButton extends ConsumerWidget {
     return IconButton(
       icon: const Icon(Icons.menu),
       tooltip: 'Menu',
-      onPressed: () => ref.read(shellScaffoldKeyProvider).currentState?.openDrawer(),
+      onPressed: () =>
+          ref.read(shellScaffoldKeyProvider).currentState?.openDrawer(),
     );
   }
 }
@@ -78,6 +81,15 @@ class AppDrawer extends ConsumerWidget {
               leading: const Icon(Icons.settings),
               title: const Text('Settings'),
               onTap: () => open((_) => const SettingsScreen()),
+            ),
+            ListTile(
+              key: const ValueKey('drawer_parent_dashboard'),
+              leading: const Icon(Icons.insights),
+              title: Text(AppLocalizations.of(context).parentDashboardMenu),
+              onTap: () {
+                navigator.pop();
+                openParentDashboard(navigator.context);
+              },
             ),
           ],
         ),

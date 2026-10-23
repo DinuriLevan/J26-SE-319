@@ -38,6 +38,10 @@ app/*.freezed.dart
 # --- Docker ---
 pgdata/
 
+# --- ML / speech (never commit audio, embeddings or bank manifests) ---
+ml/speech/data/
+ml/speech/**/*.wav
+ml/speech/**/*.npy
 
 ml/handwriting/datasets/processed/
 ml/handwriting/datasets/raw/
@@ -47,3 +51,7 @@ ml/handwriting/.venv/
 ml/handwriting/scripts/__pycache__/
 ml/handwriting/models/*.keras
 ml/handwriting/models/*.tflite
+ml/**/__pycache__/
+ml/**/.pytest_cache/
+ml/**/.venv/
+ml/**/.ipynb_checkpoints/

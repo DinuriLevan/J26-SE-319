@@ -9,6 +9,10 @@ class Settings(BaseSettings):
     database_url: str = "postgresql://akurin:akurin_dev_password@localhost:5432/akurin"
     cors_origins: str = "*"
     app_env: str = "development"
+    # Speech component: URL of the speech inference service (ml/speech/src/service.py).
+    # Default reaches a service running on the host from inside Docker Desktop.
+    speech_service_url: str = "http://host.docker.internal:8001"
+    speech_service_timeout_s: float = 15.0
 
     @property
     def cors_origins_list(self) -> list[str]:
