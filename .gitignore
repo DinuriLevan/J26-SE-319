@@ -11,6 +11,9 @@ backend/*.egg-info/
 backend/.venv/
 backend/venv/
 backend/.pytest_cache/
+ml/**/__pycache__/
+ml/handwriting/.venv/
+
 
 # --- Flutter / app ---
 app/.dart_tool/
@@ -39,6 +42,15 @@ pgdata/
 ml/speech/data/
 ml/speech/**/*.wav
 ml/speech/**/*.npy
+
+ml/handwriting/datasets/processed/
+ml/handwriting/datasets/raw/
+ml/handwriting/datasets/split/
+ml/handwriting/datasets/generated_lowercase_v2/
+ml/handwriting/.venv/
+ml/handwriting/scripts/__pycache__/
+ml/handwriting/models/*.keras
+ml/handwriting/models/*.tflite
 ml/**/__pycache__/
 ml/**/.pytest_cache/
 ml/**/.venv/

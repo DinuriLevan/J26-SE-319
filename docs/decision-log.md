@@ -209,3 +209,25 @@ A running log of structural/technical decisions for the AkuRin shared foundation
 | Tips and the Sinhala text are TO REVIEW BY A TEACHER / NATIVE SPEAKER | Not yet reviewed |
 
 <!-- Add new entries below this line, newest at the bottom or top — pick one convention and stay consistent. -->
+
+## 2026-10-18 — Math & Memory: adaptive games and local progress
+
+| Decision | Rationale |
+|---|---|
+| New local drift table `local_learner_progress` (`childId`, `progressKey`, JSON `progressData`), `AppDatabase.schemaVersion` 2→3, additive migration | Games must adapt offline and remember attempt counts / difficulty across restarts. The sync queue isn't a progress store. Generic and keyed per feature (Math & Memory uses one key per game), mirroring the backend's free-form `learner_progress` JSON; any component can reuse it |
+| `AppDatabase` takes an optional `QueryExecutor` | Lets tests use `NativeDatabase.memory()`; production behaviour unchanged |
+| First completed attempt per game = ungraded baseline; later attempts scored and adaptive; abandoned attempts never change progress | See [math-memory-adaptive-engine.md](math-memory-adaptive-engine.md) |
+| Rules-based adaptive engine (`rules_v1`), not ML | Deterministic, testable, explainable foundation; every attempt's payload records the data a future model would need |
+| Results use the existing `pending_activity_results` queue with `component_name: "math_memory"`, `activity_id` = game id | No backend or API change needed; `result_payload` is free-form JSON |
+| Local progress is not yet pushed to `PUT /learner-progress` | Kept out of scope to avoid a second sync path; progress can be rebuilt from queued payloads (`adaptation.state_after`) |
+
+## 2026-10-18 — Math & Memory: trained next-attempt models
+
+| Decision | Rationale |
+|---|---|
+| Next-attempt configuration chosen by a trained scikit-learn model (Number Quest: decision tree; Memory Match: random forest); in-attempt rules kept | The model replaces only the between-attempt choice the rules made; hints/reinforcement inside an attempt already worked and are unchanged |
+| Models exported to JSON and evaluated by a small Dart tree evaluator (`TreeEnsembleModel`), bundled as app assets | Offline on Android with **no new Flutter dependency** (no TFLite/ONNX runtime); trees are tiny; Python/Dart parity is tested on 600 cases |
+| Training data is synthetic (expert-authored learner simulator), clearly labelled as such in artifacts, reports and payloads | No real learner data exists yet; every queued attempt now records the features and prediction needed to train on real data later |
+| Training runs in `python:3.12-slim` via Docker with pinned requirements | Reproducible without a local Python install (Docker is already used for the backend) |
+| Rules engine is the fallback; payload records `next_attempt.source` = `model` / `fallback` | Games never break if an artifact is missing or incompatible, and every decision is traceable |
+| Memory Match predictions use an 11-rung (pictures, seconds) ladder where neighbours differ in one factor | One model output, bounded steps, never changes both factors at once |

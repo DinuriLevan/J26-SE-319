@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/sync/sync_service.dart';
 import '../../shared/widgets/app_drawer.dart';
-import '../handwriting/handwriting_stub_screen.dart';
+import '../handwriting/handwriting_language_selection_screen.dart';
 import '../home/home_screen.dart';
-import '../math_memory/math_memory_stub_screen.dart';
+import '../math_memory/math_game_selection_screen.dart';
 import '../speech/speech_stub_screen.dart';
 import '../spelling/spelling_stub_screen.dart';
 import 'providers/nav_providers.dart';
@@ -22,9 +22,9 @@ class HomeShellScreen extends ConsumerStatefulWidget {
 class _HomeShellScreenState extends ConsumerState<HomeShellScreen> {
   static const _pages = [
     HomeScreen(),
-    MathMemoryStubScreen(),
+    MathGameSelectionScreen(),
     SpellingStubScreen(),
-    HandwritingStubScreen(),
+    HandwritingLanguageSelectionScreen(),
     SpeechStubScreen(),
   ];
 

@@ -1,0 +1,187 @@
+{
+  "generated_at_utc": "2026-10-18T09:16:33.985295+00:00",
+  "raw_directory": "D:\\Study Materials\\Research Project\\J26-SE-319\\ml\\handwriting\\datasets\\raw",
+  "processed_directory": "D:\\Study Materials\\Research Project\\J26-SE-319\\ml\\handwriting\\datasets\\processed",
+  "total_found": 150,
+  "processed": 150,
+  "skipped": 0,
+  "failed": 0,
+  "output_size": "224x224",
+  "supported_extensions": [
+    ".bmp",
+    ".jpeg",
+    ".jpg",
+    ".png",
+    ".webp"
+  ],
+  "per_dataset": {
+    "english_lowercase": {
+      "found": 150,
+      "processed": 150,
+      "skipped": 0,
+      "failed": 0
+    }
+  },
+  "per_class": {
+    "english_lowercase/a": {
+      "found": 6,
+      "processed": 6,
+      "skipped": 0,
+      "failed": 0
+    },
+    "english_lowercase/b": {
+      "found": 6,
+      "processed": 6,
+      "skipped": 0,
+      "failed": 0
+    },
+    "english_lowercase/c": {
+      "found": 7,
+      "processed": 7,
+      "skipped": 0,
+      "failed": 0
+    },
+    "english_lowercase/d": {
+      "found": 6,
+      "processed": 6,
+      "skipped": 0,
+      "failed": 0
+    },
+    "english_lowercase/e": {
+      "found": 7,
+      "processed": 7,
+      "skipped": 0,
+      "failed": 0
+    },
+    "english_lowercase/f": {
+      "found": 5,
+      "processed": 5,
+      "skipped": 0,
+      "failed": 0
+    },
+    "english_lowercase/g": {
+      "found": 6,
+      "processed": 6,
+      "skipped": 0,
+      "failed": 0
+    },
+    "english_lowercase/h": {
+      "found": 6,
+      "processed": 6,
+      "skipped": 0,
+      "failed": 0
+    },
+    "english_lowercase/i": {
+      "found": 7,
+      "processed": 7,
+      "skipped": 0,
+      "failed": 0
+    },
+    "english_lowercase/j": {
+      "found": 6,
+      "processed": 6,
+      "skipped": 0,
+      "failed": 0
+    },
+    "english_lowercase/k": {
+      "found": 5,
+      "processed": 5,
+      "skipped": 0,
+      "failed": 0
+    },
+    "english_lowercase/l": {
+      "found": 5,
+      "processed": 5,
+      "skipped": 0,
+      "failed": 0
+    },
+    "english_lowercase/m": {
+      "found": 5,
+      "processed": 5,
+      "skipped": 0,
+      "failed": 0
+    },
+    "english_lowercase/n": {
+      "found": 6,
+      "processed": 6,
+      "skipped": 0,
+      "failed": 0
+    },
+    "english_lowercase/o": {
+      "found": 5,
+      "processed": 5,
+      "skipped": 0,
+      "failed": 0
+    },
+    "english_lowercase/p": {
+      "found": 5,
+      "processed": 5,
+      "skipped": 0,
+      "failed": 0
+    },
+    "english_lowercase/q": {
+      "found": 5,
+      "processed": 5,
+      "skipped": 0,
+      "failed": 0
+    },
+    "english_lowercase/r": {
+      "found": 5,
+      "processed": 5,
+      "skipped": 0,
+      "failed": 0
+    },
+    "english_lowercase/s": {
+      "found": 6,
+      "processed": 6,
+      "skipped": 0,
+      "failed": 0
+    },
+    "english_lowercase/t": {
+      "found": 6,
+      "processed": 6,
+      "skipped": 0,
+      "failed": 0
+    },
+    "english_lowercase/u": {
+      "found": 6,
+      "processed": 6,
+      "skipped": 0,
+      "failed": 0
+    },
+    "english_lowercase/v": {
+      "found": 6,
+      "processed": 6,
+      "skipped": 0,
+      "failed": 0
+    },
+    "english_lowercase/w": {
+      "found": 6,
+      "processed": 6,
+      "skipped": 0,
+      "failed": 0
+    },
+    "english_lowercase/x": {
+      "found": 5,
+      "processed": 5,
+      "skipped": 0,
+      "failed": 0
+    },
+    "english_lowercase/y": {
+      "found": 6,
+      "processed": 6,
+      "skipped": 0,
+      "failed": 0
+    },
+    "english_lowercase/z": {
+      "found": 6,
+      "processed": 6,
+      "skipped": 0,
+      "failed": 0
+    }
+  },
+  "skipped_files": [],
+  "failures": [],
+  "preview_created": true,
+  "preview_path": "D:\\Study Materials\\Research Project\\J26-SE-319\\ml\\handwriting\\results\\preprocessing_preview.png"
+}

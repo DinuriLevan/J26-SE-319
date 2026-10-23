@@ -1,0 +1,86 @@
+{
+  "number_quest_next_level": {
+    "chosen": "decision_tree(depth=6)",
+    "validation_accuracy": 0.7918333333333333,
+    "model": {
+      "accuracy": 0.7950833333333334,
+      "macro_f1": 0.7534049255745057,
+      "mean_abs_error_steps": 0.22341666666666668,
+      "within_one_step": 0.9815,
+      "too_hard_rate": 0.13041666666666665,
+      "too_easy_rate": 0.0745,
+      "accuracy_after_baseline": 0.737,
+      "accuracy_after_scored": 0.8144444444444444
+    },
+    "baseline_stay": {
+      "accuracy": 0.19666666666666666,
+      "macro_f1": 0.10956360259981429,
+      "mean_abs_error_steps": 0.8033333333333333,
+      "within_one_step": 1.0,
+      "too_hard_rate": 0.46025,
+      "too_easy_rate": 0.34308333333333335,
+      "accuracy_after_baseline": 0.18466666666666667,
+      "accuracy_after_scored": 0.20066666666666666
+    },
+    "baseline_rules": {
+      "accuracy": 0.6713333333333333,
+      "macro_f1": 0.5911730984057928,
+      "mean_abs_error_steps": 0.38716666666666666,
+      "within_one_step": 0.9415,
+      "too_hard_rate": 0.29433333333333334,
+      "too_easy_rate": 0.034333333333333334,
+      "accuracy_after_baseline": 0.5536666666666666,
+      "accuracy_after_scored": 0.7105555555555556
+    },
+    "validation": {
+      "decision_tree(depth=4)": 0.7645,
+      "decision_tree(depth=6)": 0.7918333333333333,
+      "decision_tree(depth=8)": 0.787,
+      "random_forest(trees=30,depth=6)": 0.7906666666666666,
+      "random_forest(trees=30,depth=8)": 0.7941666666666667
+    },
+    "export_agreement_with_sklearn": 1.0
+  },
+  "memory_match_next_config": {
+    "chosen": "random_forest(trees=30,depth=8)",
+    "validation_accuracy": 0.7389583333333334,
+    "model": {
+      "accuracy": 0.7247916666666666,
+      "macro_f1": 0.6289150555214784,
+      "mean_abs_error_steps": 0.39125,
+      "within_one_step": 0.8991666666666667,
+      "too_hard_rate": 0.13145833333333334,
+      "too_easy_rate": 0.14375,
+      "accuracy_after_baseline": 0.6683333333333333,
+      "accuracy_after_scored": 0.7436111111111111
+    },
+    "baseline_stay": {
+      "accuracy": 0.078125,
+      "macro_f1": 0.020703933747412008,
+      "mean_abs_error_steps": 1.8008333333333333,
+      "within_one_step": 0.2710416666666667,
+      "too_hard_rate": 0.4327083333333333,
+      "too_easy_rate": 0.4891666666666667,
+      "accuracy_after_baseline": 0.03333333333333333,
+      "accuracy_after_scored": 0.09305555555555556
+    },
+    "baseline_rules": {
+      "accuracy": 0.14458333333333334,
+      "macro_f1": 0.10001048273022684,
+      "mean_abs_error_steps": 1.0554166666666667,
+      "within_one_step": 0.80625,
+      "too_hard_rate": 0.418125,
+      "too_easy_rate": 0.4372916666666667,
+      "accuracy_after_baseline": 0.20333333333333334,
+      "accuracy_after_scored": 0.125
+    },
+    "validation": {
+      "decision_tree(depth=4)": 0.719375,
+      "decision_tree(depth=6)": 0.7289583333333334,
+      "decision_tree(depth=8)": 0.7270833333333333,
+      "random_forest(trees=30,depth=6)": 0.7335416666666666,
+      "random_forest(trees=30,depth=8)": 0.7389583333333334
+    },
+    "export_agreement_with_sklearn": 1.0
+  }
+}

@@ -1,0 +1,810 @@
+{
+  "seed": 42,
+  "ratios": {
+    "train": 0.7,
+    "val": 0.15,
+    "test": 0.15
+  },
+  "source_directory": "D:\\Study Materials\\Research Project\\J26-SE-319\\ml\\handwriting\\datasets\\processed",
+  "total_images": 9791,
+  "total_train": 6853,
+  "total_validation": 1488,
+  "total_test": 1450,
+  "datasets": {
+    "english_lowercase": {
+      "total": 2395,
+      "train": 1678,
+      "val": 361,
+      "test": 356,
+      "classes": {
+        "a": {
+          "total": 163,
+          "train": 114,
+          "val": 25,
+          "test": 24,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "b": {
+          "total": 154,
+          "train": 108,
+          "val": 23,
+          "test": 23,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "c": {
+          "total": 92,
+          "train": 64,
+          "val": 14,
+          "test": 14,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "d": {
+          "total": 59,
+          "train": 41,
+          "val": 9,
+          "test": 9,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "e": {
+          "total": 82,
+          "train": 58,
+          "val": 12,
+          "test": 12,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "f": {
+          "total": 121,
+          "train": 85,
+          "val": 18,
+          "test": 18,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "g": {
+          "total": 50,
+          "train": 35,
+          "val": 8,
+          "test": 7,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "h": {
+          "total": 62,
+          "train": 44,
+          "val": 9,
+          "test": 9,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "i": {
+          "total": 83,
+          "train": 58,
+          "val": 13,
+          "test": 12,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "j": {
+          "total": 100,
+          "train": 70,
+          "val": 15,
+          "test": 15,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "k": {
+          "total": 102,
+          "train": 72,
+          "val": 15,
+          "test": 15,
+          "exact_duplicate_groups": 1,
+          "largest_exact_duplicate_group": 2
+        },
+        "l": {
+          "total": 60,
+          "train": 42,
+          "val": 9,
+          "test": 9,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "m": {
+          "total": 92,
+          "train": 64,
+          "val": 14,
+          "test": 14,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "n": {
+          "total": 65,
+          "train": 45,
+          "val": 10,
+          "test": 10,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "o": {
+          "total": 122,
+          "train": 86,
+          "val": 18,
+          "test": 18,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "p": {
+          "total": 110,
+          "train": 77,
+          "val": 17,
+          "test": 16,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "q": {
+          "total": 62,
+          "train": 44,
+          "val": 9,
+          "test": 9,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "r": {
+          "total": 87,
+          "train": 61,
+          "val": 13,
+          "test": 13,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "s": {
+          "total": 58,
+          "train": 40,
+          "val": 9,
+          "test": 9,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "t": {
+          "total": 96,
+          "train": 67,
+          "val": 15,
+          "test": 14,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "u": {
+          "total": 85,
+          "train": 59,
+          "val": 13,
+          "test": 13,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "v": {
+          "total": 108,
+          "train": 76,
+          "val": 16,
+          "test": 16,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "w": {
+          "total": 94,
+          "train": 66,
+          "val": 14,
+          "test": 14,
+          "exact_duplicate_groups": 2,
+          "largest_exact_duplicate_group": 2
+        },
+        "x": {
+          "total": 88,
+          "train": 62,
+          "val": 13,
+          "test": 13,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "y": {
+          "total": 82,
+          "train": 58,
+          "val": 12,
+          "test": 12,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "z": {
+          "total": 118,
+          "train": 82,
+          "val": 18,
+          "test": 18,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        }
+      }
+    },
+    "english_uppercase": {
+      "total": 4093,
+      "train": 2866,
+      "val": 619,
+      "test": 608,
+      "classes": {
+        "A": {
+          "total": 215,
+          "train": 151,
+          "val": 32,
+          "test": 32,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "B": {
+          "total": 199,
+          "train": 139,
+          "val": 30,
+          "test": 30,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "C": {
+          "total": 216,
+          "train": 151,
+          "val": 33,
+          "test": 32,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "D": {
+          "total": 192,
+          "train": 134,
+          "val": 29,
+          "test": 29,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "E": {
+          "total": 169,
+          "train": 118,
+          "val": 26,
+          "test": 25,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "F": {
+          "total": 201,
+          "train": 141,
+          "val": 30,
+          "test": 30,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "G": {
+          "total": 87,
+          "train": 61,
+          "val": 13,
+          "test": 13,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "H": {
+          "total": 206,
+          "train": 144,
+          "val": 31,
+          "test": 31,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "I": {
+          "total": 216,
+          "train": 151,
+          "val": 33,
+          "test": 32,
+          "exact_duplicate_groups": 1,
+          "largest_exact_duplicate_group": 2
+        },
+        "J": {
+          "total": 199,
+          "train": 139,
+          "val": 30,
+          "test": 30,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "K": {
+          "total": 97,
+          "train": 68,
+          "val": 15,
+          "test": 14,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "L": {
+          "total": 167,
+          "train": 117,
+          "val": 25,
+          "test": 25,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "M": {
+          "total": 209,
+          "train": 146,
+          "val": 32,
+          "test": 31,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "N": {
+          "total": 220,
+          "train": 154,
+          "val": 33,
+          "test": 33,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "O": {
+          "total": 135,
+          "train": 95,
+          "val": 20,
+          "test": 20,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "P": {
+          "total": 134,
+          "train": 94,
+          "val": 20,
+          "test": 20,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "Q": {
+          "total": 94,
+          "train": 66,
+          "val": 14,
+          "test": 14,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "R": {
+          "total": 215,
+          "train": 151,
+          "val": 32,
+          "test": 32,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "S": {
+          "total": 131,
+          "train": 92,
+          "val": 20,
+          "test": 19,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "T": {
+          "total": 216,
+          "train": 151,
+          "val": 33,
+          "test": 32,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "U": {
+          "total": 110,
+          "train": 77,
+          "val": 17,
+          "test": 16,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "V": {
+          "total": 104,
+          "train": 73,
+          "val": 16,
+          "test": 15,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "W": {
+          "total": 108,
+          "train": 76,
+          "val": 16,
+          "test": 16,
+          "exact_duplicate_groups": 9,
+          "largest_exact_duplicate_group": 2
+        },
+        "X": {
+          "total": 111,
+          "train": 78,
+          "val": 17,
+          "test": 16,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "Y": {
+          "total": 59,
+          "train": 41,
+          "val": 9,
+          "test": 9,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        },
+        "Z": {
+          "total": 83,
+          "train": 58,
+          "val": 13,
+          "test": 12,
+          "exact_duplicate_groups": 0,
+          "largest_exact_duplicate_group": 1
+        }
+      }
+    },
+    "sinhala": {
+      "total": 3303,
+      "train": 2309,
+      "val": 508,
+      "test": 486,
+      "classes": {
+        "අ": {
+          "total": 77,
+          "train": 54,
+          "val": 12,
+          "test": 11,
+          "exact_duplicate_groups": 7,
+          "largest_exact_duplicate_group": 9
+        },
+        "ආ": {
+          "total": 77,
+          "train": 54,
+          "val": 12,
+          "test": 11,
+          "exact_duplicate_groups": 6,
+          "largest_exact_duplicate_group": 10
+        },
+        "ඇ": {
+          "total": 78,
+          "train": 54,
+          "val": 12,
+          "test": 12,
+          "exact_duplicate_groups": 5,
+          "largest_exact_duplicate_group": 11
+        },
+        "ඈ": {
+          "total": 76,
+          "train": 53,
+          "val": 12,
+          "test": 11,
+          "exact_duplicate_groups": 5,
+          "largest_exact_duplicate_group": 11
+        },
+        "ඉ": {
+          "total": 78,
+          "train": 54,
+          "val": 12,
+          "test": 12,
+          "exact_duplicate_groups": 6,
+          "largest_exact_duplicate_group": 10
+        },
+        "ඊ": {
+          "total": 78,
+          "train": 54,
+          "val": 12,
+          "test": 12,
+          "exact_duplicate_groups": 5,
+          "largest_exact_duplicate_group": 11
+        },
+        "උ": {
+          "total": 78,
+          "train": 55,
+          "val": 12,
+          "test": 11,
+          "exact_duplicate_groups": 4,
+          "largest_exact_duplicate_group": 14
+        },
+        "ඌ": {
+          "total": 77,
+          "train": 54,
+          "val": 12,
+          "test": 11,
+          "exact_duplicate_groups": 6,
+          "largest_exact_duplicate_group": 10
+        },
+        "එ": {
+          "total": 77,
+          "train": 54,
+          "val": 12,
+          "test": 11,
+          "exact_duplicate_groups": 5,
+          "largest_exact_duplicate_group": 11
+        },
+        "ඒ": {
+          "total": 75,
+          "train": 53,
+          "val": 11,
+          "test": 11,
+          "exact_duplicate_groups": 5,
+          "largest_exact_duplicate_group": 11
+        },
+        "ඔ": {
+          "total": 75,
+          "train": 53,
+          "val": 11,
+          "test": 11,
+          "exact_duplicate_groups": 6,
+          "largest_exact_duplicate_group": 10
+        },
+        "ඕ": {
+          "total": 77,
+          "train": 54,
+          "val": 12,
+          "test": 11,
+          "exact_duplicate_groups": 5,
+          "largest_exact_duplicate_group": 11
+        },
+        "ක": {
+          "total": 76,
+          "train": 53,
+          "val": 12,
+          "test": 11,
+          "exact_duplicate_groups": 6,
+          "largest_exact_duplicate_group": 10
+        },
+        "ඛ": {
+          "total": 79,
+          "train": 55,
+          "val": 12,
+          "test": 12,
+          "exact_duplicate_groups": 6,
+          "largest_exact_duplicate_group": 10
+        },
+        "ග": {
+          "total": 80,
+          "train": 56,
+          "val": 12,
+          "test": 12,
+          "exact_duplicate_groups": 6,
+          "largest_exact_duplicate_group": 10
+        },
+        "ඝ": {
+          "total": 77,
+          "train": 54,
+          "val": 12,
+          "test": 11,
+          "exact_duplicate_groups": 6,
+          "largest_exact_duplicate_group": 10
+        },
+        "ච": {
+          "total": 76,
+          "train": 53,
+          "val": 12,
+          "test": 11,
+          "exact_duplicate_groups": 6,
+          "largest_exact_duplicate_group": 10
+        },
+        "ඡ": {
+          "total": 76,
+          "train": 53,
+          "val": 12,
+          "test": 11,
+          "exact_duplicate_groups": 5,
+          "largest_exact_duplicate_group": 11
+        },
+        "ජ": {
+          "total": 78,
+          "train": 54,
+          "val": 12,
+          "test": 12,
+          "exact_duplicate_groups": 5,
+          "largest_exact_duplicate_group": 11
+        },
+        "ට": {
+          "total": 77,
+          "train": 54,
+          "val": 12,
+          "test": 11,
+          "exact_duplicate_groups": 7,
+          "largest_exact_duplicate_group": 8
+        },
+        "ඨ": {
+          "total": 79,
+          "train": 55,
+          "val": 12,
+          "test": 12,
+          "exact_duplicate_groups": 5,
+          "largest_exact_duplicate_group": 19
+        },
+        "ඩ": {
+          "total": 77,
+          "train": 54,
+          "val": 12,
+          "test": 11,
+          "exact_duplicate_groups": 6,
+          "largest_exact_duplicate_group": 10
+        },
+        "ණ": {
+          "total": 78,
+          "train": 54,
+          "val": 12,
+          "test": 12,
+          "exact_duplicate_groups": 7,
+          "largest_exact_duplicate_group": 8
+        },
+        "ත": {
+          "total": 77,
+          "train": 54,
+          "val": 12,
+          "test": 11,
+          "exact_duplicate_groups": 6,
+          "largest_exact_duplicate_group": 15
+        },
+        "ථ": {
+          "total": 63,
+          "train": 44,
+          "val": 10,
+          "test": 9,
+          "exact_duplicate_groups": 5,
+          "largest_exact_duplicate_group": 8
+        },
+        "ද": {
+          "total": 77,
+          "train": 54,
+          "val": 12,
+          "test": 11,
+          "exact_duplicate_groups": 7,
+          "largest_exact_duplicate_group": 13
+        },
+        "ධ": {
+          "total": 79,
+          "train": 55,
+          "val": 12,
+          "test": 12,
+          "exact_duplicate_groups": 7,
+          "largest_exact_duplicate_group": 13
+        },
+        "න": {
+          "total": 79,
+          "train": 55,
+          "val": 12,
+          "test": 12,
+          "exact_duplicate_groups": 6,
+          "largest_exact_duplicate_group": 15
+        },
+        "ප": {
+          "total": 78,
+          "train": 54,
+          "val": 12,
+          "test": 12,
+          "exact_duplicate_groups": 6,
+          "largest_exact_duplicate_group": 16
+        },
+        "ඵ": {
+          "total": 77,
+          "train": 55,
+          "val": 12,
+          "test": 10,
+          "exact_duplicate_groups": 3,
+          "largest_exact_duplicate_group": 27
+        },
+        "බ": {
+          "total": 81,
+          "train": 57,
+          "val": 12,
+          "test": 12,
+          "exact_duplicate_groups": 7,
+          "largest_exact_duplicate_group": 8
+        },
+        "භ": {
+          "total": 75,
+          "train": 53,
+          "val": 11,
+          "test": 11,
+          "exact_duplicate_groups": 5,
+          "largest_exact_duplicate_group": 11
+        },
+        "ම": {
+          "total": 77,
+          "train": 54,
+          "val": 12,
+          "test": 11,
+          "exact_duplicate_groups": 6,
+          "largest_exact_duplicate_group": 15
+        },
+        "ඹ": {
+          "total": 72,
+          "train": 50,
+          "val": 11,
+          "test": 11,
+          "exact_duplicate_groups": 5,
+          "largest_exact_duplicate_group": 11
+        },
+        "ය": {
+          "total": 78,
+          "train": 54,
+          "val": 12,
+          "test": 12,
+          "exact_duplicate_groups": 7,
+          "largest_exact_duplicate_group": 8
+        },
+        "ර": {
+          "total": 80,
+          "train": 56,
+          "val": 12,
+          "test": 12,
+          "exact_duplicate_groups": 7,
+          "largest_exact_duplicate_group": 8
+        },
+        "ල": {
+          "total": 77,
+          "train": 54,
+          "val": 12,
+          "test": 11,
+          "exact_duplicate_groups": 4,
+          "largest_exact_duplicate_group": 22
+        },
+        "ව": {
+          "total": 73,
+          "train": 51,
+          "val": 11,
+          "test": 11,
+          "exact_duplicate_groups": 5,
+          "largest_exact_duplicate_group": 19
+        },
+        "ශ": {
+          "total": 76,
+          "train": 53,
+          "val": 12,
+          "test": 11,
+          "exact_duplicate_groups": 6,
+          "largest_exact_duplicate_group": 15
+        },
+        "ෂ": {
+          "total": 75,
+          "train": 53,
+          "val": 11,
+          "test": 11,
+          "exact_duplicate_groups": 5,
+          "largest_exact_duplicate_group": 11
+        },
+        "ස": {
+          "total": 78,
+          "train": 54,
+          "val": 12,
+          "test": 12,
+          "exact_duplicate_groups": 5,
+          "largest_exact_duplicate_group": 11
+        },
+        "හ": {
+          "total": 79,
+          "train": 55,
+          "val": 12,
+          "test": 12,
+          "exact_duplicate_groups": 5,
+          "largest_exact_duplicate_group": 11
+        },
+        "ළ": {
+          "total": 76,
+          "train": 53,
+          "val": 12,
+          "test": 11,
+          "exact_duplicate_groups": 4,
+          "largest_exact_duplicate_group": 22
+        }
+      }
+    }
+  },
+  "warnings": [],
+  "leakage_prevention": {
+    "method": "SHA-256 exact-content grouping within each class",
+    "exact_duplicate_groups": 254,
+    "limitation": "Processed filenames are sequential and do not retain original/augmentation family identifiers. Byte-identical files are kept together, but visually related augmented variants cannot be linked reliably from these filenames."
+  },
+  "validation": {
+    "counts_match_source": true,
+    "no_source_file_overlap": true
+  },
+  "output_directory": "D:\\Study Materials\\Research Project\\J26-SE-319\\ml\\handwriting\\datasets\\split"
+}
